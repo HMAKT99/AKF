@@ -1,0 +1,65 @@
+{
+  "v": "1.0",
+  "id": "akf-prac-2025-q3-001",
+  "by": "sarah@woodgrove.com",
+  "at": "2025-07-15T09:30:00Z",
+  "label": "confidential",
+  "inherit": true,
+  "claims": [
+    {
+      "id": "c1",
+      "c": "Woodgrove Q3 revenue was $4.2B, up 12% YoY",
+      "t": 0.98,
+      "src": "SEC 10-Q Filing",
+      "tier": 1,
+      "ver": true,
+      "ver_by": "sarah@woodgrove.com"
+    },
+    {
+      "id": "c2",
+      "c": "Cloud segment grew 15-18% driven by AI workloads",
+      "t": 0.85,
+      "src": "Gartner Cloud Report 2025",
+      "tier": 2,
+      "tags": ["cloud", "AI"]
+    },
+    {
+      "id": "c3",
+      "c": "Enterprise pipeline is strong with 3 deals over $50M",
+      "t": 0.72,
+      "src": "Internal CRM data",
+      "tier": 4
+    },
+    {
+      "id": "c4",
+      "c": "Main competitor lost 2 key enterprise accounts in Q3",
+      "t": 0.65,
+      "src": "Industry contacts",
+      "tier": 3
+    },
+    {
+      "id": "c5",
+      "c": "AI copilot adoption rate is 34% across Fortune 500",
+      "t": 0.78,
+      "src": "McKinsey AI Survey 2025",
+      "tier": 2,
+      "ai": true,
+      "risk": "Survey methodology uncertain"
+    }
+  ],
+  "prov": [
+    {
+      "hop": 0,
+      "by": "sarah@woodgrove.com",
+      "do": "created",
+      "at": "2025-07-15T09:30:00Z",
+      "adds": ["c1", "c2", "c3", "c4", "c5"]
+    },
+    {
+      "hop": 1,
+      "by": "review-bot@woodgrove.com",
+      "do": "reviewed",
+      "at": "2025-07-15T10:00:00Z"
+    }
+  ]
+}

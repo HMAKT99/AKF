@@ -1,0 +1,52 @@
+/**
+ * AKF — Agent Knowledge Format v1.0
+ *
+ * Lightweight, LLM-native file format for structured knowledge exchange
+ * with built-in trust, provenance, and security metadata.
+ */
+
+// Models
+export type { AKFUnit, Claim, Fidelity, ProvHop } from "./models.js";
+
+// Core API
+export {
+  create,
+  createMulti,
+  validate,
+  toJSON,
+  fromJSON,
+  stripNulls,
+} from "./core.js";
+export type { ValidationResult } from "./core.js";
+
+// Builder
+export { AKFBuilder } from "./builder.js";
+
+// Trust
+export {
+  effectiveTrust,
+  AUTHORITY_WEIGHTS,
+  DECAY_PRESETS,
+} from "./trust.js";
+export type { TrustResult, TrustDecision } from "./trust.js";
+
+// Provenance
+export {
+  computeHopHash,
+  computeIntegrityHash,
+  validateChain,
+  addHop,
+  formatTree,
+} from "./provenance.js";
+
+// Security
+export {
+  HIERARCHY,
+  labelRank,
+  validateInheritance,
+  canShareExternal,
+  inheritLabel,
+} from "./security.js";
+
+// Transform
+export { AKFTransformer } from "./transform.js";

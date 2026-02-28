@@ -1,0 +1,10 @@
+node_modules/
+dist/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.vite/
+*.akf
+!spec/examples/*.akf
+.env

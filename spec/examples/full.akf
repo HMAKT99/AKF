@@ -1,0 +1,106 @@
+{
+  "v": "1.0",
+  "id": "akf-full-2025-q3-001",
+  "by": "sarah@woodgrove.com",
+  "agent": "copilot-m365",
+  "at": "2025-07-15T09:30:00Z",
+  "label": "highly-confidential",
+  "inherit": true,
+  "ext": false,
+  "ttl": 365,
+  "claims": [
+    {
+      "id": "c1",
+      "c": "Woodgrove Q3 revenue was $4.2B, up 12% YoY",
+      "t": 0.98,
+      "src": "SEC 10-Q Filing",
+      "uri": "https://sec.gov/filings/woodgrove/10q-2025q3",
+      "tier": 1,
+      "ver": true,
+      "ver_by": "sarah@woodgrove.com",
+      "ai": false,
+      "decay": 90,
+      "exp": "2026-07-15T00:00:00Z",
+      "tags": ["revenue", "Q3", "financial"],
+      "fidelity": {
+        "h": "Q3 rev $4.2B +12%",
+        "s": "Woodgrove reported Q3 2025 revenue of $4.2 billion, representing a 12% year-over-year increase driven primarily by cloud and AI segments.",
+        "f": "Woodgrove Bank's Q3 2025 earnings report filed with the SEC shows total revenue of $4.2 billion, a 12% increase compared to $3.75 billion in Q3 2024. The growth was primarily driven by the cloud services segment (+18%) and the new AI-powered financial advisory platform (+45% from launch). Operating margins improved to 28.3% from 26.1% YoY. The company reaffirmed full-year guidance of $17B-$17.5B in revenue."
+      }
+    },
+    {
+      "id": "c2",
+      "c": "Cloud segment grew 15-18% driven by AI workloads",
+      "t": 0.85,
+      "src": "Gartner Cloud Report 2025",
+      "uri": "https://gartner.com/reports/cloud-2025",
+      "tier": 2,
+      "ai": false,
+      "decay": 180,
+      "tags": ["cloud", "AI", "growth"]
+    },
+    {
+      "id": "c3",
+      "c": "H2 revenue expected to accelerate to 20% growth",
+      "t": 0.63,
+      "src": "AI inference from market trends",
+      "tier": 5,
+      "ai": true,
+      "risk": "AI inference — not based on direct evidence. Model extrapolated from Q1-Q3 trend.",
+      "decay": 30,
+      "tags": ["forecast", "AI-generated"],
+      "contra": "c4"
+    },
+    {
+      "id": "c4",
+      "c": "H2 growth likely to moderate to 8-10% due to macro headwinds",
+      "t": 0.71,
+      "src": "Goldman Sachs Equity Research",
+      "tier": 2,
+      "ver": true,
+      "ver_by": "sarah@woodgrove.com",
+      "decay": 60,
+      "tags": ["forecast", "macro"],
+      "contra": "c3"
+    },
+    {
+      "id": "c5",
+      "c": "Enterprise pipeline is strong with 3 deals over $50M",
+      "t": 0.72,
+      "src": "Internal CRM data",
+      "tier": 4,
+      "tags": ["pipeline", "enterprise"]
+    }
+  ],
+  "prov": [
+    {
+      "hop": 0,
+      "by": "sarah@woodgrove.com",
+      "do": "created",
+      "at": "2025-07-15T09:30:00Z",
+      "h": "sha256:a3f2e1d4c5b6a7f8e9d0c1b2a3f4e5d6c7b8a9f0e1d2c3b4a5f6e7d8c9b0a1",
+      "adds": ["c1", "c2", "c5"]
+    },
+    {
+      "hop": 1,
+      "by": "copilot-m365",
+      "do": "enriched",
+      "at": "2025-07-15T10:15:00Z",
+      "h": "sha256:b7c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0",
+      "adds": ["c3", "c4"]
+    },
+    {
+      "hop": 2,
+      "by": "sarah@woodgrove.com",
+      "do": "reviewed",
+      "at": "2025-07-15T11:00:00Z",
+      "h": "sha256:d9e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3"
+    }
+  ],
+  "hash": "sha256:f1e2d3c4b5a6f7e8d9c0b1a2f3e4d5c6b7a8f9e0d1c2b3a4f5e6d7c8b9a0f1",
+  "meta": {
+    "department": "Financial Analysis",
+    "project": "Q3 Earnings Review",
+    "workflow": "analyst-copilot-review"
+  }
+}

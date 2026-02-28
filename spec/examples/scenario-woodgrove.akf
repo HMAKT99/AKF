@@ -1,0 +1,98 @@
+{
+  "v": "1.0",
+  "id": "akf-wg-q3-analysis-001",
+  "by": "sarah@woodgrove.com",
+  "at": "2025-07-15T09:30:00Z",
+  "label": "confidential",
+  "inherit": true,
+  "ext": false,
+  "claims": [
+    {
+      "id": "wg-c1",
+      "c": "Woodgrove Q3 revenue was $4.2B, up 12% YoY",
+      "t": 0.98,
+      "src": "SEC 10-Q Filing",
+      "tier": 1,
+      "ver": true,
+      "ver_by": "sarah@woodgrove.com",
+      "tags": ["revenue", "Q3"]
+    },
+    {
+      "id": "wg-c2",
+      "c": "Cloud segment grew 15-18% driven by AI workloads",
+      "t": 0.85,
+      "src": "Gartner Cloud Report 2025",
+      "tier": 2,
+      "tags": ["cloud", "growth"]
+    },
+    {
+      "id": "wg-c3",
+      "c": "Enterprise pipeline is strong with 3 deals over $50M",
+      "t": 0.72,
+      "src": "Internal CRM estimate",
+      "tier": 4,
+      "tags": ["pipeline"]
+    },
+    {
+      "id": "wg-c4",
+      "c": "AI copilot adoption rate is 34% across Fortune 500",
+      "t": 0.78,
+      "src": "McKinsey AI Survey 2025",
+      "tier": 2,
+      "ai": true,
+      "tags": ["AI", "adoption"]
+    },
+    {
+      "id": "wg-c5",
+      "c": "H2 revenue will accelerate to 25% growth based on pipeline momentum",
+      "t": 0.63,
+      "src": "Copilot inference from Q1-Q3 trend",
+      "tier": 5,
+      "ai": true,
+      "risk": "AI inference — extrapolated from limited data points. Not supported by analyst consensus.",
+      "tags": ["forecast", "AI-generated"]
+    },
+    {
+      "id": "wg-c6",
+      "c": "Key competitor Contoso lost 2 enterprise accounts to Woodgrove in Q3",
+      "t": 0.80,
+      "src": "Sales team debrief",
+      "tier": 3,
+      "ver": true,
+      "ver_by": "sarah@woodgrove.com",
+      "tags": ["competitive"]
+    }
+  ],
+  "prov": [
+    {
+      "hop": 0,
+      "by": "sarah@woodgrove.com",
+      "do": "created",
+      "at": "2025-07-15T09:30:00Z",
+      "h": "sha256:a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1",
+      "adds": ["wg-c1", "wg-c2", "wg-c3"]
+    },
+    {
+      "hop": 1,
+      "by": "copilot-m365",
+      "do": "enriched",
+      "at": "2025-07-15T10:15:00Z",
+      "h": "sha256:b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
+      "adds": ["wg-c4", "wg-c5"]
+    },
+    {
+      "hop": 2,
+      "by": "sarah@woodgrove.com",
+      "do": "reviewed",
+      "at": "2025-07-15T11:00:00Z",
+      "h": "sha256:c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3",
+      "adds": ["wg-c6"],
+      "drops": ["wg-c5"]
+    }
+  ],
+  "hash": "sha256:d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4",
+  "meta": {
+    "scenario": "Woodgrove Bank Q3 Earnings Analysis",
+    "demo": "AKF hackathon 3-hop flow"
+  }
+}

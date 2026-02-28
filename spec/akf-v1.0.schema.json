@@ -1,0 +1,217 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://akf.dev/schema/v1.0",
+  "title": "AKF — Agent Knowledge Format v1.0",
+  "description": "Lightweight, LLM-native file format for structured knowledge exchange with built-in trust, provenance, and security metadata.",
+  "type": "object",
+  "required": ["v", "claims"],
+  "additionalProperties": true,
+  "properties": {
+    "v": {
+      "type": "string",
+      "description": "Spec version (semver)",
+      "pattern": "^\\d+\\.\\d+(\\.\\d+)?$"
+    },
+    "id": {
+      "type": "string",
+      "description": "Unique knowledge unit ID"
+    },
+    "by": {
+      "type": "string",
+      "description": "Creator (email or agent ID)"
+    },
+    "agent": {
+      "type": "string",
+      "description": "AI agent ID if AI-created"
+    },
+    "at": {
+      "type": "string",
+      "description": "Creation timestamp (ISO-8601)",
+      "format": "date-time"
+    },
+    "label": {
+      "type": "string",
+      "description": "Security classification",
+      "enum": ["public", "internal", "confidential", "highly-confidential", "restricted"]
+    },
+    "inherit": {
+      "type": "boolean",
+      "description": "Children must inherit this label",
+      "default": true
+    },
+    "ext": {
+      "type": "boolean",
+      "description": "Allow external sharing",
+      "default": false
+    },
+    "ttl": {
+      "type": "integer",
+      "description": "Retention period in days",
+      "minimum": 0
+    },
+    "claims": {
+      "type": "array",
+      "description": "Array of claim objects",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/Claim"
+      }
+    },
+    "prov": {
+      "type": "array",
+      "description": "Provenance chain (array of hops)",
+      "items": {
+        "$ref": "#/$defs/ProvHop"
+      }
+    },
+    "hash": {
+      "type": "string",
+      "description": "Integrity hash of file contents",
+      "pattern": "^(sha256|sha3-512|blake3):.*$"
+    },
+    "meta": {
+      "type": "object",
+      "description": "Free-form extension metadata",
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "Claim": {
+      "type": "object",
+      "required": ["c", "t"],
+      "additionalProperties": true,
+      "properties": {
+        "c": {
+          "type": "string",
+          "description": "The knowledge claim content"
+        },
+        "t": {
+          "type": "number",
+          "description": "Trust/confidence score",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "id": {
+          "type": "string",
+          "description": "Claim ID"
+        },
+        "src": {
+          "type": "string",
+          "description": "Source name"
+        },
+        "uri": {
+          "type": "string",
+          "description": "Source URL",
+          "format": "uri"
+        },
+        "tier": {
+          "type": "integer",
+          "description": "Authority tier",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "ver": {
+          "type": "boolean",
+          "description": "Human verified"
+        },
+        "ver_by": {
+          "type": "string",
+          "description": "Who verified"
+        },
+        "ai": {
+          "type": "boolean",
+          "description": "AI generated flag"
+        },
+        "risk": {
+          "type": "string",
+          "description": "Risk description"
+        },
+        "decay": {
+          "type": "integer",
+          "description": "Half-life in days",
+          "minimum": 0
+        },
+        "exp": {
+          "type": "string",
+          "description": "Hard expiry date (ISO-8601)",
+          "format": "date-time"
+        },
+        "tags": {
+          "type": "array",
+          "description": "Free-form tags",
+          "items": { "type": "string" }
+        },
+        "contra": {
+          "type": "string",
+          "description": "ID of contradicting claim"
+        },
+        "fidelity": {
+          "$ref": "#/$defs/Fidelity"
+        }
+      }
+    },
+    "Fidelity": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "h": {
+          "type": "string",
+          "description": "Headline (~5 tokens)"
+        },
+        "s": {
+          "type": "string",
+          "description": "Summary (~50 tokens)"
+        },
+        "f": {
+          "type": "string",
+          "description": "Full detail (~2000 tokens)"
+        }
+      }
+    },
+    "ProvHop": {
+      "type": "object",
+      "required": ["hop", "by", "do", "at"],
+      "additionalProperties": true,
+      "properties": {
+        "hop": {
+          "type": "integer",
+          "description": "Hop number (0 = origin)",
+          "minimum": 0
+        },
+        "by": {
+          "type": "string",
+          "description": "Actor (email or agent ID)"
+        },
+        "do": {
+          "type": "string",
+          "description": "Action performed",
+          "enum": ["created", "enriched", "reviewed", "consumed", "transformed"]
+        },
+        "at": {
+          "type": "string",
+          "description": "Timestamp (ISO-8601)",
+          "format": "date-time"
+        },
+        "h": {
+          "type": "string",
+          "description": "SHA-256 hash of this hop"
+        },
+        "pen": {
+          "type": "number",
+          "description": "Transform penalty applied",
+          "exclusiveMaximum": 0
+        },
+        "adds": {
+          "type": "array",
+          "description": "Claim IDs added in this hop",
+          "items": { "type": "string" }
+        },
+        "drops": {
+          "type": "array",
+          "description": "Claim IDs rejected in this hop",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}
