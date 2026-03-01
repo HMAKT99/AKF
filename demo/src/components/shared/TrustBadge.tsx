@@ -19,11 +19,12 @@ export default function TrustBadge({ trust, size = 'sm' }: TrustBadgeProps) {
         : 'text-red-700';
 
   const dims = size === 'sm' ? 'w-3 h-3' : 'w-4 h-4';
+  const textSize = size === 'sm' ? 'text-xs' : 'text-sm';
 
   return (
     <span className="inline-flex items-center gap-1.5">
       <span className={`${dims} rounded-full ${color} inline-block`} />
-      <span className={`text-xs font-semibold ${textColor}`}>
+      <span className={`${textSize} font-semibold ${textColor}`}>
         {(trust * 100).toFixed(0)}%
       </span>
     </span>

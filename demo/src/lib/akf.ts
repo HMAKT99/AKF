@@ -1,111 +1,135 @@
-// ── AKF (Agent Knowledge Format) Inline TypeScript SDK ──────────────────────
+// AKF v1.0 — Inline SDK (spec-aligned field names)
 
 export interface Claim {
-  c: string;           // claim content
-  t: number;           // trust score 0-1
-  src?: string;        // source
-  tier?: number;       // authority tier 1-5
-  ai?: boolean;        // AI-generated flag
-  verified?: boolean;  // human-verified flag
-  risk?: string;       // risk annotation
+  c: string;
+  t: number;
+  id?: string;
+  src?: string;
+  tier?: number;
+  ver?: boolean;
+  ver_by?: string;
+  ai?: boolean;
+  risk?: string;
+  tags?: string[];
+  [key: string]: unknown;
 }
 
 export interface ProvHop {
-  by: string;          // who performed this hop
-  action: string;      // what action was performed
-  ts: string;          // ISO timestamp
-  delta?: string;      // description of changes
+  hop: number;
+  by: string;
+  do: string;
+  at: string;
+  adds?: string[];
+  drops?: string[];
+  pen?: number;
 }
 
 export interface AKFUnit {
-  "$akf": "1.0";
-  id: string;
-  ts: string;
-  author: string;
-  classification: string;
+  v: string;
   claims: Claim[];
-  prov: ProvHop[];
+  id?: string;
+  by?: string;
+  agent?: string;
+  at?: string;
+  label?: string;
+  inherit?: boolean;
+  ext?: boolean;
+  prov?: ProvHop[];
+  meta?: Record<string, unknown>;
+  [key: string]: unknown;
 }
 
 const AUTHORITY_WEIGHTS: Record<number, number> = {
-  1: 1.0,
-  2: 0.85,
-  3: 0.7,
-  4: 0.5,
-  5: 0.3,
+  1: 1.0, 2: 0.85, 3: 0.7, 4: 0.5, 5: 0.3,
 };
 
-/** Compute effective trust = claim.t * authority weight for the tier */
-export function effectiveTrust(claim: Claim): number {
-  const tierWeight = AUTHORITY_WEIGHTS[claim.tier ?? 3] ?? 0.7;
-  return parseFloat((claim.t * tierWeight).toFixed(3));
-}
-
-/** Remove null/undefined keys from an object (shallow) */
-export function stripNulls<T extends Record<string, unknown>>(obj: T): Partial<T> {
-  const out: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(obj)) {
-    if (v !== null && v !== undefined) {
-      out[k] = v;
-    }
-  }
-  return out as Partial<T>;
-}
-
-/** Generate a short unique-ish ID */
+let _counter = 0;
 function makeId(): string {
-  return 'akf-' + Math.random().toString(36).substring(2, 10);
+  _counter++;
+  return `akf-${Date.now().toString(36)}${_counter.toString(36)}`;
 }
 
-export interface CreateUnitOpts {
-  author?: string;
-  classification?: string;
-  id?: string;
+function makeClaimId(): string {
+  _counter++;
+  return `c-${_counter.toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 }
 
-/** Create a new AKF unit from claims */
-export function createUnit(claims: Claim[], opts: CreateUnitOpts = {}): AKFUnit {
+export function createUnit(
+  claims: Claim[],
+  opts: {
+    by?: string;
+    agent?: string;
+    label?: string;
+    inherit?: boolean;
+    ext?: boolean;
+    meta?: Record<string, unknown>;
+  } = {}
+): AKFUnit {
   const now = new Date().toISOString();
-  const author = opts.author || 'anonymous';
-  return {
-    "$akf": "1.0",
-    id: opts.id || makeId(),
-    ts: now,
-    author,
-    classification: opts.classification || 'internal',
-    claims: claims.map(c => stripNulls(c) as Claim),
-    prov: [
-      {
-        by: author,
-        action: 'created',
-        ts: now,
-        delta: `+${claims.length} claims`,
-      },
-    ],
-  };
+  const filled = claims.map((c) => ({ ...c, id: c.id || makeClaimId() }));
+  return stripNulls({
+    v: "1.0",
+    id: makeId(),
+    at: now,
+    claims: filled,
+    by: opts.by,
+    agent: opts.agent,
+    label: opts.label,
+    inherit: opts.inherit,
+    ext: opts.ext,
+    meta: opts.meta,
+    prov: [{
+      hop: 0,
+      by: opts.by || opts.agent || "unknown",
+      do: "created",
+      at: now,
+      adds: filled.map((c) => c.id!),
+    }],
+  }) as AKFUnit;
 }
 
-export interface AddHopOpts {
-  delta?: string;
-}
-
-/** Append a provenance hop to an existing AKF unit */
 export function addHop(
   unit: AKFUnit,
   by: string,
   action: string,
-  opts: AddHopOpts = {}
+  opts?: { adds?: string[]; drops?: string[]; pen?: number }
 ): AKFUnit {
+  const existing = unit.prov || [];
+  const hop: ProvHop = stripNulls({
+    hop: existing.length,
+    by,
+    do: action,
+    at: new Date().toISOString(),
+    adds: opts?.adds,
+    drops: opts?.drops,
+    pen: opts?.pen,
+  }) as ProvHop;
+  return { ...unit, prov: [...existing, hop] };
+}
+
+export interface TrustResult {
+  score: number;
+  decision: "ACCEPT" | "LOW" | "REJECT";
+}
+
+export function effectiveTrust(claim: Claim): TrustResult {
+  const w = AUTHORITY_WEIGHTS[claim.tier ?? 3] ?? 0.7;
+  const score = Math.round(claim.t * w * 10000) / 10000;
   return {
-    ...unit,
-    prov: [
-      ...unit.prov,
-      {
-        by,
-        action,
-        ts: new Date().toISOString(),
-        delta: opts.delta,
-      },
-    ],
+    score,
+    decision: score >= 0.7 ? "ACCEPT" : score >= 0.4 ? "LOW" : "REJECT",
   };
+}
+
+export function stripNulls<T>(obj: T): T {
+  if (obj === null || obj === undefined) return obj;
+  if (Array.isArray(obj)) return obj.map(stripNulls) as T;
+  if (typeof obj === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
+      if (v !== null && v !== undefined) out[k] = stripNulls(v);
+    }
+    return out as T;
+  }
+  return obj;
 }

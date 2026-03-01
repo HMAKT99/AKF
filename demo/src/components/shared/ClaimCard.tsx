@@ -1,5 +1,5 @@
-import type { Claim } from '../lib/akf';
-import { effectiveTrust } from '../lib/akf';
+import type { Claim } from '../../lib/akf';
+import { effectiveTrust } from '../../lib/akf';
 import TrustBadge from './TrustBadge';
 
 interface ClaimCardProps {
@@ -22,13 +22,13 @@ export default function ClaimCard({ claim, index, animateIn, actions }: ClaimCar
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="text-xs text-gray-400 font-mono">#{index + 1}</span>
-            <TrustBadge trust={eTrust} />
+            <TrustBadge trust={eTrust.score} />
             {claim.ai && (
               <span className="text-xs px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded font-semibold">
                 AI
               </span>
             )}
-            {claim.verified && (
+            {claim.ver && (
               <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded font-semibold flex items-center gap-0.5">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
