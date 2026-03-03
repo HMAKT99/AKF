@@ -226,6 +226,169 @@ def enrich(file, agent, claim, trust, ai, risk) -> None:
     click.secho(f"Enriched {file} with {len(claim)} AI claim(s) by {agent}", fg="green")
 
 
+@main.command("embed")
+@click.argument("file", type=click.Path(exists=True))
+@click.option("--classification", "--label", help="Security classification")
+@click.option("--claim", "-c", multiple=True, help="Claim content")
+@click.option("--trust", "-t", multiple=True, type=float, help="Trust score per claim")
+@click.option("--src", "-s", multiple=True, help="Source per claim")
+@click.option("--ai", is_flag=True, help="Mark claims as AI-generated")
+@click.option("--agent", help="AI agent ID for provenance")
+def embed_cmd(file, classification, claim, trust, src, ai, agent) -> None:
+    """Embed AKF metadata into any supported file format."""
+    from . import universal as akf_u
+
+    metadata = {}
+    if classification:
+        metadata["classification"] = classification
+
+    claims = []
+    if claim:
+        if trust and len(claim) != len(trust):
+            click.secho("Error: Number of --claim and --trust must match", fg="red")
+            sys.exit(1)
+        for i, c in enumerate(claim):
+            cl = {"c": c, "t": trust[i] if trust else 0.7}
+            if src and i < len(src):
+                cl["src"] = src[i]
+            if ai:
+                cl["ai"] = True
+            claims.append(cl)
+
+    if agent:
+        from datetime import datetime, timezone
+        metadata.setdefault("provenance", []).append({
+            "actor": agent, "action": "embedded",
+            "at": datetime.now(timezone.utc).isoformat(),
+        })
+
+    akf_u.embed(file, claims=claims if claims else None, metadata=metadata if metadata else None,
+                classification=classification)
+    click.secho("Embedded AKF metadata into {}".format(file), fg="green")
+    if claims:
+        click.echo("  {} claim(s)".format(len(claims)))
+    if classification:
+        click.echo("  classification: {}".format(classification))
+
+
+@main.command("extract")
+@click.argument("file", type=click.Path(exists=True))
+@click.option("--format", "fmt", type=click.Choice(["json", "summary"]), default="json")
+def extract_cmd(file, fmt) -> None:
+    """Extract AKF metadata from any supported file format."""
+    from . import universal as akf_u
+
+    meta = akf_u.extract(file)
+    if meta is None:
+        click.secho("No AKF metadata found in {}".format(file), fg="yellow")
+        click.echo("  Tip: Run 'akf embed {}' to add metadata".format(file))
+        sys.exit(1)
+
+    if fmt == "json":
+        click.echo(json.dumps(meta, indent=2, ensure_ascii=False))
+    else:
+        click.echo(akf_u.info(file))
+
+
+@main.command("scan")
+@click.argument("file_or_dir", type=click.Path(exists=True))
+@click.option("--recursive", "-r", is_flag=True, help="Scan directories recursively")
+def scan_cmd(file_or_dir, recursive) -> None:
+    """Security scan any file or directory for AKF metadata."""
+    from . import universal as akf_u
+    from pathlib import Path
+
+    target = Path(file_or_dir)
+    if target.is_dir():
+        reports = akf_u.scan_directory(str(target), recursive=recursive)
+        enriched = [r for r in reports if r.enriched]
+        click.secho("Scanned {} files, {} AKF-enriched".format(len(reports), len(enriched)), bold=True)
+        for r in reports:
+            if r.enriched:
+                ai_str = " [AI: {:.0f}%]".format(r.ai_contribution * 100) if r.ai_contribution else ""
+                trust_str = " trust: {:.2f}".format(r.overall_trust) if r.overall_trust else ""
+                label_str = " ({})".format(r.classification) if r.classification else ""
+                click.secho("  {} — {} claims{}{}{}".format(
+                    r.format, r.claim_count, trust_str, ai_str, label_str), fg="green")
+    else:
+        report = akf_u.scan(str(target))
+        if not report.enriched:
+            click.secho("No AKF metadata in {}".format(file_or_dir), fg="yellow")
+            return
+
+        click.secho("AKF Scan: {}".format(file_or_dir), bold=True)
+        click.echo("  Format:          {}".format(report.format))
+        click.echo("  Mode:            {}".format(report.mode))
+        if report.classification:
+            click.echo("  Classification:  {}".format(report.classification))
+        if report.overall_trust is not None:
+            click.echo("  Trust score:     {:.2f}".format(report.overall_trust))
+        if report.ai_contribution is not None:
+            click.echo("  AI contribution: {:.0f}%".format(report.ai_contribution * 100))
+        click.echo("  Claims:          {} ({} verified, {} AI-generated)".format(
+            report.claim_count, report.verified_claim_count, report.ai_claim_count))
+        click.echo("  Provenance:      {} hops".format(report.provenance_depth))
+        if report.risk_claims:
+            click.secho("  Risks:           {}".format(len(report.risk_claims)), fg="red")
+            for risk in report.risk_claims:
+                click.secho("    - {}".format(risk), fg="red")
+
+
+@main.command("info")
+@click.argument("file", type=click.Path(exists=True))
+def info_cmd(file) -> None:
+    """Quick info check on any file's AKF metadata."""
+    from . import universal as akf_u
+    click.echo(akf_u.info(file))
+
+
+@main.command("sidecar")
+@click.argument("file", type=click.Path(exists=True))
+@click.option("--classification", "--label", help="Security classification")
+@click.option("--agent", help="AI agent ID")
+def sidecar_cmd(file, classification, agent) -> None:
+    """Create a sidecar .akf.json file for any file."""
+    from . import sidecar
+
+    metadata = {}
+    if classification:
+        metadata["classification"] = classification
+    if agent:
+        from datetime import datetime, timezone
+        metadata["provenance"] = [
+            {"actor": agent, "action": "tagged", "at": datetime.now(timezone.utc).isoformat()}
+        ]
+
+    sidecar.create(file, metadata)
+    sc_path = sidecar.sidecar_path(file)
+    click.secho("Created sidecar: {}".format(sc_path), fg="green")
+
+
+@main.command("convert")
+@click.argument("file", type=click.Path(exists=True))
+@click.option("--output", "-o", required=True, type=click.Path(), help="Output .akf file")
+def convert_cmd(file, output) -> None:
+    """Extract AKF metadata from any format into standalone .akf."""
+    from . import universal as akf_u
+
+    akf_u.to_akf(file, output)
+    click.secho("Converted {} -> {}".format(file, output), fg="green")
+
+
+@main.command("formats")
+def formats_cmd() -> None:
+    """List all supported file formats."""
+    from . import universal as akf_u
+
+    fmts = akf_u.supported_formats()
+    click.secho("Supported AKF Formats:", bold=True)
+    click.echo()
+    for ext, info in sorted(fmts.items()):
+        mode = info.get("mode", "unknown")
+        mechanism = info.get("mechanism", "")
+        click.echo("  {:<10s} {:<12s} {}".format(ext, mode, mechanism))
+
+
 @main.command()
 @click.argument("file1", type=click.Path(exists=True))
 @click.argument("file2", type=click.Path(exists=True))

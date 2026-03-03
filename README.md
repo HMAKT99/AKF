@@ -1,8 +1,8 @@
 # AKF — Agent Knowledge Format
 
-**The simplest file format for AI-generated knowledge with built-in trust, provenance, and security.**
+**The trust metadata standard for every file AI touches.**
 
-AKF is to AI knowledge what JSON is to data — a minimal format that carries trust scores, source provenance, and security classification alongside every knowledge claim. Any LLM can produce valid AKF from a one-shot example.
+AKF is to AI-generated content what EXIF is to photos. Every file that AI touches should carry trust scores, source provenance, and security classification. AKF embeds this metadata into any format — DOCX, PDF, XLSX, HTML, images, and more — or travels as a standalone `.akf` knowledge file.
 
 ## Quickstart
 
@@ -64,11 +64,52 @@ Every AI-generated insight needs three things documents and data don't: *How con
  ]}
 ```
 
+## Works With Every Format
+
+AKF metadata embeds into any file AI touches:
+
+| Format | How It Works |
+|--------|-------------|
+| `.akf` | Native (standalone knowledge claims) |
+| `.docx` `.xlsx` `.pptx` | Embedded in OOXML custom XML part |
+| `.pdf` | Embedded in PDF metadata |
+| `.html` | JSON-LD `<script type="application/akf+json">` |
+| `.md` | YAML frontmatter |
+| `.png` `.jpg` | EXIF/XMP metadata |
+| `.json` | Reserved `_akf` key |
+| Everything else | Sidecar `.akf.json` companion file |
+
+One API for all formats:
+
+```python
+import akf
+
+# Embed trust metadata into any file
+akf.embed("report.docx", claims=[...], classification="confidential")
+akf.embed("data.xlsx", claims=[...])
+akf.embed("slides.pptx", claims=[...])
+akf.embed("notes.md", claims=[...])
+akf.embed("chart.png", claims=[...])
+
+# Extract from any file
+meta = akf.extract("report.docx")
+
+# Security scan any file or directory
+akf.scan("report.docx")
+akf.info("report.docx")
+```
+
 ## Installation
 
 ```bash
-# Python
+# Core (standalone .akf + sidecar + Markdown/HTML/JSON)
 pip install akf
+
+# With Office format support
+pip install akf[office]    # DOCX + XLSX + PPTX
+pip install akf[pdf]       # PDF
+pip install akf[image]     # PNG/JPEG
+pip install akf[all]       # Everything
 
 # TypeScript / Node.js
 npm install akf
@@ -76,7 +117,7 @@ npm install akf
 
 ## SDK Usage
 
-### Python
+### Python — Standalone .akf
 
 ```python
 import akf
@@ -104,6 +145,47 @@ brief = (akf.AKFTransformer(unit)
 brief.save("weekly-brief.akf")
 ```
 
+### Python — Universal Format Layer
+
+```python
+import akf.universal as akf_u
+
+# Embed into any format — auto-detected from extension
+akf_u.embed("report.docx", claims=[
+    {"location": "paragraph:3", "c": "Revenue $4.2B", "t": 0.98,
+     "src": "SEC 10-Q", "ver": True},
+    {"location": "paragraph:7", "c": "Growth accelerating", "t": 0.63,
+     "src": "AI inference", "ai": True},
+], classification="confidential")
+
+# Extract from any format
+meta = akf_u.extract("report.docx")
+
+# Security scan
+report = akf_u.scan("report.docx")
+print(report.classification, report.ai_claim_count, report.overall_trust)
+
+# Scan entire directory (mixed formats)
+results = akf_u.scan_directory("./knowledge-base/")
+
+# Cross-format provenance — track AI transformations
+akf_u.derive(source="data.xlsx", output="summary.docx",
+             agent_id="copilot-v2", action="summarized")
+
+# Auto-enrich AI-generated files
+akf_u.auto_enrich("copilot-output.docx", agent_id="copilot-v2")
+
+# Convert any format to standalone .akf
+akf_u.to_akf("report.docx", output="report.akf")
+
+# Sidecar for unsupported formats (video, audio, etc.)
+akf_u.create_sidecar("video.mp4", metadata={
+    "classification": "internal",
+    "ai_contribution": 0.8,
+    "claims": [{"c": "AI voiceover", "t": 0.7, "ai": True}]
+})
+```
+
 ### TypeScript
 
 ```typescript
@@ -125,37 +207,51 @@ unit.claims.forEach(claim => {
 ## CLI
 
 ```bash
+# ── Standalone .akf commands ──
+
 # Create
 akf create report.akf \
   --claim "Revenue $4.2B" --trust 0.98 --src "SEC 10-Q" \
   --claim "Cloud growth 15%" --trust 0.85 --src "Gartner" \
   --by sarah@woodgrove.com --label confidential
 
-# Validate
+# Validate, inspect, trust, consume, provenance, enrich, diff
 akf validate report.akf
-# ✅ Valid AKF (Level 2: Practical) | 2 claims | confidential | ✓ integrity
-
-# Inspect with trust indicators
 akf inspect report.akf
-# 🟢 0.98  "Revenue $4.2B"       SEC 10-Q   Tier 1  verified
-# 🟡 0.85  "Cloud growth 15%"    Gartner    Tier 2
-
-# Compute effective trust
 akf trust report.akf
-
-# Agent consumption
 akf consume report.akf --output brief.akf --threshold 0.6 --agent research-bot
-
-# Provenance chain
 akf provenance report.akf --format tree
-# sarah@woodgrove.com created (+2 claims)
-#   └→ research-bot consumed (+2 claims)
-
-# AI enrichment
 akf enrich report.akf --agent copilot --claim "AI insight" --trust 0.75
-
-# Diff two files
 akf diff report.akf brief.akf
+
+# ── Universal format commands (works with ANY file) ──
+
+# Embed AKF metadata into any file
+akf embed report.docx --classification confidential \
+  --claim "Revenue $4.2B" --trust 0.98
+
+# Extract metadata
+akf extract report.docx
+
+# Quick info check
+akf info report.docx
+#   Format:          DOCX
+#   AKF enriched:    Yes
+#   Classification:  Confidential
+#   Claims:          2
+
+# Security scan (file or directory)
+akf scan report.docx
+akf scan ./knowledge-base/ --recursive
+
+# Convert any format to standalone .akf
+akf convert report.docx --output report.akf
+
+# Create sidecar for any file
+akf sidecar video.mp4 --classification internal
+
+# List supported formats
+akf formats
 ```
 
 ## Trust Computation
