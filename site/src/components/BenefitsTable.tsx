@@ -4,17 +4,17 @@ const benefits = [
   {
     feature: 'Trust Scores',
     description: 'Every claim carries a 0.0–1.0 confidence score with authority tiers and temporal decay.',
-    detail: 't × tier_weight × decay',
+    detail: 'effective_trust()',
   },
   {
     feature: 'Source Provenance',
     description: 'Immutable hop-by-hop chain tracks every creator, enricher, and transformer.',
-    detail: 'prov[] array',
+    detail: 'prov[] chain',
   },
   {
     feature: 'Security Classification',
     description: 'Five-level labels from public to restricted. Inheritance propagates to children.',
-    detail: 'label + inherit',
+    detail: 'security_score()',
   },
   {
     feature: 'Universal Format Support',
@@ -22,9 +22,29 @@ const benefits = [
     detail: '9+ formats',
   },
   {
-    feature: 'Agent-to-Agent',
-    description: 'Agents consume, filter, penalize, and re-emit AKF units without data loss.',
-    detail: 'AKFTransformer',
+    feature: 'Agent-Native',
+    description: 'Consume, derive, and transform knowledge between agents. Generate AKF from tool calls or LLM outputs.',
+    detail: 'akf.consume()',
+  },
+  {
+    feature: 'Compliance & Audit',
+    description: 'Built-in regulation checks for EU AI Act, SOX, HIPAA, GDPR, and NIST AI RMF.',
+    detail: 'akf.audit()',
+  },
+  {
+    feature: 'Knowledge Base',
+    description: 'Persistent directory-backed knowledge store. Add, query, prune, and inject claims into LLM context.',
+    detail: 'KnowledgeBase',
+  },
+  {
+    feature: 'Secure by Default',
+    description: 'New units are born secure — internal classification, provenance auto-created, integrity hash computed.',
+    detail: 'Zero config',
+  },
+  {
+    feature: 'Descriptive Names',
+    description: 'Human-readable field names (confidence, source, authority_tier) with compact wire format aliases.',
+    detail: 'Dual format',
   },
   {
     feature: '~15 Token Overhead',
@@ -39,7 +59,7 @@ export default function BenefitsTable() {
       <div className="max-w-4xl mx-auto">
         <SectionHeading
           title="Why AKF"
-          subtitle="Everything AI-generated content needs, nothing it doesn't."
+          subtitle="Trust, provenance, compliance, and agent-native knowledge exchange — built in."
         />
         <div className="overflow-x-auto rounded-xl border border-border-subtle">
           <table className="w-full text-left">

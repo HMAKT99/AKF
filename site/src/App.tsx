@@ -7,6 +7,7 @@ import About from './components/About';
 import FormatGlance from './components/FormatGlance';
 import BenefitsTable from './components/BenefitsTable';
 import SDKUsage from './components/SDKUsage';
+import Modules from './components/Modules';
 import FormatSupport from './components/FormatSupport';
 import Footer from './components/Footer';
 
@@ -60,6 +61,9 @@ export default function App() {
         </div>
         <div className="section-animate">
           <BenefitsTable />
+        </div>
+        <div className="section-animate">
+          <Modules />
         </div>
         <div className="section-animate">
           <SDKUsage />
