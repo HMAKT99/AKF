@@ -34,6 +34,115 @@ def main(ctx) -> None:
         click.echo("Run 'akf --help' for all commands or 'akf create --demo' for a walkthrough.")
 
 
+@main.command("init")
+@click.option("--git-hooks", is_flag=True, help="Install post-commit hook for akf stamp-commit")
+@click.option("--agent", help="Default AI agent ID")
+@click.option("--label", "classification", default="internal", help="Default classification")
+@click.option("--path", "target", default=".", type=click.Path(), help="Project root")
+def init_cmd(git_hooks, agent, classification, target) -> None:
+    """Initialize AKF in a project directory."""
+    root = Path(target).resolve()
+    akf_dir = root / ".akf"
+    akf_dir.mkdir(exist_ok=True)
+
+    config = {
+        "version": "1.0",
+        "classification": classification,
+        "auto_embed": True,
+    }
+    if agent:
+        config["agent"] = agent
+
+    config_path = akf_dir / "config.json"
+    config_path.write_text(json.dumps(config, indent=2) + "\n")
+    click.secho(f"Created {config_path}", fg="green")
+
+    if git_hooks:
+        hooks_dir = root / ".git" / "hooks"
+        if not hooks_dir.parent.exists():
+            click.secho("Warning: .git directory not found, skipping hooks", fg="yellow")
+        else:
+            hooks_dir.mkdir(exist_ok=True)
+            hook = hooks_dir / "post-commit"
+            hook.write_text("#!/bin/sh\nakf stamp-commit\n")
+            hook.chmod(0o755)
+            click.secho(f"Installed post-commit hook: {hook}", fg="green")
+
+    click.echo()
+    click.secho("AKF initialized!", bold=True)
+    click.echo("  Config:  .akf/config.json")
+    click.echo()
+    click.echo("Quick start:")
+    click.echo("  akf embed report.docx         # add trust metadata")
+    click.echo("  akf read report.docx           # view trust metadata")
+    click.echo("  akf audit report.docx          # compliance check")
+
+
+@main.command("read")
+@click.argument("file", type=click.Path(exists=True))
+@click.option("--json", "as_json", is_flag=True, help="Output raw JSON")
+def read_cmd(file, as_json) -> None:
+    """Read and display AKF trust metadata from any file."""
+    from . import universal as akf_u
+
+    meta = akf_u.extract(file)
+    if meta is None:
+        click.secho(f"No AKF metadata found in {file}", fg="yellow")
+        click.echo(f"  Tip: Run 'akf embed {file}' to add metadata")
+        return
+
+    if as_json:
+        click.echo(json.dumps(meta, indent=2, ensure_ascii=False))
+        return
+
+    # Header
+    click.secho(f"AKF Trust Metadata: {file}", bold=True)
+    if meta.get("classification"):
+        click.echo(f"  Classification: {meta['classification']}")
+
+    # Claims
+    claims = meta.get("claims", [])
+    if claims:
+        click.echo(f"  Claims: {len(claims)}")
+        click.echo()
+        for claim in claims:
+            conf = claim.get("confidence", claim.get("t", 0))
+            content = claim.get("content", claim.get("c", ""))
+            source = claim.get("source", claim.get("src", ""))
+
+            if conf >= 0.8:
+                color = "green"
+                icon = "\U0001f7e2"
+            elif conf >= 0.5:
+                color = "yellow"
+                icon = "\U0001f7e1"
+            else:
+                color = "red"
+                icon = "\U0001f534"
+
+            parts = [f'{icon} {conf:.2f}  "{content}"']
+            if source:
+                parts.append(source)
+            if claim.get("verified"):
+                parts.append(click.style("verified", fg="green"))
+            if claim.get("ai_generated") or claim.get("ai"):
+                parts.append(click.style("\u26a0 AI", fg="yellow"))
+            click.echo("  " + "  ".join(parts))
+    else:
+        click.echo("  No claims found")
+
+    # Provenance
+    prov = meta.get("provenance", [])
+    if prov:
+        click.echo()
+        click.secho("  Provenance:", bold=True)
+        for hop in prov:
+            actor = hop.get("actor", hop.get("by", "unknown"))
+            action = hop.get("action", "")
+            ts = hop.get("timestamp", hop.get("at", ""))
+            click.echo(f"    {actor} — {action} @ {ts}")
+
+
 @main.command("create")
 @click.argument("file", type=click.Path(), required=False)
 @click.option("--claim", "-c", multiple=True, help="Claim content")
@@ -170,6 +279,11 @@ def inspect(file) -> None:
             parts.append(click.style("verified", fg="green"))
         if claim.ai_generated:
             parts.append(click.style("\u26a0 AI", fg="yellow"))
+        if claim.origin:
+            parts.append(click.style(f"origin:{claim.origin.type}", fg="cyan"))
+        if claim.reviews:
+            verdicts = ",".join(r.verdict for r in claim.reviews)
+            parts.append(click.style(f"reviewed:{verdicts}", fg="blue"))
         if claim.risk:
             parts.append(click.style(f"risk: {claim.risk}", fg="red"))
 
@@ -192,9 +306,20 @@ def trust(file, threshold) -> None:
         else:
             color = "red"
 
+        extras = []
+        extras.append(f"t={claim.confidence}")
+        extras.append(f"tier={claim.authority_tier or 3}")
+        extras.append(f"auth={result.breakdown['authority']}")
+        if result.breakdown.get("origin_weight", 1.0) != 1.0:
+            extras.append(f"origin={result.breakdown['origin_weight']}")
+        if result.breakdown.get("grounding_bonus", 0) > 0:
+            extras.append(f"ground=+{result.breakdown['grounding_bonus']:.2f}")
+        if result.breakdown.get("review_bonus", 0) != 0:
+            extras.append(f"review={result.breakdown['review_bonus']:+.2f}")
+
         click.secho(
             f"  {result.decision:6s}  {result.score:.4f}  \"{claim.content}\"  "
-            f"(t={claim.confidence}, tier={claim.authority_tier or 3}, auth={result.breakdown['authority']})",
+            f"({', '.join(extras)})",
             fg=color,
         )
 
@@ -519,11 +644,12 @@ def diff(file1, file2) -> None:
 
 @main.command("audit")
 @click.argument("file", type=click.Path(exists=True))
-@click.option("--regulation", "-r", help="Check specific regulation (eu_ai_act, sox, hipaa, gdpr, nist_ai)")
+@click.option("--regulation", "-r", help="Check specific regulation (eu_ai_act, sox, hipaa, gdpr, nist_ai, iso_42001)")
 @click.option("--trail", is_flag=True, help="Show audit trail")
-def audit_cmd(file, regulation, trail) -> None:
+@click.option("--export", "export_fmt", type=click.Choice(["json", "markdown", "csv"]), help="Export audit result")
+def audit_cmd(file, regulation, trail, export_fmt) -> None:
     """Run compliance audit on an .akf file."""
-    from .compliance import audit, check_regulation, audit_trail
+    from .compliance import audit, check_regulation, audit_trail, export_audit
 
     if trail:
         click.echo(audit_trail(file, format="text"))
@@ -531,14 +657,17 @@ def audit_cmd(file, regulation, trail) -> None:
 
     if regulation:
         result = check_regulation(file, regulation)
-        status = "COMPLIANT" if result.compliant else "NON-COMPLIANT"
-        color = "green" if result.compliant else "red"
-        click.secho(f"{result.regulation}: {status} (score: {result.score:.2f})", fg=color)
     else:
         result = audit(file)
-        status = "COMPLIANT" if result.compliant else "NON-COMPLIANT"
-        color = "green" if result.compliant else "red"
-        click.secho(f"Audit: {status} (score: {result.score:.2f})", fg=color)
+
+    if export_fmt:
+        click.echo(export_audit(result, format=export_fmt))
+        return
+
+    status = "COMPLIANT" if result.compliant else "NON-COMPLIANT"
+    color = "green" if result.compliant else "red"
+    label = result.regulation if result.regulation and result.regulation != "general" else "Audit"
+    click.secho(f"{label}: {status} (score: {result.score:.2f})", fg=color)
 
     for check in result.checks:
         icon = "\u2705" if check["passed"] else "\u274c"
@@ -549,6 +678,96 @@ def audit_cmd(file, regulation, trail) -> None:
         click.secho("Recommendations:", bold=True)
         for rec in result.recommendations:
             click.echo(f"  \u2022 {rec}")
+
+
+@main.command("stream")
+@click.argument("action", type=click.Choice(["collect"]))
+@click.argument("file", type=click.Path(exists=True))
+@click.option("--output", "-o", type=click.Path(), help="Output .akf file")
+def stream_cmd(action, file, output) -> None:
+    """Streaming .akfl operations."""
+    from .streaming import collect_stream
+
+    if action == "collect":
+        try:
+            unit = collect_stream(file)
+        except (ValueError, FileNotFoundError) as e:
+            click.secho(f"Error: {e}", fg="red")
+            sys.exit(1)
+
+        if output:
+            unit.save(output)
+            click.secho(f"Collected {len(unit.claims)} claims from {file} -> {output}", fg="green")
+        else:
+            click.echo(unit.to_json(indent=2, compact=True))
+
+
+@main.command("security")
+@click.argument("file", type=click.Path(exists=True))
+def security_cmd(file) -> None:
+    """Show security score with letter grade."""
+    from .security import security_score
+
+    unit = load(file)
+    result = security_score(unit)
+
+    color = "green" if result.score >= 8 else "yellow" if result.score >= 5 else "red"
+    click.secho(f"Security Score: {result.score:.1f}/10 (Grade: {result.grade})", fg=color, bold=True)
+    click.echo()
+
+    for check in result.checks:
+        icon = "\u2705" if check["passed"] else "\u274c"
+        click.echo(f"  {icon} {check['check']}")
+
+    if result.issues:
+        click.echo()
+        click.secho("Issues:", bold=True)
+        for issue in result.issues:
+            click.echo(f"  \u2022 {issue}")
+
+
+@main.command("explain")
+@click.argument("file", type=click.Path(exists=True))
+@click.option("--claim-id", help="Explain a specific claim by ID")
+def explain_cmd(file, claim_id) -> None:
+    """Show trust explanation for claims."""
+    from .trust import explain_trust
+
+    unit = load(file)
+    for claim in unit.claims:
+        if claim_id and claim.id != claim_id:
+            continue
+        click.echo(explain_trust(claim))
+        click.echo()
+        if claim_id:
+            return
+
+    if claim_id:
+        click.secho(f"Claim '{claim_id}' not found", fg="red")
+
+
+@main.command("hash")
+@click.argument("file", type=click.Path(exists=True))
+def hash_cmd(file) -> None:
+    """Compute and display/update integrity hash."""
+    from .security import compute_security_hash
+
+    unit = load(file)
+    new_hash = compute_security_hash(unit)
+
+    if unit.integrity_hash:
+        if unit.integrity_hash == new_hash:
+            click.secho(f"Hash valid: {new_hash}", fg="green")
+        else:
+            click.secho(f"Hash mismatch!", fg="red")
+            click.echo(f"  Stored:   {unit.integrity_hash}")
+            click.echo(f"  Computed: {new_hash}")
+    else:
+        click.echo(f"Hash: {new_hash}")
+        # Update the file with the hash
+        unit = unit.model_copy(update={"integrity_hash": new_hash})
+        unit.save(file)
+        click.secho(f"Updated {file} with integrity hash", fg="green")
 
 
 @main.group("kb")

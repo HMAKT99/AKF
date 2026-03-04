@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://akf.dev/schema/v1.0",
-  "title": "AKF — Agent Knowledge Format v1.0",
+  "$id": "https://akf.dev/schema/v1.1",
+  "title": "AKF — Agent Knowledge Format v1.1",
   "description": "Lightweight, LLM-native file format for structured knowledge exchange with built-in trust, provenance, and security metadata.",
   "type": "object",
   "required": ["v", "claims"],
@@ -26,7 +26,7 @@
     },
     "model": {
       "type": "string",
-      "description": "Model identifier (e.g. claude-sonnet-4-20250514)"
+      "description": "Model identifier (e.g. claude-opus-4-6)"
     },
     "tools": {
       "type": "array",
@@ -86,6 +86,43 @@
       "type": "object",
       "description": "Free-form extension metadata",
       "additionalProperties": true
+    },
+    "made_by": {
+      "type": "array",
+      "description": "Full authorship chain",
+      "items": { "$ref": "#/$defs/MadeBy" }
+    },
+    "reviews": {
+      "type": "array",
+      "description": "Unit-level reviews",
+      "items": { "$ref": "#/$defs/Review" }
+    },
+    "security": {
+      "type": "object",
+      "description": "Security block (access_control, trust_anchors, redaction_policy)",
+      "additionalProperties": true
+    },
+    "compliance": {
+      "type": "object",
+      "description": "Compliance block (regulations, last_audit, auto_audit)",
+      "additionalProperties": true
+    },
+    "cost": {
+      "$ref": "#/$defs/CostMetadata"
+    },
+    "annotations": {
+      "type": "array",
+      "description": "Unit-level annotations",
+      "items": { "$ref": "#/$defs/Annotation" }
+    },
+    "sv": {
+      "type": "string",
+      "description": "Schema version for forward compatibility",
+      "default": "1.1"
+    },
+    "parent": {
+      "type": "string",
+      "description": "Parent unit ID for derivation lineage"
     }
   },
   "$defs": {
@@ -168,9 +205,36 @@
         "evidence": {
           "type": "array",
           "description": "Evidence supporting the claim",
-          "items": {
-            "$ref": "#/$defs/Evidence"
-          }
+          "items": { "$ref": "#/$defs/Evidence" }
+        },
+        "origin": {
+          "$ref": "#/$defs/Origin"
+        },
+        "reviews": {
+          "type": "array",
+          "description": "Claim-level reviews",
+          "items": { "$ref": "#/$defs/Review" }
+        },
+        "source_detail": {
+          "$ref": "#/$defs/SourceDetail"
+        },
+        "reasoning": {
+          "$ref": "#/$defs/ReasoningChain"
+        },
+        "freshness": {
+          "$ref": "#/$defs/Freshness"
+        },
+        "annotations": {
+          "type": "array",
+          "description": "Claim-level annotations",
+          "items": { "$ref": "#/$defs/Annotation" }
+        },
+        "cost": {
+          "$ref": "#/$defs/CostMetadata"
+        },
+        "sup": {
+          "type": "string",
+          "description": "ID of claim this supersedes"
         }
       }
     },
@@ -258,6 +322,286 @@
           "type": "array",
           "description": "Claim IDs rejected in this hop",
           "items": { "type": "string" }
+        },
+        "in_h": {
+          "type": "string",
+          "description": "Hash of input state"
+        },
+        "out_h": {
+          "type": "string",
+          "description": "Hash of output state"
+        },
+        "agent_profile": {
+          "$ref": "#/$defs/AgentProfile"
+        },
+        "dur": {
+          "type": "integer",
+          "description": "Processing duration in milliseconds",
+          "minimum": 0
+        },
+        "tools": {
+          "type": "array",
+          "description": "Tools invoked during this hop",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "Origin": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": true,
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Origin type",
+          "enum": ["human", "ai", "human_assisted_by_ai", "ai_supervised_by_human", "ai_chain"]
+        },
+        "model": {
+          "type": "string",
+          "description": "Model identifier"
+        },
+        "ver": {
+          "type": "string",
+          "description": "Model version"
+        },
+        "prov": {
+          "type": "string",
+          "description": "Provider name"
+        },
+        "params": {
+          "$ref": "#/$defs/GenerationParams"
+        }
+      }
+    },
+    "GenerationParams": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "temp": {
+          "type": "number",
+          "description": "Temperature",
+          "minimum": 0
+        },
+        "top_p": {
+          "type": "number",
+          "description": "Top-p sampling",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "max_tok": {
+          "type": "integer",
+          "description": "Maximum tokens"
+        },
+        "sys_hash": {
+          "type": "string",
+          "description": "Hash of the system prompt"
+        },
+        "tools": {
+          "type": "array",
+          "description": "Tool names available during generation",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "MadeBy": {
+      "type": "object",
+      "required": ["by"],
+      "additionalProperties": true,
+      "properties": {
+        "by": {
+          "type": "string",
+          "description": "Actor identifier"
+        },
+        "role": {
+          "type": "string",
+          "description": "Role in authorship",
+          "enum": ["author", "reviewer", "editor", "approver", "system"]
+        },
+        "at": {
+          "type": "string",
+          "description": "Timestamp (ISO-8601)",
+          "format": "date-time"
+        }
+      }
+    },
+    "Review": {
+      "type": "object",
+      "required": ["by", "v"],
+      "additionalProperties": true,
+      "properties": {
+        "by": {
+          "type": "string",
+          "description": "Reviewer identifier"
+        },
+        "v": {
+          "type": "string",
+          "description": "Review verdict",
+          "enum": ["approved", "rejected", "needs_changes"]
+        },
+        "msg": {
+          "type": "string",
+          "description": "Review comment"
+        },
+        "at": {
+          "type": "string",
+          "description": "Review timestamp (ISO-8601)",
+          "format": "date-time"
+        }
+      }
+    },
+    "SourceDetail": {
+      "type": "object",
+      "required": ["uri"],
+      "additionalProperties": true,
+      "properties": {
+        "uri": {
+          "type": "string",
+          "description": "Source URI",
+          "format": "uri"
+        },
+        "at": {
+          "type": "string",
+          "description": "Retrieval timestamp (ISO-8601)",
+          "format": "date-time"
+        },
+        "h": {
+          "type": "string",
+          "description": "Hash of the source content"
+        },
+        "pg": {
+          "type": "integer",
+          "description": "Page number"
+        },
+        "sec": {
+          "type": "string",
+          "description": "Section reference"
+        }
+      }
+    },
+    "ReasoningChain": {
+      "type": "object",
+      "required": ["steps"],
+      "additionalProperties": true,
+      "properties": {
+        "steps": {
+          "type": "array",
+          "description": "Reasoning steps",
+          "items": { "type": "string" }
+        },
+        "end": {
+          "type": "string",
+          "description": "Final conclusion"
+        },
+        "model": {
+          "type": "string",
+          "description": "Model used for reasoning"
+        },
+        "tok": {
+          "type": "integer",
+          "description": "Token count for reasoning"
+        }
+      }
+    },
+    "Annotation": {
+      "type": "object",
+      "required": ["k", "val"],
+      "additionalProperties": true,
+      "properties": {
+        "k": {
+          "type": "string",
+          "description": "Annotation key"
+        },
+        "val": {
+          "description": "Annotation value (any type)"
+        },
+        "scope": {
+          "type": "string",
+          "description": "Scope of the annotation",
+          "enum": ["claim", "unit", "provenance"]
+        },
+        "at": {
+          "type": "string",
+          "description": "Timestamp (ISO-8601)",
+          "format": "date-time"
+        }
+      }
+    },
+    "Freshness": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "at": {
+          "type": "string",
+          "description": "Retrieval timestamp (ISO-8601)",
+          "format": "date-time"
+        },
+        "until": {
+          "type": "string",
+          "description": "Valid until timestamp (ISO-8601)",
+          "format": "date-time"
+        },
+        "url": {
+          "type": "string",
+          "description": "URL to refresh this data",
+          "format": "uri"
+        },
+        "stale_h": {
+          "type": "integer",
+          "description": "Hours after which data is considered stale",
+          "minimum": 0
+        }
+      }
+    },
+    "CostMetadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "in_tok": {
+          "type": "integer",
+          "description": "Input token count"
+        },
+        "out_tok": {
+          "type": "integer",
+          "description": "Output token count"
+        },
+        "model": {
+          "type": "string",
+          "description": "Model used"
+        },
+        "cost": {
+          "type": "number",
+          "description": "Cost in USD",
+          "minimum": 0
+        }
+      }
+    },
+    "AgentProfile": {
+      "type": "object",
+      "required": ["id"],
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Agent identifier"
+        },
+        "name": {
+          "type": "string",
+          "description": "Agent display name"
+        },
+        "ver": {
+          "type": "string",
+          "description": "Agent version"
+        },
+        "caps": {
+          "type": "array",
+          "description": "Agent capabilities",
+          "items": { "type": "string" }
+        },
+        "ceil": {
+          "type": "number",
+          "description": "Maximum trust ceiling for this agent",
+          "minimum": 0,
+          "maximum": 1
         }
       }
     }

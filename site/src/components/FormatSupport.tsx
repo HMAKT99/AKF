@@ -13,7 +13,7 @@ const formats = [
 
 export default function FormatSupport() {
   return (
-    <section className="py-20 px-6">
+    <section id="formats" className="py-20 px-6">
       <div className="max-w-4xl mx-auto">
         <SectionHeading
           title="Works with every format"

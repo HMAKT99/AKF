@@ -1,4 +1,4 @@
-"""AKF v1.0 — Agent-native utilities.
+"""AKF v1.1 — Agent-native utilities.
 
 Functions for LLMs and AI agents to produce, consume, and validate AKF.
 """
@@ -6,12 +6,13 @@ Functions for LLMs and AI agents to produce, consume, and validate AKF.
 from __future__ import annotations
 
 import json
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 from .core import ValidationResult, create, load, loads, validate
-from .models import AKF, Claim
+from .models import AKF, AgentProfile, Claim, Origin
 from .provenance import add_hop, compute_integrity_hash
 from .trust import effective_trust
 
@@ -25,7 +26,7 @@ def consume(
     """Consume an AKF unit as an agent.
 
     Loads the unit, filters claims by trust threshold, applies penalty,
-    and adds a provenance hop.
+    and adds a provenance hop with agent_profile and duration_ms.
 
     Args:
         target: File path, JSON string, or AKF object.
@@ -37,6 +38,8 @@ def consume(
         Derived AKF unit with provenance.
     """
     from .transform import AKFTransformer
+
+    start_time = time.monotonic()
 
     if isinstance(target, AKF):
         unit = target
@@ -56,6 +59,20 @@ def consume(
         .by(agent_id)
         .build()
     )
+
+    # v1.1: Update last provenance hop with agent_profile and duration_ms
+    duration_ms = int((time.monotonic() - start_time) * 1000)
+    if derived.prov:
+        last_hop = derived.prov[-1]
+        last_hop_dict = last_hop.model_dump()
+        last_hop_dict["agent_profile"] = AgentProfile(id=agent_id)
+        last_hop_dict["duration_ms"] = duration_ms
+        from .models import ProvHop
+        updated_hop = ProvHop(**last_hop_dict)
+        derived = derived.model_copy(
+            update={"prov": list(derived.prov[:-1]) + [updated_hop]}
+        )
+
     return derived
 
 
@@ -83,6 +100,8 @@ def derive(
     from .transform import AKFTransformer
     from .security import inherit_label
 
+    start_time = time.monotonic()
+
     if isinstance(parent, (str, Path)):
         path = Path(parent)
         if path.exists():
@@ -106,6 +125,19 @@ def derive(
         new_ids = [c.id for c in new_claim_objs if c.id]
         derived = add_hop(derived, by=agent_id, action="enriched", adds=new_ids)
 
+    # v1.1: Update last provenance hop with agent_profile and duration_ms
+    duration_ms = int((time.monotonic() - start_time) * 1000)
+    if derived.prov:
+        last_hop = derived.prov[-1]
+        last_hop_dict = last_hop.model_dump()
+        last_hop_dict["agent_profile"] = AgentProfile(id=agent_id)
+        last_hop_dict["duration_ms"] = duration_ms
+        from .models import ProvHop
+        updated_hop = ProvHop(**last_hop_dict)
+        derived = derived.model_copy(
+            update={"prov": list(derived.prov[:-1]) + [updated_hop]}
+        )
+
     return derived
 
 
@@ -127,14 +159,24 @@ When generating claims, output valid AKF JSON with this structure:
       "src": "<source>",
       "tier": <1-5>,
       "ai": true,
-      "risk": "<optional risk description>"
+      "risk": "<optional risk description>",
+      "origin": {
+        "type": "ai",
+        "model": "<your model name>",
+        "provider": "<your provider>"
+      }
     }
+  ],
+  "made_by": [
+    {"by": "<your agent id>", "role": "author"}
   ]
 }
 
 Authority tiers: 1=primary source, 2=secondary, 3=tertiary, 4=speculative, 5=AI inference.
-Always set "ai": true and be conservative with trust scores.
-Include "risk" for tier 4-5 claims explaining limitations.'''
+Always set "ai": true and include "origin" with type "ai" for transparency.
+Be conservative with trust scores.
+Include "risk" for tier 4-5 claims explaining limitations.
+Add "reasoning" with steps for explainability when possible.'''
 
 
 def validate_output(llm_response: str) -> ValidationResult:
@@ -215,6 +257,28 @@ def response_schema(level: str = "standard") -> dict:
             "risk": {"type": "string", "description": "Risk description"},
             "ver": {"type": "boolean"},
             "tags": {"type": "array", "items": {"type": "string"}},
+            "origin": {
+                "type": "object",
+                "properties": {
+                    "type": {"type": "string", "enum": ["human", "ai", "human_assisted_by_ai", "ai_supervised_by_human", "ai_chain"]},
+                    "model": {"type": "string"},
+                    "provider": {"type": "string"},
+                },
+            },
+            "reasoning": {
+                "type": "object",
+                "properties": {
+                    "steps": {"type": "array", "items": {"type": "string"}},
+                    "conclusion": {"type": "string"},
+                },
+            },
+            "freshness": {
+                "type": "object",
+                "properties": {
+                    "retrieved_at": {"type": "string"},
+                    "valid_until": {"type": "string"},
+                },
+            },
         })
 
     return {
@@ -235,6 +299,7 @@ def from_tool_call(params: dict) -> Claim:
     """Create a Claim from function/tool call parameters.
 
     Normalizes common parameter names to AKF fields.
+    Auto-populates origin.type = "ai" and origin.model if available.
 
     Args:
         params: Tool call parameters dict.
@@ -272,6 +337,14 @@ def from_tool_call(params: dict) -> Claim:
 
     # Always mark as AI-generated
     normalized.setdefault("ai_generated", True)
+
+    # v1.1: Auto-populate origin
+    origin_data: Dict[str, Any] = {"type": "ai"}
+    if "model" in params:
+        origin_data["model"] = params["model"]
+    if "provider" in params:
+        origin_data["provider"] = params["provider"]
+    normalized["origin"] = Origin(**origin_data)
 
     return Claim(**normalized)
 

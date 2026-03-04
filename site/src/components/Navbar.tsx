@@ -1,10 +1,10 @@
 import { useState } from 'react';
 
 const navLinks = [
-  { href: '#format', label: 'Format' },
-  { href: '#benefits', label: 'Features' },
-  { href: '#modules', label: 'Modules' },
+  { href: '#workflow', label: 'Workflow' },
   { href: '#sdk', label: 'SDK' },
+  { href: '#formats', label: 'Formats' },
+  { href: '#about', label: 'About' },
 ];
 
 export default function Navbar() {

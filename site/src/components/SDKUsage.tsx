@@ -1,93 +1,117 @@
 import SectionHeading from '../ui/SectionHeading';
 import TabSwitcher from '../ui/TabSwitcher';
 import CodeBlock from '../ui/CodeBlock';
+import IntegrationSteps from '../ui/IntegrationSteps';
+
+const cliCode = `# Initialize AKF in your project
+akf init --git-hooks --agent my-pipeline
+
+# Trust metadata is already embedded — just read it
+akf read report.pdf
+akf read quarterly-deck.pptx
+
+# See full provenance trail
+akf provenance report.pdf
+
+# Audit when you need compliance
+akf audit report.pdf
+akf audit report.pdf --regulation eu_ai_act
+akf audit ./outputs/ --recursive`;
 
 const pythonCode = `import akf
 
-# One-line stamp API for AI agents
-akf.stamp("Fixed auth bypass", kind="code_change",
-    evidence=["42/42 tests passed", "mypy: 0 errors"],
-    agent="claude-code", model="claude-sonnet-4-20250514")
+# Initialize AKF in your project
+akf.init(git_hooks=True, agent="my-pipeline")
 
-# Stamp directly onto git commits (uses git notes)
-akf.stamp_commit(content="Refactored auth", kind="code_change",
-    evidence=["all tests pass"], agent="claude-code")
-unit = akf.read_commit()
-print(akf.trust_log(n=10))
+# Read the trust metadata already embedded in any file
+unit = akf.read("report.pdf")
+print(unit.claims)        # who made it, what evidence backs it
+print(unit.provenance)    # every agent hop, timestamped
 
-# Builder API for multiple claims
-unit = (akf.AKFBuilder()
-    .by("sarah@woodgrove.com")
-    .label("confidential")
-    .claim("Revenue $4.2B", 0.98, source="SEC 10-Q", authority_tier=1, verified=True)
-    .claim("Cloud growth 15-18%", 0.85, source="Gartner", authority_tier=2)
-    .claim("Pipeline strong", 0.72, source="estimate", authority_tier=4)
-    .build())
+# Audit when you need compliance
+result = akf.audit("report.pdf")
+akf.check_regulation("report.pdf", "eu_ai_act")
+print(result.passed)      # True / False`;
 
-# Compute effective trust with human-readable explanation
-for claim in unit.claims:
-    result = akf.effective_trust(claim)
-    print(f"{result.decision}: {result.score:.2f} — {claim.content}")
-    print(f"  grounded: {result.grounded}, evidence: {result.evidence_count}")
-print(akf.explain_trust(unit.claims[0]))
+const typescriptCode = `import { init, read, audit, checkRegulation } from 'akf';
 
-# Compliance auditing
-result = akf.audit("report.akf")
-akf.check_regulation("report.akf", "eu_ai_act")`;
+// Initialize AKF in your project
+init();  // hooks into your environment — Office, git, agents
 
-const typescriptCode = `import { AKFBuilder, effectiveTrust, fromJSON, toDescriptive } from 'akf';
+// Read the trust metadata already embedded in any file
+const unit = await read('report.pdf');
+console.log(unit.claims);       // who made it, what evidence backs it
+console.log(unit.provenance);   // every agent hop, timestamped
 
-const unit = new AKFBuilder()
-  .by('sarah@woodgrove.com')
-  .label('confidential')
-  .claim('Revenue $4.2B', 0.98, { src: 'SEC 10-Q', tier: 1, ver: true })
-  .claim('Cloud growth 15-18%', 0.85, { src: 'Gartner', tier: 2 })
-  .build();
+// Audit when you need compliance
+const result = await audit('report.pdf');
+await checkRegulation('report.pdf', 'eu_ai_act');
+console.log(result.passed);     // true / false`;
 
-// Compute effective trust for each claim
-unit.claims.forEach(claim => {
-  const result = effectiveTrust(claim);
-  console.log(\`\${result.decision}: \${result.score} — \${claim.c}\`);
-});
+const officeSteps = [
+  {
+    title: 'Install the add-in',
+    description: 'Load the AKF add-in from the Office Add-ins store or sideload for development.',
+  },
+  {
+    title: 'Save your document normally',
+    description: 'AKF metadata embeds into the file as a Custom XML Part — no extra steps needed.',
+  },
+  {
+    title: 'View the trust panel',
+    description: 'Click "AKF > View Trust" in the ribbon to see claims, provenance, and trust scores.',
+  },
+  {
+    title: 'Run a compliance audit',
+    description: 'Click "AKF > Audit" to check provenance, classification, AI labeling, and more — 7 checks total.',
+  },
+];
 
-// Parse descriptive JSON (auto-normalizes to compact)
-const loaded = fromJSON('{"version":"1.0","claims":[{"content":"test","confidence":0.8}]}');
-
-// Convert to descriptive for display
-const descriptive = toDescriptive(unit);
-console.log(descriptive); // { version, classification, claims: [{ content, confidence, ... }] }`;
-
-const cliCode = `# Quick start with demo file
-akf create --demo
-
-# Create a knowledge unit
-akf create report.akf \\
-  --claim "Revenue $4.2B" --trust 0.98 --src "SEC 10-Q" \\
-  --claim "Cloud growth 15%" --trust 0.85 --src "Gartner" \\
-  --by sarah@woodgrove.com --label confidential
-
-# Validate, inspect, and compute trust
-akf validate report.akf
-akf inspect report.akf
-akf trust report.akf
-
-# Compliance auditing
-akf audit report.akf
-akf audit report.akf --regulation eu_ai_act
-akf audit report.akf --trail
-
-# Knowledge base management
-akf kb stats ./kb
-akf kb query ./kb --topic finance
-akf kb prune ./kb --max-age 90 --min-trust 0.3
-
-# Embed into documents & scan
-akf embed report.docx --classification confidential \\
-  --claim "Revenue $4.2B" --trust 0.98
-akf scan ./knowledge-base/ --recursive`;
+const googleSteps = [
+  {
+    title: 'Install the add-on',
+    description: 'Install AKF from the Google Workspace Marketplace for Docs, Sheets, or Slides.',
+  },
+  {
+    title: 'Edit your document normally',
+    description: 'AKF metadata is stored in Document Properties — it persists automatically with your file.',
+  },
+  {
+    title: 'Open the sidebar',
+    description: 'Go to AKF > View Trust to see claims with colored trust indicators and provenance timeline.',
+  },
+  {
+    title: 'Run a compliance audit',
+    description: 'AKF > Run Audit checks all 7 compliance criteria and gives actionable recommendations.',
+  },
+];
 
 export default function SDKUsage() {
   const tabs = [
+    {
+      label: 'CLI',
+      content: <CodeBlock code={cliCode} language="bash" filename="terminal" />,
+    },
+    {
+      label: 'Office',
+      content: (
+        <div className="rounded-lg border border-gray-800 bg-gray-900 p-6">
+          <div className="text-sm font-medium text-text-primary mb-1">Microsoft Office Add-in</div>
+          <div className="text-xs text-text-secondary mb-5">Word, Excel, and PowerPoint — trust metadata in the ribbon</div>
+          <IntegrationSteps steps={officeSteps} />
+        </div>
+      ),
+    },
+    {
+      label: 'Google',
+      content: (
+        <div className="rounded-lg border border-gray-800 bg-gray-900 p-6">
+          <div className="text-sm font-medium text-text-primary mb-1">Google Workspace Add-on</div>
+          <div className="text-xs text-text-secondary mb-5">Docs, Sheets, and Slides — trust metadata in the sidebar</div>
+          <IntegrationSteps steps={googleSteps} />
+        </div>
+      ),
+    },
     {
       label: 'Python',
       content: <CodeBlock code={pythonCode} language="python" filename="example.py" />,
@@ -96,10 +120,6 @@ export default function SDKUsage() {
       label: 'TypeScript',
       content: <CodeBlock code={typescriptCode} language="typescript" filename="example.ts" />,
     },
-    {
-      label: 'CLI',
-      content: <CodeBlock code={cliCode} language="bash" filename="terminal" />,
-    },
   ];
 
   return (
@@ -107,7 +127,7 @@ export default function SDKUsage() {
       <div className="max-w-4xl mx-auto">
         <SectionHeading
           title="Get started in minutes"
-          subtitle="SDKs for Python and TypeScript, plus a full CLI with compliance auditing and knowledge base management."
+          subtitle="Install, init, done. Trust metadata flows automatically — read or audit it whenever you need to."
         />
         <TabSwitcher tabs={tabs} />
       </div>

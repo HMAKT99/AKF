@@ -1,8 +1,11 @@
-"""AKF v1.0 — Security classification and inheritance."""
+"""AKF v1.1 — Security classification, inheritance, and access control."""
 
 from __future__ import annotations
 
+import hashlib
+import json
 from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional
 
 from .models import AKF
 
@@ -74,10 +77,14 @@ class SecurityScore:
 
 
 def security_score(unit: AKF) -> SecurityScore:
-    """Compute a 0-10 security score for an AKF unit."""
+    """Compute a 0-10 security score for an AKF unit.
+
+    Enhanced in v1.1: 15 raw points, normalized to 0-10 scale.
+    """
     checks = []
     issues = []
     points = 0.0
+    max_points = 15.0
 
     # Check 1: Classification set (2 points)
     has_label = unit.classification is not None
@@ -132,7 +139,35 @@ def security_score(unit: AKF) -> SecurityScore:
     if ai_labeled:
         points += 1.0
 
-    return SecurityScore(score=min(10.0, points), checks=checks, issues=issues)
+    # Check 8 (v1.1): Origin tracking — AI claims have origin field (2 points)
+    ai_with_origin = all(
+        c.origin is not None for c in unit.claims if c.ai_generated
+    ) if ai_claims else True
+    checks.append({"check": "origin_tracking", "passed": ai_with_origin})
+    if ai_with_origin:
+        points += 2.0
+    else:
+        issues.append("AI claims missing origin tracking")
+
+    # Check 9 (v1.1): Reviews present (1 point)
+    has_reviews = bool(unit.reviews) or any(c.reviews for c in unit.claims if c.reviews)
+    checks.append({"check": "reviews_present", "passed": has_reviews})
+    if has_reviews:
+        points += 1.0
+
+    # Check 10 (v1.1): Trust anchor verification (1 point)
+    has_anchor = False
+    if has_prov and unit.prov:
+        first_actor = unit.prov[0].actor
+        has_anchor = not first_actor.startswith("ai-") and "@" in first_actor
+    checks.append({"check": "trust_anchor", "passed": has_anchor})
+    if has_anchor:
+        points += 1.0
+
+    # Normalize to 0-10 scale
+    normalized = (points / max_points) * 10.0
+
+    return SecurityScore(score=round(min(10.0, normalized), 1), checks=checks, issues=issues)
 
 
 def purview_signals(unit: AKF) -> dict:
@@ -182,7 +217,6 @@ def detect_laundering(unit: AKF) -> list[str]:
     # Check 3: Provenance shows classification downgrade
     if unit.prov and len(unit.prov) >= 2:
         for i in range(1, len(unit.prov)):
-            prev_hop = unit.prov[i - 1]
             curr_hop = unit.prov[i]
             if curr_hop.action in ("downgraded", "declassified", "reclassified"):
                 warnings.append(
@@ -197,3 +231,114 @@ def detect_laundering(unit: AKF) -> list[str]:
         )
 
     return warnings
+
+
+# ---------------------------------------------------------------------------
+# v1.1 — New security functions
+# ---------------------------------------------------------------------------
+
+def check_access(unit: AKF, actor: str, required_level: str = "internal") -> bool:
+    """Check if an actor meets the classification level for the unit.
+
+    Uses unit.security.access_control if present, otherwise falls back
+    to comparing the required_level against the unit's classification.
+
+    Args:
+        unit: AKF unit.
+        actor: Actor identifier (email, agent ID).
+        required_level: Minimum classification level the actor needs.
+
+    Returns:
+        True if actor has sufficient access.
+    """
+    # Check unit.security.access_control if present
+    if unit.security and "access_control" in unit.security:
+        ac = unit.security["access_control"]
+        allowed = ac.get("allowed_actors", [])
+        denied = ac.get("denied_actors", [])
+        if actor in denied:
+            return False
+        if allowed and actor not in allowed:
+            return False
+        return True
+
+    # Fallback: compare classification levels
+    unit_rank = label_rank(unit.classification)
+    required_rank = label_rank(required_level)
+    return required_rank >= unit_rank
+
+
+def verify_trust_anchor(unit: AKF, trusted_actors: List[str]) -> dict:
+    """Verify that the provenance chain starts from a trusted actor.
+
+    Args:
+        unit: AKF unit.
+        trusted_actors: List of trusted actor identifiers.
+
+    Returns:
+        Dict with 'anchored' (bool), 'anchor_actor' (str), 'chain_length' (int).
+    """
+    if not unit.prov or len(unit.prov) == 0:
+        return {"anchored": False, "anchor_actor": None, "chain_length": 0}
+
+    first_actor = unit.prov[0].actor
+    anchored = first_actor in trusted_actors
+
+    return {
+        "anchored": anchored,
+        "anchor_actor": first_actor,
+        "chain_length": len(unit.prov),
+    }
+
+
+def redaction_report(unit: AKF) -> dict:
+    """Identify claims that should be redacted based on classification and sharing rules.
+
+    Args:
+        unit: AKF unit.
+
+    Returns:
+        Dict with 'redact' (list of claim IDs), 'reason' (list of reasons), 'total'.
+    """
+    redact_ids: list[str] = []
+    reasons: list[str] = []
+
+    for claim in unit.claims:
+        # Claims with high authority in externally-shared units
+        if unit.allow_external and claim.authority_tier and claim.authority_tier <= 2:
+            cid = claim.id or "unknown"
+            redact_ids.append(cid)
+            reasons.append(f"[{cid}] High-authority claim in externally-shared unit")
+
+        # AI claims without risk in confidential+ units
+        if (claim.ai_generated and not claim.risk
+                and label_rank(unit.classification) >= HIERARCHY.get("confidential", 2)):
+            cid = claim.id or "unknown"
+            if cid not in redact_ids:
+                redact_ids.append(cid)
+                reasons.append(f"[{cid}] Undisclosed AI risk in classified unit")
+
+    return {
+        "redact": redact_ids,
+        "reasons": reasons,
+        "total": len(redact_ids),
+    }
+
+
+def compute_security_hash(unit: AKF) -> str:
+    """Compute SHA-256 of canonical sorted JSON (excluding hash field itself).
+
+    Args:
+        unit: AKF unit.
+
+    Returns:
+        Hash string with 'sha256:' prefix.
+    """
+    d = unit.to_dict(compact=False)
+    # Exclude the hash field itself
+    d.pop("integrity_hash", None)
+    d.pop("hash", None)
+
+    canonical = json.dumps(d, sort_keys=True, ensure_ascii=False)
+    hash_hex = hashlib.sha256(canonical.encode()).hexdigest()
+    return f"sha256:{hash_hex}"

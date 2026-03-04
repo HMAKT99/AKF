@@ -105,14 +105,15 @@ class TestTrustGrounding:
         assert result.evidence_count == 3
         assert result.grounded is True
 
-    def test_grounding_does_not_change_score(self):
-        """Evidence grounding is informational — does NOT affect the trust score."""
+    def test_grounding_adds_bonus(self):
+        """Evidence grounding adds a trust bonus in v1.1."""
         c1 = Claim(content="Test", confidence=0.9, authority_tier=1)
         c2 = Claim(content="Test", confidence=0.9, authority_tier=1,
                    evidence=[Evidence(type="test_pass", detail="ok")])
         r1 = effective_trust(c1)
         r2 = effective_trust(c2)
-        assert r1.score == r2.score
+        assert r2.score > r1.score
+        assert r2.breakdown["grounding_bonus"] == 0.05
 
 
 class TestAKFEnvelopeNewFields:
