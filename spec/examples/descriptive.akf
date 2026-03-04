@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+  "id": "desc-example-001",
+  "author": "sarah@woodgrove.com",
+  "created": "2025-01-15T10:30:00Z",
+  "classification": "confidential",
+  "inherit_classification": true,
+  "allow_external": false,
+  "claims": [
+    {
+      "content": "Q3 2024 revenue was $4.2 billion",
+      "confidence": 0.98,
+      "source": "SEC 10-Q Filing",
+      "authority_tier": 1,
+      "verified": true,
+      "verified_by": "sarah@woodgrove.com"
+    },
+    {
+      "content": "AI predicts 15% YoY revenue growth in Q4",
+      "confidence": 0.65,
+      "source": "internal-forecast-model-v3",
+      "authority_tier": 4,
+      "ai_generated": true,
+      "risk": "Model trained on 3 years of data; may not account for market disruptions",
+      "decay_half_life": 30
+    }
+  ],
+  "provenance": [
+    {
+      "actor": "sarah@woodgrove.com",
+      "action": "created",
+      "timestamp": "2025-01-15T10:30:00Z",
+      "hash": "sha256:a1b2c3d4..."
+    }
+  ]
+}

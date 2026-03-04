@@ -21,6 +21,7 @@ def compute_integrity_hash(unit: AKF) -> str:
     """Compute SHA-256 of entire unit contents (excluding the hash field)."""
     d = unit.to_dict()
     d.pop("hash", None)
+    d.pop("integrity_hash", None)
     payload = json.dumps(d, sort_keys=True, ensure_ascii=False)
     digest = hashlib.sha256(payload.encode()).hexdigest()
     return "sha256:{}".format(digest)
@@ -45,7 +46,7 @@ def add_hop(
     """Add a new provenance hop to an existing unit. Auto-hashes."""
     existing = list(unit.prov) if unit.prov else []
     hop_num = len(existing)
-    prev_hash = existing[-1].h if existing and existing[-1].h else None
+    prev_hash = existing[-1].hash if existing and existing[-1].hash else None
 
     hop_data: Dict = {
         "hop": hop_num,
@@ -69,7 +70,7 @@ def add_hop(
 
     # Recompute integrity hash
     integrity = compute_integrity_hash(updated)
-    updated = updated.model_copy(update={"hash": integrity})
+    updated = updated.model_copy(update={"integrity_hash": integrity})
 
     return updated
 
@@ -81,20 +82,24 @@ def format_tree(unit: AKF) -> str:
 
     lines: list = []
     for i, hop in enumerate(unit.prov):
-        h_short = hop.h[:18] + "..." if hop.h else ""
+        h_short = hop.hash[:18] + "..." if hop.hash else ""
 
         adds_str = ""
-        if hop.adds:
-            adds_str = " (+{} claims)".format(len(hop.adds))
+        if hop.claims_added:
+            adds_str = " (+{} claims)".format(len(hop.claims_added))
         drops_str = ""
-        if hop.drops:
-            drops_str = " (-{} rejected)".format(len(hop.drops))
+        if hop.claims_removed:
+            drops_str = " (-{} rejected)".format(len(hop.claims_removed))
 
         if i == 0:
             prefix = ""
         else:
             prefix = "  " * i + "\u2514\u2192 "
 
-        lines.append("{}{} {}{}{} \u2014 {}".format(prefix, hop.by, hop.do, adds_str, drops_str, h_short))
+        lines.append(
+            "{}{} {}{}{} \u2014 {}".format(
+                prefix, hop.actor, hop.action, adds_str, drops_str, h_short
+            )
+        )
 
     return "\n".join(lines)

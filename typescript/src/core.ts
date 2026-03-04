@@ -4,6 +4,7 @@
 
 import { randomUUID } from "node:crypto";
 import type { AKFUnit, Claim } from "./models.js";
+import { normalizeUnit } from "./models.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -275,7 +276,8 @@ export function toJSON(unit: AKFUnit, indent?: number): string {
   return JSON.stringify(stripNulls(unit), null, indent);
 }
 
-/** Parse a JSON string into an AKF unit. */
+/** Parse a JSON string into an AKF unit, normalizing descriptive field names to compact. */
 export function fromJSON(json: string): AKFUnit {
-  return JSON.parse(json) as AKFUnit;
+  const raw = JSON.parse(json);
+  return normalizeUnit(raw);
 }

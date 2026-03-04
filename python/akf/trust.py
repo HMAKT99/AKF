@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 
 from .models import AKF, Claim
 
@@ -27,6 +28,26 @@ DECAY_PRESETS: dict[str, float] = {
 }
 
 
+class TrustLevel(Enum):
+    """Trust decision levels with thresholds."""
+
+    ACCEPT = "ACCEPT"
+    LOW = "LOW"
+    REJECT = "REJECT"
+
+    @staticmethod
+    def from_score(score: float) -> "TrustLevel":
+        if score >= 0.7:
+            return TrustLevel.ACCEPT
+        elif score >= 0.4:
+            return TrustLevel.LOW
+        return TrustLevel.REJECT
+
+    @property
+    def threshold(self) -> float:
+        return {TrustLevel.ACCEPT: 0.7, TrustLevel.LOW: 0.4, TrustLevel.REJECT: 0.0}[self]
+
+
 @dataclass
 class TrustResult:
     """Result of trust computation for a single claim."""
@@ -39,6 +60,10 @@ class TrustResult:
     def accepted(self) -> bool:
         return self.decision == "ACCEPT"
 
+    @property
+    def level(self) -> TrustLevel:
+        return TrustLevel.from_score(self.score)
+
 
 def effective_trust(
     claim: Claim,
@@ -47,14 +72,14 @@ def effective_trust(
 ) -> TrustResult:
     """Compute effective trust for a single claim.
 
-    Formula: effective_trust = t * authority_weight * temporal_decay * (1 + cumulative_penalty)
+    Formula: effective_trust = confidence * authority_weight * temporal_decay * (1 + cumulative_penalty)
     """
-    confidence = claim.t
-    tier = claim.tier if claim.tier is not None else 3
+    conf = claim.confidence
+    tier = claim.authority_tier if claim.authority_tier is not None else 3
     authority = AUTHORITY_WEIGHTS.get(tier, 0.70)
 
     # Temporal decay: 0.5^(age_days / half_life_days)
-    half_life = claim.decay if claim.decay else None
+    half_life = claim.decay_half_life if claim.decay_half_life else None
     if half_life and half_life > 0 and age_days > 0:
         decay = 0.5 ** (age_days / half_life)
     else:
@@ -63,7 +88,7 @@ def effective_trust(
     # Penalty factor: (1 + cumulative_penalty) where penalty is negative
     penalty_factor = 1.0 + penalty
 
-    score = confidence * authority * decay * penalty_factor
+    score = conf * authority * decay * penalty_factor
     score = max(0.0, min(1.0, score))  # clamp
 
     if score >= 0.7:
@@ -77,7 +102,7 @@ def effective_trust(
         score=round(score, 4),
         decision=decision,
         breakdown={
-            "confidence": confidence,
+            "confidence": conf,
             "authority": authority,
             "tier": tier,
             "decay": round(decay, 4),
@@ -85,6 +110,33 @@ def effective_trust(
             "penalty_factor": round(penalty_factor, 4),
         },
     )
+
+
+def explain_trust(claim: Claim, age_days: float = 0, penalty: float = 0) -> str:
+    """Return a human-readable explanation of trust computation for a claim."""
+    result = effective_trust(claim, age_days=age_days, penalty=penalty)
+    b = result.breakdown
+
+    lines = [f'Trust Analysis for "{claim.content}"', "=" * 40]
+    lines.append(f"  Base confidence:    {b['confidence']:.2f}")
+    lines.append(f"  Authority tier:     {b['tier']} (weight: {b['authority']:.2f})")
+    if b["decay"] < 1.0:
+        half_life = claim.decay_half_life or "N/A"
+        lines.append(f"  Temporal decay:     {b['decay']:.4f} (half-life: {half_life}d, age: {age_days}d)")
+    if b["penalty"] != 0:
+        lines.append(f"  Penalty:            {b['penalty']:+.4f} (factor: {b['penalty_factor']:.4f})")
+    lines.append(f"  ─────────────────────────────────")
+    lines.append(f"  Effective trust:    {result.score:.4f}")
+    lines.append(f"  Decision:           {result.decision}")
+
+    if result.decision == "ACCEPT":
+        lines.append("  → Claim meets trust threshold for use.")
+    elif result.decision == "LOW":
+        lines.append("  → Claim has low trust. Use with caution.")
+    else:
+        lines.append("  → Claim does not meet minimum trust. Consider discarding.")
+
+    return "\n".join(lines)
 
 
 def compute_all(

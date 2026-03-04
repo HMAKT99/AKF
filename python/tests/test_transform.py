@@ -14,10 +14,10 @@ class TestAKFTransformer:
             .by("sarah@woodgrove.com")
             .label("confidential")
             .inherit(True)
-            .claim("Revenue $4.2B", 0.98, src="SEC 10-Q", tier=1, ver=True)
-            .claim("Cloud growth 15-18%", 0.85, src="Gartner", tier=2)
-            .claim("Pipeline strong", 0.72, src="estimate", tier=4)
-            .claim("AI inference", 0.63, src="inference", tier=5, ai=True)
+            .claim("Revenue $4.2B", 0.98, source="SEC 10-Q", authority_tier=1, verified=True)
+            .claim("Cloud growth 15-18%", 0.85, source="Gartner", authority_tier=2)
+            .claim("Pipeline strong", 0.72, source="estimate", authority_tier=4)
+            .claim("AI inference", 0.63, source="inference", authority_tier=5, ai_generated=True)
             .build()
         )
 
@@ -44,10 +44,10 @@ class TestAKFTransformer:
             .by("agent")
             .build()
         )
-        # All claims should have t reduced by 0.03
+        # All claims should have confidence reduced by 0.03
         for orig, deriv in zip(parent.claims, derived.claims):
             if deriv.id == orig.id:
-                assert deriv.t == pytest.approx(orig.t - 0.03, abs=0.001)
+                assert deriv.confidence == pytest.approx(orig.confidence - 0.03, abs=0.001)
 
     def test_inherits_classification(self):
         parent = self._make_parent()
@@ -57,7 +57,7 @@ class TestAKFTransformer:
             .by("agent")
             .build()
         )
-        assert derived.label == "confidential"
+        assert derived.classification == "confidential"
         assert validate_inheritance(parent, derived) is True
 
     def test_provenance_extended(self):
@@ -71,8 +71,8 @@ class TestAKFTransformer:
         # Parent has 1 hop, derived should have 2
         assert len(derived.prov) == len(parent.prov) + 1
         last_hop = derived.prov[-1]
-        assert last_hop.by == "research-agent"
-        assert last_hop.do == "consumed"
+        assert last_hop.actor == "research-agent"
+        assert last_hop.action == "consumed"
 
     def test_derived_validates(self):
         parent = self._make_parent()
@@ -114,5 +114,5 @@ class TestAKFTransformer:
             .by("agent")
             .build()
         )
-        assert derived.hash is not None
-        assert derived.hash != parent.hash
+        assert derived.integrity_hash is not None
+        assert derived.integrity_hash != parent.integrity_hash

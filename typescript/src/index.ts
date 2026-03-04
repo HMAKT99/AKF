@@ -7,6 +7,13 @@
 
 // Models
 export type { AKFUnit, Claim, Fidelity, ProvHop } from "./models.js";
+export {
+  normalizeClaim,
+  normalizeProvHop,
+  normalizeUnit,
+  toDescriptive,
+  toDescriptiveClaim,
+} from "./models.js";
 
 // Core API
 export {

@@ -243,7 +243,7 @@ class TestToAkf:
         # Verify the .akf file
         from akf.core import load
         unit = load(output)
-        assert unit.v == "1.0"
+        assert unit.version == "1.0"
         assert len(unit.claims) >= 1
 
     def test_to_akf_no_metadata_raises(self, tmp_path):

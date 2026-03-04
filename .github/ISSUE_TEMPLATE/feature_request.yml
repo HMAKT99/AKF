@@ -1,0 +1,34 @@
+name: Feature Request
+description: Suggest a new feature for AKF
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem does this feature solve?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: How would you like this to work? Include API examples if possible.
+      render: python
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Core SDK
+        - Trust computation
+        - Compliance
+        - Agent integration
+        - File format support
+        - CLI
+        - Documentation
+        - Other
+    validations:
+      required: true

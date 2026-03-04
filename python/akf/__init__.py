@@ -6,7 +6,7 @@ Usage:
     import akf
 
     # Standalone .akf
-    unit = akf.create("Revenue $4.2B", t=0.98)
+    unit = akf.create("Revenue $4.2B", confidence=0.98)
     unit.save("out.akf")
 
     # Universal: embed into any format
@@ -17,12 +17,20 @@ Usage:
 """
 
 from .models import AKF, Claim, Fidelity, ProvHop
-from .core import create, create_multi, load, loads, validate
+from .core import create, create_multi, load, loads, validate, ValidationResult
 from .builder import AKFBuilder
-from .trust import effective_trust, compute_all, TrustResult, AUTHORITY_WEIGHTS
+from .trust import effective_trust, compute_all, explain_trust, TrustResult, TrustLevel, AUTHORITY_WEIGHTS
 from .provenance import add_hop, format_tree, compute_integrity_hash
-from .security import validate_inheritance, can_share_external, inherit_label
+from .security import validate_inheritance, can_share_external, inherit_label, security_score, purview_signals, detect_laundering, SecurityScore
 from .transform import AKFTransformer
+from .agent import (
+    consume, derive, generation_prompt, validate_output,
+    response_schema, from_tool_call, to_context, detect,
+)
+from .compliance import audit, check_regulation, audit_trail, verify_human_oversight, AuditResult
+from .view import show, to_html, to_markdown, executive_summary
+from .data import load_dataset, quality_report, merge, filter_claims
+from .knowledge_base import KnowledgeBase
 
 # Universal format layer — lazy imports to avoid optional dependency issues
 def embed(filepath, **kwargs):
@@ -57,10 +65,15 @@ __all__ = [
     "AKFBuilder",
     "AKFTransformer",
     "AUTHORITY_WEIGHTS",
+    "AuditResult",
     "Claim",
     "Fidelity",
+    "KnowledgeBase",
     "ProvHop",
+    "SecurityScore",
+    "TrustLevel",
     "TrustResult",
+    "ValidationResult",
     # Core
     "add_hop",
     "can_share_external",
@@ -75,6 +88,36 @@ __all__ = [
     "loads",
     "validate",
     "validate_inheritance",
+    # Trust extras
+    "explain_trust",
+    # Security extras
+    "detect_laundering",
+    "purview_signals",
+    "security_score",
+    # Agent
+    "consume",
+    "derive",
+    "detect",
+    "from_tool_call",
+    "generation_prompt",
+    "response_schema",
+    "to_context",
+    "validate_output",
+    # Compliance
+    "audit",
+    "audit_trail",
+    "check_regulation",
+    "verify_human_oversight",
+    # View
+    "executive_summary",
+    "show",
+    "to_html",
+    "to_markdown",
+    # Data
+    "filter_claims",
+    "load_dataset",
+    "merge",
+    "quality_report",
     # Universal format layer
     "embed",
     "extract",

@@ -1,0 +1,39 @@
+{
+  "scopeName": "source.akf",
+  "fileTypes": ["akf"],
+  "patterns": [
+    { "include": "source.json" },
+    {
+      "match": "\"(v|version)\"\\s*:",
+      "name": "keyword.other.version.akf"
+    },
+    {
+      "match": "\"(c|content)\"\\s*:",
+      "name": "entity.name.tag.claim.akf"
+    },
+    {
+      "match": "\"(t|confidence)\"\\s*:",
+      "name": "constant.numeric.trust.akf"
+    },
+    {
+      "match": "\"(src|source)\"\\s*:",
+      "name": "string.other.source.akf"
+    },
+    {
+      "match": "\"(ai|ai_generated)\"\\s*:",
+      "name": "keyword.control.ai.akf"
+    },
+    {
+      "match": "\"(ver|verified)\"\\s*:",
+      "name": "keyword.other.verified.akf"
+    },
+    {
+      "match": "\"(label|classification)\"\\s*:",
+      "name": "markup.bold.classification.akf"
+    },
+    {
+      "match": "\"risk\"\\s*:",
+      "name": "markup.deleted.risk.akf"
+    }
+  ]
+}

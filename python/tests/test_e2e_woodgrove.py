@@ -23,19 +23,6 @@ from akf.trust import compute_all, effective_trust
 
 
 class TestWoodgroveE2E:
-    """
-    Scenario: Woodgrove Bank Q3 Earnings Analysis
-
-    Step 1: Sarah creates Q3-Analysis.akf with 3 claims
-    Step 2: Copilot enriches with 2 AI claims (one flagged)
-    Step 3: Sarah reviews — confirms 1, rejects 1, adds 1
-    Step 4: Validate classification inheritance
-    Step 5: Simulate external share → Purview blocks
-    Step 6: Research agent consumes → filter → Weekly-Brief.akf
-    Step 7: Validate provenance chain
-    Step 8: Validate integrity hashes
-    """
-
     def test_full_scenario(self):
         # ============================================================
         # STEP 1: Sarah creates Q3-Analysis.akf with 3 initial claims
@@ -48,43 +35,43 @@ class TestWoodgroveE2E:
             .claim(
                 "Woodgrove Q3 revenue was $4.2B, up 12% YoY",
                 0.98,
-                src="SEC 10-Q Filing",
-                tier=1,
-                ver=True,
-                ver_by="sarah@woodgrove.com",
+                source="SEC 10-Q Filing",
+                authority_tier=1,
+                verified=True,
+                verified_by="sarah@woodgrove.com",
             )
             .tag("revenue", "Q3")
             .claim(
                 "Cloud segment grew 15-18% driven by AI workloads",
                 0.85,
-                src="Gartner Cloud Report 2025",
-                tier=2,
+                source="Gartner Cloud Report 2025",
+                authority_tier=2,
             )
             .tag("cloud", "growth")
             .claim(
                 "Enterprise pipeline is strong with 3 deals over $50M",
                 0.72,
-                src="Internal CRM estimate",
-                tier=4,
+                source="Internal CRM estimate",
+                authority_tier=4,
             )
             .tag("pipeline")
             .build()
         )
 
         # Verify initial state
-        assert q3_analysis.v == "1.0"
-        assert q3_analysis.by == "sarah@woodgrove.com"
-        assert q3_analysis.label == "confidential"
-        assert q3_analysis.inherit is True
+        assert q3_analysis.version == "1.0"
+        assert q3_analysis.author == "sarah@woodgrove.com"
+        assert q3_analysis.classification == "confidential"
+        assert q3_analysis.inherit_classification is True
         assert len(q3_analysis.claims) == 3
-        assert q3_analysis.claims[0].t == 0.98
-        assert q3_analysis.claims[0].ver is True
+        assert q3_analysis.claims[0].confidence == 0.98
+        assert q3_analysis.claims[0].verified is True
 
         # Verify initial provenance (hop 0: created)
         assert q3_analysis.prov is not None
         assert len(q3_analysis.prov) == 1
-        assert q3_analysis.prov[0].by == "sarah@woodgrove.com"
-        assert q3_analysis.prov[0].do == "created"
+        assert q3_analysis.prov[0].actor == "sarah@woodgrove.com"
+        assert q3_analysis.prov[0].action == "created"
 
         # Verify initial validation
         result = validate(q3_analysis)
@@ -95,22 +82,21 @@ class TestWoodgroveE2E:
         # ============================================================
         # STEP 2: Copilot enriches with 2 AI claims
         # ============================================================
-        # Copilot adds a reasonable AI claim and one flagged inference
         copilot_claim_1 = Claim(
-            c="AI copilot adoption rate is 34% across Fortune 500",
-            t=0.78,
-            src="McKinsey AI Survey 2025",
-            tier=2,
-            ai=True,
+            content="AI copilot adoption rate is 34% across Fortune 500",
+            confidence=0.78,
+            source="McKinsey AI Survey 2025",
+            authority_tier=2,
+            ai_generated=True,
             tags=["AI", "adoption"],
         )
 
         copilot_claim_2 = Claim(
-            c="H2 revenue will accelerate to 25% growth based on pipeline momentum",
-            t=0.63,
-            src="Copilot inference from Q1-Q3 trend",
-            tier=5,
-            ai=True,
+            content="H2 revenue will accelerate to 25% growth based on pipeline momentum",
+            confidence=0.63,
+            source="Copilot inference from Q1-Q3 trend",
+            authority_tier=5,
+            ai_generated=True,
             risk="AI inference — extrapolated from limited data points. Not supported by analyst consensus.",
             tags=["forecast", "AI-generated"],
         )
@@ -131,10 +117,10 @@ class TestWoodgroveE2E:
         # Verify enrichment
         assert len(enriched.claims) == 5
         assert len(enriched.prov) == 2
-        assert enriched.prov[1].by == "copilot-m365"
-        assert enriched.prov[1].do == "enriched"
+        assert enriched.prov[1].actor == "copilot-m365"
+        assert enriched.prov[1].action == "enriched"
 
-        ai_claims = [c for c in enriched.claims if c.ai]
+        ai_claims = [c for c in enriched.claims if c.ai_generated]
         assert len(ai_claims) == 2
 
         # The flagged claim should have a risk description
@@ -145,10 +131,6 @@ class TestWoodgroveE2E:
         # ============================================================
         # STEP 3: Sarah reviews — confirms 1, rejects 1, adds 1
         # ============================================================
-        # Sarah confirms copilot_claim_1 (adoption rate — reasonable)
-        # Sarah REJECTS copilot_claim_2 (H2 acceleration — hallucination)
-        # Sarah adds her own competitive intelligence claim
-
         rejected_id = copilot_claim_2.id
 
         # Remove the rejected claim
@@ -156,12 +138,12 @@ class TestWoodgroveE2E:
 
         # Sarah adds her own claim
         sarah_new_claim = Claim(
-            c="Key competitor Contoso lost 2 enterprise accounts to Woodgrove in Q3",
-            t=0.80,
-            src="Sales team debrief",
-            tier=3,
-            ver=True,
-            ver_by="sarah@woodgrove.com",
+            content="Key competitor Contoso lost 2 enterprise accounts to Woodgrove in Q3",
+            confidence=0.80,
+            source="Sales team debrief",
+            authority_tier=3,
+            verified=True,
+            verified_by="sarah@woodgrove.com",
             tags=["competitive"],
         )
         reviewed_claims.append(sarah_new_claim)
@@ -191,93 +173,80 @@ class TestWoodgroveE2E:
 
         # Review provenance should track adds and drops
         review_hop = reviewed.prov[2]
-        assert review_hop.by == "sarah@woodgrove.com"
-        assert review_hop.do == "reviewed"
-        assert sarah_new_claim.id in review_hop.adds
-        assert rejected_id in review_hop.drops
+        assert review_hop.actor == "sarah@woodgrove.com"
+        assert review_hop.action == "reviewed"
+        assert sarah_new_claim.id in review_hop.claims_added
+        assert rejected_id in review_hop.claims_removed
 
         # ============================================================
         # STEP 4: Validate classification inheritance
         # ============================================================
-        # Any derived document must maintain at least "confidential" level
-        assert reviewed.label == "confidential"
-        assert reviewed.inherit is True
+        assert reviewed.classification == "confidential"
+        assert reviewed.inherit_classification is True
 
         # A public child should be REJECTED
         public_child = AKF(
-            v="1.0",
-            claims=[Claim(c="public leak", t=0.5)],
-            label="public",
+            version="1.0",
+            claims=[Claim(content="public leak", confidence=0.5)],
+            classification="public",
         )
         assert validate_inheritance(reviewed, public_child) is False
 
         # A confidential child should be ACCEPTED
         confidential_child = AKF(
-            v="1.0",
-            claims=[Claim(c="ok", t=0.5)],
-            label="confidential",
+            version="1.0",
+            claims=[Claim(content="ok", confidence=0.5)],
+            classification="confidential",
         )
         assert validate_inheritance(reviewed, confidential_child) is True
 
         # A restricted child should be ACCEPTED (higher is fine)
         restricted_child = AKF(
-            v="1.0",
-            claims=[Claim(c="ok", t=0.5)],
-            label="restricted",
+            version="1.0",
+            claims=[Claim(content="ok", confidence=0.5)],
+            classification="restricted",
         )
         assert validate_inheritance(reviewed, restricted_child) is True
 
         # ============================================================
-        # STEP 5: Simulate external share → Purview blocks
+        # STEP 5: Simulate external share — Purview blocks
         # ============================================================
-        # Confidential documents cannot be shared externally
         assert can_share_external(reviewed) is False
 
-        # Simulate: Purview DLP policy would check:
-        # 1. Classification is "confidential" → block external
-        # 2. Contains AI-generated claims → flag for review
-        # 3. Low trust claims present → additional scrutiny
-
-        ai_claims_present = any(c.ai for c in reviewed.claims)
-        assert ai_claims_present  # Purview would flag this
-
-        low_trust_claims = [c for c in reviewed.claims if c.t < 0.7]
-        # All remaining claims should be >= 0.72 trust
-        # (we removed the 0.63 one)
+        ai_claims_present = any(c.ai_generated for c in reviewed.claims)
+        assert ai_claims_present
 
         # ============================================================
-        # STEP 6: Research agent consumes → Weekly-Brief.akf
+        # STEP 6: Research agent consumes -> Weekly-Brief.akf
         # ============================================================
         weekly_brief = (
             AKFTransformer(reviewed)
-            .filter(trust_min=0.5)  # Filter by effective trust
-            .penalty(-0.03)         # Apply transform penalty
+            .filter(trust_min=0.5)
+            .penalty(-0.03)
             .by("research-agent")
             .build()
         )
 
-        # The weekly brief should only contain high-trust claims
         assert len(weekly_brief.claims) > 0
         assert len(weekly_brief.claims) < len(reviewed.claims)
 
         # Classification should be inherited
-        assert weekly_brief.label == "confidential"
+        assert weekly_brief.classification == "confidential"
         assert validate_inheritance(reviewed, weekly_brief) is True
 
         # Provenance should extend the chain
         assert len(weekly_brief.prov) == len(reviewed.prov) + 1
         agent_hop = weekly_brief.prov[-1]
-        assert agent_hop.by == "research-agent"
-        assert agent_hop.do == "consumed"
+        assert agent_hop.actor == "research-agent"
+        assert agent_hop.action == "consumed"
 
         # Parent reference should exist
         assert weekly_brief.meta["parent_id"] == reviewed.id
 
         # Trust scores should be reduced by penalty
         for claim in weekly_brief.claims:
-            # All claims should have had 0.03 deducted from original t
             original = next(c for c in reviewed.claims if c.id == claim.id)
-            assert claim.t == pytest.approx(original.t - 0.03, abs=0.001)
+            assert claim.confidence == pytest.approx(original.confidence - 0.03, abs=0.001)
 
         # Brief should validate
         brief_result = validate(weekly_brief)
@@ -288,17 +257,16 @@ class TestWoodgroveE2E:
         # ============================================================
         assert validate_chain(weekly_brief.prov) is True
 
-        # Verify the complete chain narrative
         chain = weekly_brief.prov
-        assert chain[0].do == "created"     # Sarah created
-        assert chain[1].do == "enriched"    # Copilot enriched
-        assert chain[2].do == "reviewed"    # Sarah reviewed
-        assert chain[3].do == "consumed"    # Agent consumed
+        assert chain[0].action == "created"
+        assert chain[1].action == "enriched"
+        assert chain[2].action == "reviewed"
+        assert chain[3].action == "consumed"
 
-        assert chain[0].by == "sarah@woodgrove.com"
-        assert chain[1].by == "copilot-m365"
-        assert chain[2].by == "sarah@woodgrove.com"
-        assert chain[3].by == "research-agent"
+        assert chain[0].actor == "sarah@woodgrove.com"
+        assert chain[1].actor == "copilot-m365"
+        assert chain[2].actor == "sarah@woodgrove.com"
+        assert chain[3].actor == "research-agent"
 
         # Pretty-print the provenance tree
         tree = format_tree(weekly_brief)
@@ -309,26 +277,22 @@ class TestWoodgroveE2E:
         # ============================================================
         # STEP 8: Validate integrity hashes
         # ============================================================
-        # Each version should have a valid integrity hash
-        assert reviewed.hash is not None
-        assert reviewed.hash.startswith("sha256:")
+        assert reviewed.integrity_hash is not None
+        assert reviewed.integrity_hash.startswith("sha256:")
 
-        assert weekly_brief.hash is not None
-        assert weekly_brief.hash.startswith("sha256:")
+        assert weekly_brief.integrity_hash is not None
+        assert weekly_brief.integrity_hash.startswith("sha256:")
 
-        # Hashes should be different (different content)
-        assert reviewed.hash != weekly_brief.hash
+        assert reviewed.integrity_hash != weekly_brief.integrity_hash
 
-        # Recomputing should match
         recomputed = compute_integrity_hash(weekly_brief)
-        assert recomputed == weekly_brief.hash
+        assert recomputed == weekly_brief.integrity_hash
 
-        # Tampering should invalidate
         tampered = weekly_brief.model_copy(
-            update={"claims": [Claim(c="tampered!", t=0.01)]}
+            update={"claims": [Claim(content="tampered!", confidence=0.01)]}
         )
         tampered_hash = compute_integrity_hash(tampered)
-        assert tampered_hash != weekly_brief.hash
+        assert tampered_hash != weekly_brief.integrity_hash
 
         # ============================================================
         # STEP 9: Round-trip file save/load
@@ -339,15 +303,14 @@ class TestWoodgroveE2E:
             weekly_brief.save(path)
             reloaded = load(path)
 
-            # Verify round-trip fidelity
             assert reloaded.id == weekly_brief.id
-            assert reloaded.label == weekly_brief.label
+            assert reloaded.classification == weekly_brief.classification
             assert len(reloaded.claims) == len(weekly_brief.claims)
             assert len(reloaded.prov) == len(weekly_brief.prov)
 
             for orig, loaded in zip(weekly_brief.claims, reloaded.claims):
-                assert orig.c == loaded.c
-                assert orig.t == loaded.t
+                assert orig.content == loaded.content
+                assert orig.confidence == loaded.confidence
 
             # Verify no null fields in saved file
             with open(path) as f:
@@ -365,16 +328,3 @@ class TestWoodgroveE2E:
             assert_no_nulls(raw)
         finally:
             os.unlink(path)
-
-        # ============================================================
-        # SUMMARY: The complete lifecycle validated
-        # ============================================================
-        # - Sarah created a confidential 3-claim analysis
-        # - Copilot enriched with 2 AI claims
-        # - Sarah reviewed: confirmed 1, rejected 1 hallucination, added 1
-        # - Classification inheritance enforced
-        # - External sharing blocked by Purview-compatible checks
-        # - Research agent consumed with trust filtering
-        # - Provenance chain links all 4 hops correctly
-        # - Integrity hashes detect tampering
-        # - Round-trip file save/load preserves all data

@@ -22,9 +22,9 @@ def sample_file():
         AKFBuilder()
         .by("sarah@test.com")
         .label("confidential")
-        .claim("Revenue $4.2B", 0.98, src="SEC 10-Q", tier=1, ver=True)
-        .claim("Growth 15%", 0.85, src="Gartner", tier=2)
-        .claim("AI inference", 0.63, src="inference", tier=5, ai=True,
+        .claim("Revenue $4.2B", 0.98, source="SEC 10-Q", authority_tier=1, verified=True)
+        .claim("Growth 15%", 0.85, source="Gartner", authority_tier=2)
+        .claim("AI inference", 0.63, source="inference", authority_tier=5, ai_generated=True,
                risk="AI extrapolation")
         .build()
     )
@@ -50,7 +50,7 @@ class TestCreateCmd:
             assert result.exit_code == 0
             assert "Created" in result.output
             unit = load(path)
-            assert unit.claims[0].c == "Revenue $4.2B"
+            assert unit.claims[0].content == "Revenue $4.2B"
         finally:
             os.unlink(path)
 
@@ -68,7 +68,7 @@ class TestCreateCmd:
             assert result.exit_code == 0
             unit = load(path)
             assert len(unit.claims) == 2
-            assert unit.by == "user@test.com"
+            assert unit.author == "user@test.com"
         finally:
             os.unlink(path)
 
@@ -146,7 +146,7 @@ class TestEnrichCmd:
         assert result.exit_code == 0
         assert "Enriched" in result.output
         unit = load(sample_file)
-        assert any(c.c == "New AI insight" for c in unit.claims)
+        assert any(c.content == "New AI insight" for c in unit.claims)
 
 
 class TestDiffCmd:
@@ -166,3 +166,57 @@ class TestDiffCmd:
             assert "Comparing" in result.output
         finally:
             os.unlink(output_path)
+
+
+class TestWelcome:
+    def test_bare_command(self, runner):
+        result = runner.invoke(main, [])
+        assert result.exit_code == 0
+        assert "Agent Knowledge Format" in result.output
+        assert "Quick start" in result.output
+
+
+class TestDemoCmd:
+    def test_demo(self, runner):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = runner.invoke(main, ["create", "--demo", os.path.join(tmpdir, "demo.akf")])
+            assert result.exit_code == 0
+            assert "demo" in result.output.lower()
+            assert os.path.exists(os.path.join(tmpdir, "demo.akf"))
+
+
+class TestAuditCmd:
+    def test_audit(self, runner, sample_file):
+        result = runner.invoke(main, ["audit", sample_file])
+        assert result.exit_code == 0
+        assert "Audit" in result.output
+
+    def test_audit_with_regulation(self, runner, sample_file):
+        result = runner.invoke(main, ["audit", sample_file, "--regulation", "eu_ai_act"])
+        assert result.exit_code == 0
+        assert "eu_ai_act" in result.output
+
+    def test_audit_trail(self, runner, sample_file):
+        result = runner.invoke(main, ["audit", sample_file, "--trail"])
+        assert result.exit_code == 0
+        assert "Audit Trail" in result.output
+
+
+class TestKbCmd:
+    def test_kb_stats(self, runner):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            from akf.knowledge_base import KnowledgeBase
+            kb = KnowledgeBase(tmpdir)
+            kb.add("test claim", 0.9, topic="test")
+            result = runner.invoke(main, ["kb", "stats", tmpdir])
+            assert result.exit_code == 0
+            assert "Total claims" in result.output or "Total" in result.output
+
+    def test_kb_query(self, runner):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            from akf.knowledge_base import KnowledgeBase
+            kb = KnowledgeBase(tmpdir)
+            kb.add("important fact", 0.9, topic="test")
+            result = runner.invoke(main, ["kb", "query", tmpdir, "--topic", "test"])
+            assert result.exit_code == 0
+            assert "important fact" in result.output

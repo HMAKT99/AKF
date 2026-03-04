@@ -23,7 +23,7 @@ class AKFBuilder:
 
     def claim(self, content: str, trust: float, **kwargs) -> "AKFBuilder":
         """Add a claim."""
-        self._claims.append(Claim(c=content, t=trust, **kwargs))
+        self._claims.append(Claim(content=content, confidence=trust, **kwargs))
         return self
 
     def by(self, author: str) -> "AKFBuilder":
@@ -86,23 +86,23 @@ class AKFBuilder:
             prov = [
                 ProvHop(
                     hop=0,
-                    by=actor,
-                    **{"do": "created"},
-                    at=now,
-                    adds=[c.id for c in self._claims if c.id],
+                    actor=actor,
+                    action="created",
+                    timestamp=now,
+                    claims_added=[c.id for c in self._claims if c.id],
                 )
             ]
 
         unit = AKF(
-            v="1.0",
+            version="1.0",
             id=unit_id,
             claims=self._claims,
-            by=self._by,
+            author=self._by,
             agent=self._agent_id,
-            at=now,
-            label=self._label,
-            inherit=self._inherit,
-            ext=self._ext,
+            created=now,
+            classification=self._label if self._label is not None else "internal",
+            inherit_classification=self._inherit if self._inherit is not None else True,
+            allow_external=self._ext if self._ext is not None else False,
             ttl=self._ttl,
             prov=prov,
             meta=self._meta,
@@ -110,6 +110,6 @@ class AKFBuilder:
 
         # Auto-compute integrity hash
         integrity = compute_integrity_hash(unit)
-        unit = unit.model_copy(update={"hash": integrity})
+        unit = unit.model_copy(update={"integrity_hash": integrity})
 
         return unit

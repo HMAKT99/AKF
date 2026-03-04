@@ -1,0 +1,25 @@
+name: 'AKF Validate'
+description: 'Validate .akf files in your repository'
+inputs:
+  paths:
+    description: 'Glob pattern for .akf files to validate'
+    required: false
+    default: '**/*.akf'
+  classification:
+    description: 'Required minimum classification level'
+    required: false
+    default: ''
+  fail-on-untrusted:
+    description: 'Fail if any claim has trust below threshold'
+    required: false
+    default: '0'
+  trust-threshold:
+    description: 'Minimum trust score (used with fail-on-untrusted)'
+    required: false
+    default: '0.5'
+runs:
+  using: 'node20'
+  main: 'index.js'
+branding:
+  icon: 'shield'
+  color: 'blue'

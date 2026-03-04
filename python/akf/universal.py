@@ -300,12 +300,12 @@ def to_akf(filepath: str, output: str) -> None:
         for i, p in enumerate(meta["provenance"]):
             hop_data = {
                 "hop": i,
-                "by": p.get("actor", p.get("by", "unknown")),
-                "do": p.get("action", p.get("do", "unknown")),
-                "at": p.get("at", ""),
+                "actor": p.get("actor", p.get("by", "unknown")),
+                "action": p.get("action", p.get("do", "unknown")),
+                "timestamp": p.get("at", p.get("timestamp", "")),
             }
             if p.get("hash") or p.get("h"):
-                hop_data["h"] = p.get("hash", p.get("h"))
+                hop_data["hash"] = p.get("hash", p.get("h"))
             hops.append(ProvHop(**hop_data))
         unit = unit.model_copy(update={"prov": hops})
 

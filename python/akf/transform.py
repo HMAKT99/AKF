@@ -44,8 +44,8 @@ class AKFTransformer:
         self._penalty = pen
         adjusted: list[Claim] = []
         for claim in self._claims:
-            new_t = max(0.0, claim.t + pen)
-            adjusted.append(claim.model_copy(update={"t": round(new_t, 4)}))
+            new_t = max(0.0, claim.confidence + pen)
+            adjusted.append(claim.model_copy(update={"confidence": round(new_t, 4)}))
         self._claims = adjusted
         return self
 
@@ -67,11 +67,11 @@ class AKFTransformer:
 
         # Build the derived unit (without provenance first)
         derived = AKF(
-            v="1.0",
+            version="1.0",
             id=new_id,
             claims=self._claims,
-            by=self._agent,
-            at=now,
+            author=self._agent,
+            created=now,
             prov=list(self._parent.prov) if self._parent.prov else [],
             meta={"parent_id": self._parent.id},
             **security,

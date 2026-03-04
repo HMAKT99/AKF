@@ -14,16 +14,54 @@ from .models import AKF, Claim
 # Create
 # ---------------------------------------------------------------------------
 
-def create(content: str, t: float, **kwargs) -> AKF:
-    """Create a single-claim AKF unit."""
-    claim = Claim(c=content, t=t, **kwargs)
-    return AKF(v="1.0", claims=[claim])
+def create(content: str, confidence: float = None, *, t: float = None, **kwargs) -> AKF:
+    """Create a single-claim AKF unit with secure defaults.
+
+    Accepts either ``confidence=`` (descriptive) or ``t=`` (compact) for
+    the trust score.
+
+    Secure defaults applied:
+    - source defaults to "unspecified"
+    - authority_tier defaults to 3
+    - verified defaults to False
+    - ai_generated defaults to False
+    - classification defaults to "internal"
+    - inherit_classification defaults to True
+    - allow_external defaults to False
+    """
+    from .provenance import compute_integrity_hash
+
+    score = confidence if confidence is not None else t
+    if score is None:
+        raise ValueError("Trust score required: use confidence= or t=")
+    # Secure claim defaults
+    claim_defaults = {
+        "source": "unspecified",
+        "authority_tier": 3,
+        "verified": False,
+        "ai_generated": False,
+    }
+    for k, v in claim_defaults.items():
+        kwargs.setdefault(k, v)
+    claim = Claim(content=content, confidence=score, **kwargs)
+    unit = AKF(version="1.0", claims=[claim])
+    # Apply secure envelope defaults
+    if unit.classification is None:
+        unit = unit.model_copy(update={"classification": "internal"})
+    if unit.inherit_classification is None:
+        unit = unit.model_copy(update={"inherit_classification": True})
+    if unit.allow_external is None:
+        unit = unit.model_copy(update={"allow_external": False})
+    return unit
 
 
 def create_multi(claims: List[dict], **envelope) -> AKF:
-    """Create a multi-claim AKF unit."""
+    """Create a multi-claim AKF unit.
+
+    Claims can use either compact or descriptive field names.
+    """
     claim_objects = [Claim(**c) for c in claims]
-    return AKF(v="1.0", claims=claim_objects, **envelope)
+    return AKF(version="1.0", claims=claim_objects, **envelope)
 
 
 # ---------------------------------------------------------------------------
@@ -97,8 +135,8 @@ def validate(target: Union[AKF, str, Path]) -> ValidationResult:
         result.errors.append("Unsupported target type: {}".format(type(target)))
         return result
 
-    # RULE 1: v must be present
-    if not unit.v:
+    # RULE 1: version must be present
+    if not unit.version:
         result.valid = False
         result.errors.append("RULE 1: 'v' (version) is required")
 
@@ -107,26 +145,26 @@ def validate(target: Union[AKF, str, Path]) -> ValidationResult:
         result.valid = False
         result.errors.append("RULE 2: 'claims' must be a non-empty array")
 
-    # RULE 3: Each claim must have c and t in range
+    # RULE 3: Each claim must have content and confidence in range
     for i, claim in enumerate(unit.claims):
-        if not isinstance(claim.t, (int, float)) or not (0.0 <= claim.t <= 1.0):
+        if not isinstance(claim.confidence, (int, float)) or not (0.0 <= claim.confidence <= 1.0):
             result.valid = False
             result.errors.append(
-                "RULE 3: claim[{}].t must be float 0.0-1.0, got {}".format(i, claim.t)
+                "RULE 3: claim[{}].t must be float 0.0-1.0, got {}".format(i, claim.confidence)
             )
 
-    # RULE 4: tier must be 1-5
+    # RULE 4: authority_tier must be 1-5
     for i, claim in enumerate(unit.claims):
-        if claim.tier is not None and not (1 <= claim.tier <= 5):
+        if claim.authority_tier is not None and not (1 <= claim.authority_tier <= 5):
             result.valid = False
             result.errors.append(
-                "RULE 4: claim[{}].tier must be 1-5, got {}".format(i, claim.tier)
+                "RULE 4: claim[{}].tier must be 1-5, got {}".format(i, claim.authority_tier)
             )
 
-    # RULE 5: label must be valid
-    if unit.label is not None and unit.label not in VALID_LABELS:
+    # RULE 5: classification must be valid
+    if unit.classification is not None and unit.classification not in VALID_LABELS:
         result.valid = False
-        result.errors.append("RULE 5: invalid label '{}'".format(unit.label))
+        result.errors.append("RULE 5: invalid label '{}'".format(unit.classification))
 
     # RULE 7: provenance hops sequential
     if unit.prov:
@@ -137,54 +175,58 @@ def validate(target: Union[AKF, str, Path]) -> ValidationResult:
                     "RULE 7: provenance hop[{}] has hop={}, expected {}".format(i, hop.hop, i)
                 )
 
-    # RULE 8: pen must be negative
+    # RULE 8: penalty must be negative
     if unit.prov:
         for i, hop in enumerate(unit.prov):
-            if hop.pen is not None and hop.pen >= 0:
+            if hop.penalty is not None and hop.penalty >= 0:
                 result.valid = False
                 result.errors.append(
-                    "RULE 8: provenance hop[{}].pen must be negative, got {}".format(i, hop.pen)
+                    "RULE 8: provenance hop[{}].pen must be negative, got {}".format(
+                        i, hop.penalty
+                    )
                 )
 
     # RULE 9: AI + tier 5 should have risk (warning)
     for i, claim in enumerate(unit.claims):
-        if claim.ai and claim.tier == 5 and not claim.risk:
+        if claim.ai_generated and claim.authority_tier == 5 and not claim.risk:
             result.warnings.append(
                 "RULE 9: claim[{}] is AI-generated tier 5 but has no risk description".format(i)
             )
 
     # RULE 10: hash prefix
-    if unit.hash is not None:
-        if not re.match(r"^(sha256|sha3-512|blake3):.*$", unit.hash):
+    if unit.integrity_hash is not None:
+        if not re.match(r"^(sha256|sha3-512|blake3):.*$", unit.integrity_hash):
             result.valid = False
             result.errors.append(
-                "RULE 10: hash must be prefixed with algorithm, got '{}'".format(unit.hash)
+                "RULE 10: hash must be prefixed with algorithm, got '{}'".format(
+                    unit.integrity_hash
+                )
             )
 
     # RULE 11: timestamps valid ISO-8601
-    if unit.at:
+    if unit.created:
         try:
-            _parse_iso(unit.at)
+            _parse_iso(unit.created)
         except ValueError:
             result.valid = False
-            result.errors.append("RULE 11: invalid timestamp '{}'".format(unit.at))
+            result.errors.append("RULE 11: invalid timestamp '{}'".format(unit.created))
 
     if unit.prov:
         for i, hop in enumerate(unit.prov):
             try:
-                _parse_iso(hop.at)
+                _parse_iso(hop.timestamp)
             except ValueError:
                 result.valid = False
                 result.errors.append(
-                    "RULE 11: invalid timestamp in prov[{}].at '{}'".format(i, hop.at)
+                    "RULE 11: invalid timestamp in prov[{}].at '{}'".format(i, hop.timestamp)
                 )
 
     # Determine level
     if result.valid:
         has_prov = bool(unit.prov)
-        has_sources = any(c.src for c in unit.claims)
-        has_label = unit.label is not None
-        has_hash = unit.hash is not None
+        has_sources = any(c.source for c in unit.claims)
+        has_label = unit.classification is not None
+        has_hash = unit.integrity_hash is not None
 
         if has_prov and has_hash and has_label and has_sources:
             result.level = 3  # Full

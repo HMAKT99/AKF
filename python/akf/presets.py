@@ -51,12 +51,15 @@ class Template:
 
         for c in claims:
             claim_kwargs = {**self.defaults, **c}
-            if self.decay and "decay" not in claim_kwargs:
-                claim_kwargs["decay"] = self.decay
-            if self.ai_default and "ai" not in claim_kwargs:
-                claim_kwargs["ai"] = True
-            content = claim_kwargs.pop("c")
-            trust = claim_kwargs.pop("t")
+            if self.decay and "decay" not in claim_kwargs and "decay_half_life" not in claim_kwargs:
+                claim_kwargs["decay_half_life"] = self.decay
+            if self.ai_default and "ai" not in claim_kwargs and "ai_generated" not in claim_kwargs:
+                claim_kwargs["ai_generated"] = True
+            # Support both compact and descriptive content/confidence keys
+            content = claim_kwargs.pop("content", None) or claim_kwargs.pop("c", None)
+            trust = claim_kwargs.pop("confidence", None) or claim_kwargs.pop("t", None)
+            if content is None or trust is None:
+                raise ValueError("Each claim must have content/c and confidence/t")
             builder.claim(content, trust, **claim_kwargs)
 
         return builder.build()
@@ -90,4 +93,46 @@ TEMPLATES: dict[str, Template] = {
         name="ai_output",
         ai_default=True,
     ),
+    "meeting_notes": Template(
+        name="meeting_notes",
+        label="internal",
+        decay=30,
+        defaults={"authority_tier": 4},
+    ),
+    "incident_report": Template(
+        name="incident_report",
+        label="confidential",
+        inherit=True,
+        decay=365,
+        defaults={"authority_tier": 2},
+    ),
+    "research_paper": Template(
+        name="research_paper",
+        label="internal",
+        decay=3650,
+        defaults={"authority_tier": 1},
+    ),
+    "press_release": Template(
+        name="press_release",
+        label="public",
+        ext=True,
+        defaults={"authority_tier": 2},
+    ),
 }
+
+
+def register(name: str, template: Template) -> None:
+    """Register a custom template."""
+    TEMPLATES[name] = template
+
+
+def get_template(name: str) -> Template:
+    """Get a template by name. Raises KeyError if not found."""
+    if name not in TEMPLATES:
+        raise KeyError(f"Unknown template: {name}. Available: {', '.join(TEMPLATES.keys())}")
+    return TEMPLATES[name]
+
+
+def list_templates() -> list[str]:
+    """Return list of available template names."""
+    return list(TEMPLATES.keys())

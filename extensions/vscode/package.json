@@ -1,0 +1,50 @@
+{
+  "name": "akf-vscode",
+  "displayName": "AKF — Agent Knowledge Format",
+  "description": "Syntax highlighting, validation, and hover info for .akf files",
+  "version": "0.1.0",
+  "publisher": "akf",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Programming Languages"],
+  "activationEvents": [
+    "onLanguage:akf"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "akf",
+        "aliases": ["AKF", "Agent Knowledge Format"],
+        "extensions": [".akf"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "akf",
+        "scopeName": "source.akf",
+        "path": "./syntaxes/akf.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "akf.validate",
+        "title": "AKF: Validate Current File"
+      },
+      {
+        "command": "akf.inspect",
+        "title": "AKF: Inspect Claims"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.3.0"
+  }
+}
