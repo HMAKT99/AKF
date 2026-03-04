@@ -18,6 +18,7 @@ Usage:
 
 from .models import AKF, Claim, Evidence, Fidelity, ProvHop
 from .core import create, create_multi, load, loads, validate, ValidationResult
+from .universal import ConvertResult
 from .builder import AKFBuilder
 from .trust import effective_trust, compute_all, explain_trust, TrustResult, TrustLevel, AUTHORITY_WEIGHTS
 from .provenance import add_hop, format_tree, compute_integrity_hash
@@ -59,6 +60,11 @@ def is_enriched(filepath):
     """Check if any file has AKF metadata."""
     from .universal import is_enriched as _is_enriched
     return _is_enriched(filepath)
+
+def convert_directory(dirpath, **kwargs):
+    """Convert all files in a directory to standalone .akf files."""
+    from .universal import convert_directory as _convert_directory
+    return _convert_directory(dirpath, **kwargs)
 
 __version__ = "1.0.0"
 __all__ = [
@@ -127,6 +133,8 @@ __all__ = [
     "read_commit",
     "trust_log",
     # Universal format layer
+    "ConvertResult",
+    "convert_directory",
     "embed",
     "extract",
     "info",

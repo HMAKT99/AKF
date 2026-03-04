@@ -11,8 +11,11 @@ Usage:
     report = universal.scan("report.md")
 """
 
+import hashlib
 import json
 import os
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from typing import Any, Callable, Dict, List, Optional
 
 from .formats.base import AKFFormatHandler, ScanReport
@@ -619,3 +622,162 @@ def verify_chain(filepath: str) -> List[Dict[str, Any]]:
         results.append(result)
 
     return results
+
+
+# ---------------------------------------------------------------------------
+# Batch directory conversion
+# ---------------------------------------------------------------------------
+
+@dataclass
+class ConvertResult:
+    """Result of a batch directory conversion."""
+    converted: int = 0
+    skipped: int = 0
+    failed: int = 0
+    errors: List[str] = field(default_factory=list)
+
+    def __bool__(self) -> bool:
+        return self.failed == 0
+
+
+def _enrich_to_akf(filepath: str, output: str, agent: Optional[str] = None) -> None:
+    """Generate a baseline .akf for a file WITHOUT existing AKF metadata.
+
+    Creates three claims (file exists, SHA-256 hash, detected format)
+    and a provenance hop.
+    """
+    from .core import create_multi
+    from .provenance import compute_integrity_hash
+
+    with open(filepath, "rb") as f:
+        file_hash = "sha256:" + hashlib.sha256(f.read()).hexdigest()
+
+    ext = _get_extension(filepath) or "unknown"
+    basename = os.path.basename(filepath)
+
+    claims = [
+        {"content": "File exists: {}".format(basename), "confidence": 1.0},
+        {"content": "SHA-256: {}".format(file_hash), "confidence": 1.0},
+        {"content": "Detected format: {}".format(ext), "confidence": 0.9},
+    ]
+
+    actor = agent or "akf-convert"
+    now = datetime.now(timezone.utc).isoformat()
+
+    unit = create_multi(claims)
+
+    from .models import ProvHop
+    hop = ProvHop(
+        hop=0,
+        actor=actor,
+        action="enrich",
+        timestamp=now,
+        hash=file_hash,
+    )
+    unit = unit.model_copy(update={"prov": [hop]})
+
+    integrity = compute_integrity_hash(unit)
+    unit = unit.model_copy(update={"hash": integrity})
+
+    unit.save(output)
+
+
+def convert_directory(
+    dirpath: str,
+    output_dir: Optional[str] = None,
+    recursive: bool = True,
+    mode: str = "both",
+    overwrite: bool = False,
+    agent: Optional[str] = None,
+) -> ConvertResult:
+    """Convert all files in a directory to standalone .akf files.
+
+    Args:
+        dirpath: Input directory to convert.
+        output_dir: Output directory. Defaults to ``dirpath``.
+        mode: ``"extract"`` (metadata only), ``"enrich"`` (baseline only),
+              or ``"both"`` (extract if metadata, enrich otherwise).
+        recursive: Walk subdirectories.
+        overwrite: Overwrite existing .akf outputs.
+        agent: Agent ID for enrich-mode provenance.
+
+    Returns:
+        ConvertResult with counts and per-file errors.
+    """
+    result = ConvertResult()
+
+    if not os.path.isdir(dirpath):
+        result.failed += 1
+        result.errors.append("Directory not found: {}".format(dirpath))
+        return result
+
+    if output_dir is None:
+        output_dir = dirpath
+
+    def _should_skip(filename: str) -> bool:
+        if filename.startswith("."):
+            return True
+        if filename.endswith(".akf.json"):
+            return True
+        if filename.endswith(".akf"):
+            return True
+        return False
+
+    def _process_file(filepath: str, rel_dir: str) -> None:
+        filename = os.path.basename(filepath)
+        out_subdir = os.path.join(output_dir, rel_dir)
+        os.makedirs(out_subdir, exist_ok=True)
+        out_path = os.path.join(out_subdir, filename + ".akf")
+
+        if os.path.exists(out_path) and not overwrite:
+            result.skipped += 1
+            return
+
+        try:
+            has_meta = is_enriched(filepath)
+
+            if mode == "extract":
+                if not has_meta:
+                    result.skipped += 1
+                    return
+                to_akf(filepath, out_path)
+                result.converted += 1
+
+            elif mode == "enrich":
+                if has_meta:
+                    result.skipped += 1
+                    return
+                _enrich_to_akf(filepath, out_path, agent)
+                result.converted += 1
+
+            else:  # both
+                if has_meta:
+                    to_akf(filepath, out_path)
+                else:
+                    _enrich_to_akf(filepath, out_path, agent)
+                result.converted += 1
+
+        except Exception as exc:
+            result.failed += 1
+            result.errors.append("{}: {}".format(filepath, exc))
+
+    if recursive:
+        for root, dirs, files in os.walk(dirpath):
+            dirs[:] = [d for d in dirs if not d.startswith(".")]
+            rel_dir = os.path.relpath(root, dirpath)
+            if rel_dir == ".":
+                rel_dir = ""
+            for filename in sorted(files):
+                if _should_skip(filename):
+                    continue
+                _process_file(os.path.join(root, filename), rel_dir)
+    else:
+        for entry in sorted(os.listdir(dirpath)):
+            if _should_skip(entry):
+                continue
+            filepath = os.path.join(dirpath, entry)
+            if not os.path.isfile(filepath):
+                continue
+            _process_file(filepath, "")
+
+    return result

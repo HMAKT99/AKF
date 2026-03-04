@@ -341,3 +341,165 @@ class TestDerive:
         assert result.get("parent_hash", "").startswith("sha256:")
         assert result.get("classification") == "internal"
         assert len(result.get("provenance", [])) >= 1
+
+
+class TestConvertDirectory:
+    """Tests for convert_directory batch conversion."""
+
+    def _make_enriched_json(self, path, claim_text="claim"):
+        with open(path, "w") as f:
+            json.dump({"data": True}, f)
+        universal.embed(path, metadata={"claims": [{"c": claim_text, "t": 0.8}]})
+
+    def _make_plain_file(self, path, content="plain"):
+        with open(path, "w") as f:
+            f.write(content)
+
+    def test_extract_mode(self, tmp_path):
+        """extract mode only converts files WITH existing metadata."""
+        self._make_enriched_json(str(tmp_path / "a.json"))
+        self._make_plain_file(str(tmp_path / "b.txt"))
+
+        out = tmp_path / "out"
+        out.mkdir()
+        result = universal.convert_directory(str(tmp_path), str(out), mode="extract")
+
+        assert result.converted == 1
+        assert result.skipped >= 1  # b.txt skipped
+        assert os.path.isfile(str(out / "a.json.akf"))
+        assert not os.path.isfile(str(out / "b.txt.akf"))
+
+    def test_enrich_mode(self, tmp_path):
+        """enrich mode only converts files WITHOUT existing metadata."""
+        self._make_enriched_json(str(tmp_path / "a.json"))
+        self._make_plain_file(str(tmp_path / "b.txt"))
+
+        out = tmp_path / "out"
+        out.mkdir()
+        result = universal.convert_directory(str(tmp_path), str(out), mode="enrich")
+
+        assert result.converted == 1
+        assert result.skipped >= 1  # a.json skipped
+        assert os.path.isfile(str(out / "b.txt.akf"))
+
+    def test_both_mode(self, tmp_path):
+        """both mode converts all files (extract if metadata, enrich otherwise)."""
+        self._make_enriched_json(str(tmp_path / "a.json"))
+        self._make_plain_file(str(tmp_path / "b.txt"))
+
+        out = tmp_path / "out"
+        out.mkdir()
+        result = universal.convert_directory(str(tmp_path), str(out), mode="both")
+
+        assert result.converted == 2
+        assert os.path.isfile(str(out / "a.json.akf"))
+        assert os.path.isfile(str(out / "b.txt.akf"))
+
+    def test_skip_existing_no_overwrite(self, tmp_path):
+        """Without --overwrite, existing .akf outputs are skipped."""
+        self._make_plain_file(str(tmp_path / "a.txt"))
+
+        out = tmp_path / "out"
+        out.mkdir()
+        # Pre-create the output file
+        (out / "a.txt.akf").write_text("existing")
+
+        result = universal.convert_directory(str(tmp_path), str(out), overwrite=False)
+
+        assert result.skipped >= 1
+        assert (out / "a.txt.akf").read_text() == "existing"
+
+    def test_overwrite_existing(self, tmp_path):
+        """With --overwrite, existing .akf outputs are replaced."""
+        self._make_plain_file(str(tmp_path / "a.txt"))
+
+        out = tmp_path / "out"
+        out.mkdir()
+        (out / "a.txt.akf").write_text("old")
+
+        result = universal.convert_directory(str(tmp_path), str(out), overwrite=True)
+
+        assert result.converted >= 1
+        assert (out / "a.txt.akf").read_text() != "old"
+
+    def test_recursive_structure_mirroring(self, tmp_path):
+        """Recursive mode mirrors subdirectory structure in output."""
+        sub = tmp_path / "sub"
+        sub.mkdir()
+        self._make_plain_file(str(tmp_path / "top.txt"))
+        self._make_plain_file(str(sub / "nested.txt"))
+
+        out = tmp_path / "out"
+        out.mkdir()
+        result = universal.convert_directory(str(tmp_path), str(out), recursive=True)
+
+        assert result.converted == 2
+        assert os.path.isfile(str(out / "top.txt.akf"))
+        assert os.path.isfile(str(out / "sub" / "nested.txt.akf"))
+
+    def test_non_recursive(self, tmp_path):
+        """Non-recursive mode only processes top-level files."""
+        sub = tmp_path / "sub"
+        sub.mkdir()
+        self._make_plain_file(str(tmp_path / "top.txt"))
+        self._make_plain_file(str(sub / "nested.txt"))
+
+        out = tmp_path / "out"
+        out.mkdir()
+        result = universal.convert_directory(str(tmp_path), str(out), recursive=False)
+
+        assert result.converted == 1
+        assert os.path.isfile(str(out / "top.txt.akf"))
+        assert not os.path.isfile(str(out / "sub" / "nested.txt.akf"))
+
+    def test_nonexistent_dir_error(self):
+        """Nonexistent directory returns a failed result with error."""
+        result = universal.convert_directory("/nonexistent/path", "/tmp/out")
+
+        assert result.failed == 1
+        assert not result  # __bool__ returns False
+        assert any("not found" in e for e in result.errors)
+
+    def test_extract_skips_plain_files(self, tmp_path):
+        """extract mode skips files without AKF metadata."""
+        self._make_plain_file(str(tmp_path / "plain.txt"))
+
+        out = tmp_path / "out"
+        out.mkdir()
+        result = universal.convert_directory(str(tmp_path), str(out), mode="extract")
+
+        assert result.converted == 0
+        assert result.skipped == 1
+
+    def test_agent_provenance_in_enrich(self, tmp_path):
+        """enrich mode includes agent in provenance hop."""
+        self._make_plain_file(str(tmp_path / "a.txt"))
+
+        out = tmp_path / "out"
+        out.mkdir()
+        universal.convert_directory(str(tmp_path), str(out), mode="enrich", agent="test-agent")
+
+        from akf.core import load
+        unit = load(str(out / "a.txt.akf"))
+        assert unit.prov is not None
+        assert len(unit.prov) >= 1
+        assert unit.prov[0].actor == "test-agent"
+
+    def test_hidden_and_sidecar_skipped(self, tmp_path):
+        """Hidden files and .akf.json sidecars are skipped."""
+        self._make_plain_file(str(tmp_path / ".hidden"))
+        self._make_plain_file(str(tmp_path / "data.akf.json"))
+        self._make_plain_file(str(tmp_path / "existing.akf"))
+        self._make_plain_file(str(tmp_path / "real.txt"))
+
+        out = tmp_path / "out"
+        out.mkdir()
+        result = universal.convert_directory(str(tmp_path), str(out))
+
+        assert result.converted == 1
+        assert os.path.isfile(str(out / "real.txt.akf"))
+
+    def test_convert_result_bool(self):
+        """ConvertResult is truthy when no failures."""
+        assert universal.ConvertResult(converted=3, skipped=1, failed=0)
+        assert not universal.ConvertResult(converted=1, skipped=0, failed=1)

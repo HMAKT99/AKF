@@ -411,14 +411,45 @@ def sidecar_cmd(file, classification, agent) -> None:
 
 
 @main.command("convert")
-@click.argument("file", type=click.Path(exists=True))
-@click.option("--output", "-o", required=True, type=click.Path(), help="Output .akf file")
-def convert_cmd(file, output) -> None:
+@click.argument("file_or_dir", type=click.Path(exists=True))
+@click.option("--output", "-o", required=True, type=click.Path(), help="Output .akf file or directory")
+@click.option("--recursive", "-r", is_flag=True, help="Recurse into subdirectories")
+@click.option("--mode", "-m", type=click.Choice(["extract", "enrich", "both"]), default="both",
+              help="extract=metadata only, enrich=baseline only, both=auto")
+@click.option("--overwrite", is_flag=True, help="Overwrite existing .akf outputs")
+@click.option("--agent", help="Agent ID for enrich-mode provenance")
+def convert_cmd(file_or_dir, output, recursive, mode, overwrite, agent) -> None:
     """Extract AKF metadata from any format into standalone .akf."""
     from . import universal as akf_u
+    from pathlib import Path
 
-    akf_u.to_akf(file, output)
-    click.secho("Converted {} -> {}".format(file, output), fg="green")
+    target = Path(file_or_dir)
+    if target.is_dir():
+        result = akf_u.convert_directory(
+            str(target), output_dir=output, recursive=recursive,
+            mode=mode, overwrite=overwrite, agent=agent,
+        )
+        click.secho(
+            "Converted {}, skipped {}, failed {}".format(
+                result.converted, result.skipped, result.failed),
+            fg="green" if result.failed == 0 else "red",
+        )
+        for err in result.errors:
+            click.secho("  {}".format(err), fg="red")
+    else:
+        # Single-file mode: try extract first, fall back to enrich
+        if mode in ("extract", "both"):
+            try:
+                akf_u.to_akf(str(target), output)
+                click.secho("Converted {} -> {}".format(file_or_dir, output), fg="green")
+                return
+            except ValueError:
+                if mode == "extract":
+                    click.secho("No AKF metadata found in {}".format(file_or_dir), fg="red")
+                    sys.exit(1)
+        # enrich or both-fallback
+        akf_u._enrich_to_akf(str(target), output, agent)
+        click.secho("Enriched {} -> {}".format(file_or_dir, output), fg="green")
 
 
 @main.command("formats")
