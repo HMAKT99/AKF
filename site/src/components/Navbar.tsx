@@ -17,7 +17,7 @@ export default function Navbar() {
             SDK
           </a>
           <a
-            href="https://github.com/ArunPrakashG/akf"
+            href="https://github.com/HMAKT99/AKF"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-3.5 py-1.5 rounded-md bg-surface-overlay border border-border-subtle text-sm text-text-primary hover:border-text-tertiary transition-colors"

@@ -8,12 +8,12 @@ export default function Footer() {
         </div>
         <p className="text-sm text-text-tertiary">Built for the AI era.</p>
         <a
-          href="https://github.com/ArunPrakashG/akf"
+          href="https://github.com/HMAKT99/AKF"
           target="_blank"
           rel="noopener noreferrer"
           className="text-sm text-text-secondary hover:text-text-primary transition-colors"
         >
-          github.com/ArunPrakashG/akf
+          github.com/HMAKT99/AKF
         </a>
       </div>
     </footer>

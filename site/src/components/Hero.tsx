@@ -30,7 +30,7 @@ export default function Hero() {
 
         <div className="mt-8 flex items-center justify-center gap-4">
           <a
-            href="https://github.com/ArunPrakashG/akf"
+            href="https://github.com/HMAKT99/AKF"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent hover:bg-accent-hover text-white font-medium text-sm transition-colors"
