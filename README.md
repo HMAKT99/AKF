@@ -13,16 +13,17 @@ pip install akf
 ```python
 import akf
 
-# Create
-unit = akf.create("Revenue was $4.2B, up 12% YoY", t=0.98, src="SEC 10-Q", tier=1)
+# Create with descriptive field names (secure defaults applied)
+unit = akf.create("Revenue was $4.2B, up 12% YoY", confidence=0.98, source="SEC 10-Q", authority_tier=1)
 unit.save("report.akf")
 
-# Load
+# Load and validate
 unit = akf.load("report.akf")
-
-# Validate
 result = akf.validate("report.akf")
 print(result.valid, result.level)  # True, 2
+
+# Compact names still work
+unit = akf.create("Revenue was $4.2B", t=0.98, src="SEC 10-Q", tier=1)
 ```
 
 ## Why AKF?
@@ -37,18 +38,16 @@ Every AI-generated insight needs three things documents and data don't: *How con
 
 ## Format at a Glance
 
-**Minimal** (~15 tokens):
+AKF supports both **compact** (wire format) and **descriptive** (human-readable) field names:
+
+**Compact** (~15 tokens):
 ```json
-{"v":"1.0","claims":[{"c":"Revenue was $4.2B","t":0.98}]}
+{"v":"1.0","claims":[{"c":"Revenue was $4.2B","t":0.98,"src":"SEC 10-Q"}]}
 ```
 
-**Practical** (with source and tier):
+**Descriptive** (same data, human-readable):
 ```json
-{"v":"1.0","by":"sarah@woodgrove.com","label":"confidential","claims":[
-  {"c":"Revenue $4.2B, up 12%","t":0.98,"src":"SEC 10-Q","tier":1,"ver":true},
-  {"c":"Cloud growth 15-18%","t":0.85,"src":"Gartner","tier":2},
-  {"c":"Pipeline strong","t":0.72,"src":"CRM estimate","tier":4}
-]}
+{"version":"1.0","claims":[{"content":"Revenue was $4.2B","confidence":0.98,"source":"SEC 10-Q"}]}
 ```
 
 **Full** (with provenance, decay, AI flags):
@@ -63,6 +62,8 @@ Every AI-generated insight needs three things documents and data don't: *How con
    {"hop":1,"by":"copilot-m365","do":"enriched","at":"2025-07-15T10:15:00Z"}
  ]}
 ```
+
+Both formats are accepted on input and produce identical internal objects.
 
 ## Works With Every Format
 
@@ -86,10 +87,6 @@ import akf
 
 # Embed trust metadata into any file
 akf.embed("report.docx", claims=[...], classification="confidential")
-akf.embed("data.xlsx", claims=[...])
-akf.embed("slides.pptx", claims=[...])
-akf.embed("notes.md", claims=[...])
-akf.embed("chart.png", claims=[...])
 
 # Extract from any file
 meta = akf.extract("report.docx")
@@ -117,24 +114,24 @@ npm install akf
 
 ## SDK Usage
 
-### Python — Standalone .akf
+### Python — Core API
 
 ```python
 import akf
 
-# Builder API
+# Builder API with descriptive field names
 unit = (akf.AKFBuilder()
     .by("sarah@woodgrove.com")
     .label("confidential")
-    .claim("Revenue $4.2B", 0.98, src="SEC 10-Q", tier=1, ver=True)
-    .claim("Cloud growth 15-18%", 0.85, src="Gartner", tier=2)
-    .claim("Pipeline strong", 0.72, src="estimate", tier=4)
+    .claim("Revenue $4.2B", 0.98, source="SEC 10-Q", authority_tier=1, verified=True)
+    .claim("Cloud growth 15-18%", 0.85, source="Gartner", authority_tier=2)
+    .claim("Pipeline strong", 0.72, source="estimate", authority_tier=4)
     .build())
 
-# Trust computation
+# Descriptive attribute access
 for claim in unit.claims:
     result = akf.effective_trust(claim)
-    print(f"{result.decision}: {result.score:.2f} — {claim.c}")
+    print(f"{result.decision}: {result.score:.2f} — {claim.content}")
 
 # Agent consumption (filter + transform)
 brief = (akf.AKFTransformer(unit)
@@ -143,6 +140,138 @@ brief = (akf.AKFTransformer(unit)
     .by("research-agent")
     .build())
 brief.save("weekly-brief.akf")
+```
+
+### Python — Agent Integration
+
+```python
+import akf
+
+# Consume existing AKF for agent use
+derived = akf.consume("report.akf", "my-agent", trust_threshold=0.6)
+
+# Create from AI tool calls
+claim = akf.from_tool_call({"content": "Result", "confidence": 0.8})
+
+# Format claims as LLM context
+context = akf.to_context(unit, max_tokens=2000)
+
+# Get structured output schema for LLMs
+schema = akf.response_schema("standard")
+
+# Validate LLM output as AKF
+result = akf.validate_output(llm_response_text)
+if result.valid:
+    unit = result.unit
+
+# Auto-detect AKF in files, dicts, or strings
+detected = akf.detect(some_data)
+
+# One-shot system prompt for any LLM
+prompt = akf.generation_prompt()
+```
+
+### Python — Compliance & Audit
+
+```python
+import akf
+
+# General compliance audit
+result = akf.audit("report.akf")
+print(f"Score: {result.score:.2f}, Compliant: {result.compliant}")
+
+# Check against specific regulations
+result = akf.check_regulation("report.akf", "eu_ai_act")   # EU AI Act
+result = akf.check_regulation("report.akf", "sox")          # Sarbanes-Oxley
+result = akf.check_regulation("report.akf", "hipaa")        # HIPAA
+result = akf.check_regulation("report.akf", "gdpr")         # GDPR
+result = akf.check_regulation("report.akf", "nist_ai")      # NIST AI RMF
+
+# Generate audit trail
+trail = akf.audit_trail("report.akf", format="markdown")
+
+# Verify human oversight
+oversight = akf.verify_human_oversight("report.akf")
+print(oversight["has_human_oversight"], oversight["human_actors"])
+```
+
+### Python — Views & Reporting
+
+```python
+import akf
+
+# Pretty terminal output
+akf.show("report.akf")
+
+# Generate standalone HTML report
+html = akf.to_html("report.akf")
+
+# Generate Markdown
+md = akf.to_markdown("report.akf")
+
+# Plain English executive summary
+summary = akf.executive_summary("report.akf")
+```
+
+### Python — Data Operations
+
+```python
+import akf
+
+# Load claims from multiple files
+claims = akf.load_dataset(["a.akf", "b.akf"], filters={"min_trust": 0.6})
+
+# Merge multiple units (deduplicates, takes highest classification)
+merged = akf.merge([unit1, unit2, unit3])
+
+# Filter claims
+filtered = akf.filter_claims(unit, min_trust=0.5, verified_only=True, exclude_ai=True)
+
+# Quality report
+report = akf.quality_report(unit)
+print(report["quality_score"], report["verified_claims"])
+```
+
+### Python — Knowledge Base
+
+```python
+import akf
+
+# Persistent directory-backed knowledge store
+kb = akf.KnowledgeBase("./kb")
+
+# Add claims by topic
+kb.add("Revenue was $4.2B", 0.98, source="SEC", topic="finance")
+kb.add("Cloud grew 15%", 0.85, source="Gartner", topic="cloud")
+
+# Query
+claims = kb.query(topic="finance", min_trust=0.6)
+
+# Format for LLM context injection
+context = kb.to_context(max_tokens=2000)
+
+# Maintenance
+kb.prune(max_age_days=90, min_trust=0.3)
+stats = kb.stats()  # {"topics": 2, "total_claims": 2, "average_trust": 0.915}
+```
+
+### Python — Security Analysis
+
+```python
+import akf
+
+# Security score (0-10 with grade A-F)
+score = akf.security_score(unit)
+print(f"Score: {score.score}/10, Grade: {score.grade}")
+
+# Microsoft Purview DLP-compatible signals
+signals = akf.purview_signals(unit)
+
+# Detect classification laundering
+warnings = akf.detect_laundering(unit)
+
+# Human-readable trust explanation
+explanation = akf.explain_trust(claim, age_days=30)
 ```
 
 ### Python — Universal Format Layer
@@ -154,8 +283,6 @@ import akf.universal as akf_u
 akf_u.embed("report.docx", claims=[
     {"location": "paragraph:3", "c": "Revenue $4.2B", "t": 0.98,
      "src": "SEC 10-Q", "ver": True},
-    {"location": "paragraph:7", "c": "Growth accelerating", "t": 0.63,
-     "src": "AI inference", "ai": True},
 ], classification="confidential")
 
 # Extract from any format
@@ -168,28 +295,14 @@ print(report.classification, report.ai_claim_count, report.overall_trust)
 # Scan entire directory (mixed formats)
 results = akf_u.scan_directory("./knowledge-base/")
 
-# Cross-format provenance — track AI transformations
-akf_u.derive(source="data.xlsx", output="summary.docx",
-             agent_id="copilot-v2", action="summarized")
-
-# Auto-enrich AI-generated files
-akf_u.auto_enrich("copilot-output.docx", agent_id="copilot-v2")
-
 # Convert any format to standalone .akf
 akf_u.to_akf("report.docx", output="report.akf")
-
-# Sidecar for unsupported formats (video, audio, etc.)
-akf_u.create_sidecar("video.mp4", metadata={
-    "classification": "internal",
-    "ai_contribution": 0.8,
-    "claims": [{"c": "AI voiceover", "t": 0.7, "ai": True}]
-})
 ```
 
 ### TypeScript
 
 ```typescript
-import { AKFBuilder, effectiveTrust } from 'akf';
+import { AKFBuilder, effectiveTrust, fromJSON, toDescriptive } from 'akf';
 
 const unit = new AKFBuilder()
   .by('sarah@woodgrove.com')
@@ -202,20 +315,27 @@ unit.claims.forEach(claim => {
   const result = effectiveTrust(claim);
   console.log(`${result.decision}: ${result.score} — ${claim.c}`);
 });
+
+// Parse descriptive JSON (auto-normalizes to compact)
+const loaded = fromJSON('{"version":"1.0","claims":[{"content":"test","confidence":0.8}]}');
+
+// Convert to descriptive for display
+const descriptive = toDescriptive(unit);
 ```
 
 ## CLI
 
 ```bash
-# ── Standalone .akf commands ──
+# ── Getting started ──
+akf                          # Welcome message + quick start guide
+akf create --demo            # Create a demo file with walkthrough
 
-# Create
+# ── Standalone .akf commands ──
 akf create report.akf \
   --claim "Revenue $4.2B" --trust 0.98 --src "SEC 10-Q" \
   --claim "Cloud growth 15%" --trust 0.85 --src "Gartner" \
   --by sarah@woodgrove.com --label confidential
 
-# Validate, inspect, trust, consume, provenance, enrich, diff
 akf validate report.akf
 akf inspect report.akf
 akf trust report.akf
@@ -224,40 +344,32 @@ akf provenance report.akf --format tree
 akf enrich report.akf --agent copilot --claim "AI insight" --trust 0.75
 akf diff report.akf brief.akf
 
-# ── Universal format commands (works with ANY file) ──
+# ── Compliance ──
+akf audit report.akf                          # General audit
+akf audit report.akf --regulation eu_ai_act   # EU AI Act check
+akf audit report.akf --trail                  # Show audit trail
 
-# Embed AKF metadata into any file
+# ── Knowledge Base ──
+akf kb stats ./kb                             # Show KB statistics
+akf kb query ./kb --topic finance             # Query by topic
+akf kb prune ./kb --max-age 90 --min-trust 0.3  # Prune stale claims
+
+# ── Universal format commands (works with ANY file) ──
 akf embed report.docx --classification confidential \
   --claim "Revenue $4.2B" --trust 0.98
-
-# Extract metadata
 akf extract report.docx
-
-# Quick info check
 akf info report.docx
-#   Format:          DOCX
-#   AKF enriched:    Yes
-#   Classification:  Confidential
-#   Claims:          2
-
-# Security scan (file or directory)
 akf scan report.docx
 akf scan ./knowledge-base/ --recursive
-
-# Convert any format to standalone .akf
 akf convert report.docx --output report.akf
-
-# Create sidecar for any file
 akf sidecar video.mp4 --classification internal
-
-# List supported formats
 akf formats
 ```
 
 ## Trust Computation
 
 ```
-effective_trust = t × authority_weight × temporal_decay × (1 + penalty)
+effective_trust = confidence × authority_weight × temporal_decay × (1 + penalty)
 ```
 
 | Tier | Weight | Example |
@@ -270,6 +382,20 @@ effective_trust = t × authority_weight × temporal_decay × (1 + penalty)
 
 **Decision:** score >= 0.7 ACCEPT | >= 0.4 LOW | < 0.4 REJECT
 
+## Secure Defaults
+
+New units are born secure. `akf.create()` and `AKFBuilder` apply:
+
+| Field | Default |
+|-------|---------|
+| `classification` | `"internal"` |
+| `inherit_classification` | `True` |
+| `allow_external` | `False` |
+| `source` | `"unspecified"` |
+| `authority_tier` | `3` |
+| `verified` | `False` |
+| `ai_generated` | `False` |
+
 ## Provenance
 
 Every transformation is tracked:
@@ -280,6 +406,22 @@ sarah@woodgrove.com created (+3 claims) — sha256:a3f2...
     └→ sarah@woodgrove.com reviewed (+1, -1 rejected) — sha256:c3d4...
       └→ research-agent consumed (2 accepted) — sha256:d9e4...
 ```
+
+## Framework Integrations
+
+| Package | Description |
+|---------|-------------|
+| [`langchain-akf`](packages/langchain-akf/) | LangChain callback handler + document loader |
+| [`mcp-server-akf`](packages/mcp-server-akf/) | MCP server with create, validate, scan, trust tools |
+| [`llama-index-akf`](packages/llama-index-akf/) | LlamaIndex integration (stub) |
+| [`crewai-akf`](packages/crewai-akf/) | CrewAI integration (stub) |
+
+## Extensions
+
+| Extension | Description |
+|-----------|-------------|
+| [VSCode](extensions/vscode/) | Syntax highlighting, hover info, validation for `.akf` files |
+| [GitHub Action](extensions/github-action/) | Validate `.akf` files in CI, fail on untrusted claims |
 
 ## For LLMs
 
@@ -292,24 +434,23 @@ Output knowledge as AKF:
 {"v":"1.0","claims":[{"c":"<claim>","t":<0-1>,"src":"<source>","tier":<1-5>,"ai":true}]}
 ```
 
-LLMs produce valid AKF 95%+ of the time from a single example.
+LLMs produce valid AKF 95%+ of the time from a single example. See [LLM-PROMPT.md](spec/LLM-PROMPT.md) for a full copy-paste system prompt and structured output schema.
 
-## Specification
+## Specification & Documentation
 
 - [Full Format Spec](spec/akf-v1.0-spec.md)
 - [JSON Schema](spec/akf-v1.0.schema.json)
+- [Producing AKF](spec/PRODUCING-AKF.md) — quick start for 8 languages
+- [LLM Prompt](spec/LLM-PROMPT.md) — system prompt + structured output schema
 - [Trust Computation](docs/trust-computation.md)
 - [Purview Integration](docs/purview-integration.md)
 - [LLM Integration](docs/llm-integration.md)
+- [EU AI Act Mapping](docs/compliance/eu-ai-act-mapping.md)
+- [NIST AI RMF Mapping](docs/compliance/nist-ai-rmf-mapping.md)
 
 ## Contributing
 
-1. Fork the repo
-2. Create a feature branch
-3. Make your changes with tests
-4. Submit a PR
-
-All example .akf files must validate against the JSON Schema. All tests must pass.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, testing, and PR process.
 
 ## License
 
