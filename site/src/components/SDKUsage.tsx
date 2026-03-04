@@ -4,7 +4,7 @@ import CodeBlock from '../ui/CodeBlock';
 
 const pythonCode = `import akf
 
-# One-line stamp API for coding agents
+# One-line stamp API for AI agents
 akf.stamp("Fixed auth bypass", kind="code_change",
     evidence=["42/42 tests passed", "mypy: 0 errors"],
     agent="claude-code", model="claude-sonnet-4-20250514")

@@ -26,9 +26,9 @@ print(result.valid, result.level)  # True, 2
 unit = akf.create("Revenue was $4.2B", t=0.98, src="SEC 10-Q", tier=1)
 ```
 
-## For Coding Agents
+## For AI Agents
 
-AKF ships a one-line `stamp()` API and git integration designed for Claude Code, Copilot, Cursor, Devin, and other coding agents.
+AKF ships a one-line `stamp()` API and git integration designed for AI agents — coding agents (Claude Code, Copilot, Cursor, Devin), research agents, data agents, and more.
 
 ```python
 import akf

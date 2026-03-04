@@ -1,4 +1,4 @@
-"""AKF v1.0 — One-line stamp API for coding agents.
+"""AKF v1.0 — One-line stamp API for AI agents.
 
 Usage:
     import akf
@@ -96,7 +96,7 @@ def stamp(
     ai_generated: bool = True,
     **kwargs,
 ) -> AKF:
-    """One-line API for coding agents to create an AKF unit.
+    """One-line API for AI agents to create an AKF unit.
 
     Args:
         content: What the agent did or claims.

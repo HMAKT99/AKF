@@ -49,7 +49,7 @@ export default function Hero() {
         </h1>
 
         <p className="mt-6 text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto">
-          AKF attaches trust scores, evidence, and provenance to anything AI creates. One-line integration for coding agents — stamp commits with test results, type checks, and CI status.
+          AKF attaches trust scores, evidence, and provenance to anything AI creates. One-line stamp API for any AI agent — ground claims with test results, type checks, CI status, and human reviews.
         </p>
 
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">

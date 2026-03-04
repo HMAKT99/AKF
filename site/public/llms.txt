@@ -37,9 +37,9 @@ TypeScript / Node.js:
 npm install akf
 ```
 
-## For Coding Agents
+## For AI Agents
 
-One-line `stamp()` API and git integration for Claude Code, Copilot, Cursor, Devin, etc.:
+One-line `stamp()` API and git integration for any AI agent (coding, research, data, etc.):
 
 ```python
 import akf
@@ -137,7 +137,7 @@ Trust formula: `effective_trust = confidence × authority_weight × temporal_dec
 | Module | Description |
 |--------|-------------|
 | `akf` (core) | create, validate, load, save, effective_trust, AKFBuilder, AKFTransformer |
-| `akf.stamp` | stamp() — one-line API for coding agents with evidence parsing |
+| `akf.stamp` | stamp() — one-line API for AI agents with evidence parsing |
 | `akf.git_ops` | stamp_commit, read_commit, trust_log — git notes integration |
 | `akf.agent` | consume, derive, from_tool_call, to_context, detect, generation_prompt |
 | `akf.compliance` | audit, check_regulation, audit_trail, verify_human_oversight |

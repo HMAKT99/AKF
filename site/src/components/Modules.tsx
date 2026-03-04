@@ -4,7 +4,7 @@ const modules = [
   {
     name: 'Stamp API',
     pkg: 'akf.stamp',
-    description: 'One-line API for coding agents. Auto-detects evidence type from strings (test_pass, type_check, lint_clean, ci_pass, human_review).',
+    description: 'One-line API for AI agents. Auto-detects evidence type from strings (test_pass, type_check, lint_clean, ci_pass, human_review).',
     functions: ['stamp()', 'parse_evidence_string()'],
   },
   {

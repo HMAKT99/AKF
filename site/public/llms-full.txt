@@ -21,7 +21,7 @@ This is the comprehensive reference for AI agents that need to generate AKF code
 - Validation Rules
 - Integrity Hashing
 - Secure Defaults
-- Stamp API (Coding Agents)
+- Stamp API (AI Agents)
 - Git Integration
 - Python SDK API
 - Agent Integration API
@@ -468,9 +468,9 @@ Provenance hop 0 and integrity hash are auto-created by the builder.
 
 ---
 
-## Stamp API (Coding Agents)
+## Stamp API (AI Agents)
 
-One-line API for coding agents (Claude Code, Copilot, Cursor, Devin, etc.):
+One-line API for any AI agent — coding agents (Claude Code, Copilot, Cursor, Devin), research agents, data agents, and more:
 
 ```python
 import akf
