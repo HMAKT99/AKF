@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
+import GitHubStats from './components/GitHubStats';
 import Problem from './components/Problem';
+import About from './components/About';
 import FormatGlance from './components/FormatGlance';
 import BenefitsTable from './components/BenefitsTable';
 import SDKUsage from './components/SDKUsage';
@@ -10,6 +12,8 @@ import Footer from './components/Footer';
 
 function useScrollReveal() {
   useEffect(() => {
+    const elements = document.querySelectorAll('.section-animate');
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -19,11 +23,15 @@ function useScrollReveal() {
           }
         });
       },
-      { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
+      { threshold: 0 }
     );
 
-    document.querySelectorAll('.section-animate').forEach((el) => {
-      observer.observe(el);
+    elements.forEach((el) => {
+      const rect = el.getBoundingClientRect();
+      if (rect.top >= window.innerHeight) {
+        el.classList.add('below-fold');
+        observer.observe(el);
+      }
     });
 
     return () => observer.disconnect();
@@ -39,9 +47,13 @@ export default function App() {
       <main>
         <div className="animate-fade-up">
           <Hero />
+          <GitHubStats />
         </div>
         <div className="section-animate">
           <Problem />
+        </div>
+        <div className="section-animate">
+          <About />
         </div>
         <div className="section-animate">
           <FormatGlance />

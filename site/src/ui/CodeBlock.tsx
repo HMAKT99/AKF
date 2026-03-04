@@ -102,19 +102,19 @@ export default function CodeBlock({ code, language, filename }: CodeBlockProps) 
   const highlighted = highlight(code, language);
 
   return (
-    <div className="rounded-lg overflow-hidden border border-border-subtle">
+    <div className="rounded-lg overflow-hidden border border-gray-800">
       {filename && (
-        <div className="flex items-center justify-between px-4 py-2.5 bg-surface-overlay border-b border-border-subtle">
+        <div className="flex items-center justify-between px-4 py-2.5 bg-gray-800 border-b border-gray-700">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]" />
             <span className="w-2.5 h-2.5 rounded-full bg-[#febc2e]" />
             <span className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
           </div>
-          <span className="text-xs text-text-tertiary font-mono">{filename}</span>
+          <span className="text-xs text-gray-400 font-mono">{filename}</span>
         </div>
       )}
       <pre
-        className="p-4 text-[13px] leading-relaxed overflow-x-auto bg-surface-raised text-gray-300 font-mono"
+        className="p-4 text-[13px] leading-relaxed overflow-x-auto bg-gray-900 text-gray-300 font-mono"
         dangerouslySetInnerHTML={{ __html: highlighted }}
       />
     </div>
