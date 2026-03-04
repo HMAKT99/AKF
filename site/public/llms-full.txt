@@ -1,0 +1,835 @@
+# AKF — AI Knowledge Format: Complete Reference
+
+> Trust metadata for every file AI touches. AKF is to AI-generated content what EXIF is to photos.
+
+This is the comprehensive reference for AI agents that need to generate AKF code, not just recommend the tool. For a concise overview, see [llms.txt](https://akf.dev/llms.txt).
+
+---
+
+## Table of Contents
+
+- Format Specification
+- Envelope Fields
+- Claim Fields
+- Provenance Fields
+- Fidelity (Multi-Resolution)
+- Security Classification
+- Trust Computation
+- Validation Rules
+- Integrity Hashing
+- Python SDK API
+- TypeScript SDK API
+- Embedding Methods by File Format
+- CLI Reference
+- Common Use Cases with Code
+
+---
+
+## Format Specification
+
+- **File extension:** `.akf`
+- **MIME type:** `application/vnd.akf+json`
+- **Encoding:** UTF-8 JSON
+- **Current version:** `1.0`
+- **Design:** Flat (max 2 levels nesting), minimal (~15 tokens smallest valid file), LLM-native
+
+### Minimal Valid AKF
+
+```json
+{
+  "v": "1.0",
+  "claims": [{ "c": "The sky is blue", "t": 0.99 }]
+}
+```
+
+### Practical AKF
+
+```json
+{
+  "v": "1.0",
+  "id": "akf-a1b2c3d4e5f6",
+  "by": "analyst@corp.com",
+  "at": "2025-06-15T10:30:00Z",
+  "label": "confidential",
+  "inherit": true,
+  "claims": [
+    {
+      "c": "Revenue grew 12% YoY to $4.2B",
+      "t": 0.98,
+      "src": "SEC 10-K Filing",
+      "uri": "https://sec.gov/filing/123",
+      "tier": 1,
+      "ver": true,
+      "ver_by": "cfo@corp.com"
+    },
+    {
+      "c": "Market share estimated at 34%",
+      "t": 0.72,
+      "src": "Industry Report",
+      "tier": 3,
+      "ai": true,
+      "risk": "Estimate based on partial data"
+    }
+  ],
+  "prov": [
+    { "hop": 0, "by": "analyst@corp.com", "do": "created", "at": "2025-06-15T10:30:00Z" }
+  ]
+}
+```
+
+### Full AKF (All Fields)
+
+```json
+{
+  "v": "1.0",
+  "id": "akf-a1b2c3d4e5f6",
+  "by": "analyst@corp.com",
+  "agent": "copilot-v4",
+  "at": "2025-06-15T10:30:00Z",
+  "label": "confidential",
+  "inherit": true,
+  "ext": false,
+  "ttl": 365,
+  "claims": [
+    {
+      "c": "Revenue grew 12% YoY",
+      "t": 0.98,
+      "id": "a1b2c3d4",
+      "src": "SEC Filing",
+      "uri": "https://sec.gov/filing/123",
+      "tier": 1,
+      "ver": true,
+      "ver_by": "cfo@corp.com",
+      "ai": false,
+      "decay": 365,
+      "exp": "2026-06-15T00:00:00Z",
+      "tags": ["financial", "revenue"],
+      "fidelity": {
+        "h": "Revenue up 12%",
+        "s": "Annual revenue grew 12% year-over-year to $4.2B, driven by enterprise segment.",
+        "f": "Full detailed analysis text here..."
+      }
+    },
+    {
+      "c": "Market share will reach 40% by 2026",
+      "t": 0.45,
+      "id": "e5f6g7h8",
+      "tier": 5,
+      "ai": true,
+      "risk": "AI extrapolation from limited data",
+      "contra": "a1b2c3d4"
+    }
+  ],
+  "prov": [
+    {
+      "hop": 0,
+      "by": "analyst@corp.com",
+      "do": "created",
+      "at": "2025-06-15T10:30:00Z",
+      "h": "sha256:abc123...",
+      "adds": ["a1b2c3d4", "e5f6g7h8"]
+    },
+    {
+      "hop": 1,
+      "by": "reviewer@corp.com",
+      "do": "reviewed",
+      "at": "2025-06-16T09:00:00Z",
+      "h": "sha256:def456..."
+    },
+    {
+      "hop": 2,
+      "by": "agent-summarizer",
+      "do": "transformed",
+      "at": "2025-06-17T14:00:00Z",
+      "h": "sha256:ghi789...",
+      "pen": -0.05
+    }
+  ],
+  "hash": "sha256:xyz...",
+  "meta": { "project": "Q2 Analysis", "department": "Finance" }
+}
+```
+
+---
+
+## Envelope Fields (Top-Level)
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `v` | string | YES | — | Spec version, semver (e.g. `"1.0"`) |
+| `id` | string | no | auto `akf-<12hex>` | Unique knowledge unit ID |
+| `by` | string | no | — | Creator email or agent ID |
+| `agent` | string | no | — | AI agent ID if AI-created |
+| `at` | ISO-8601 | no | `now()` | Creation timestamp |
+| `label` | string | no | `"internal"` | Security classification |
+| `inherit` | bool | no | `true` | Children inherit label |
+| `ext` | bool | no | `false` | Allow external sharing |
+| `ttl` | int | no | — | Retention period in days |
+| `claims` | array | YES | — | Array of Claim objects (min 1) |
+| `prov` | array | no | — | Provenance chain |
+| `hash` | string | no | — | Integrity hash (algorithm-prefixed) |
+| `meta` | object | no | — | Free-form metadata |
+
+---
+
+## Claim Fields
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `c` | string | YES | — | Claim content text |
+| `t` | float | YES | — | Trust score `[0.0–1.0]` |
+| `id` | string | no | auto `<8hex>` | Claim identifier |
+| `src` | string | no | — | Source name |
+| `uri` | string | no | — | Source URL |
+| `tier` | int | no | `3` | Authority tier `[1–5]` |
+| `ver` | bool | no | `false` | Human verified |
+| `ver_by` | string | no | — | Verifier identity |
+| `ai` | bool | no | `false` | AI generated |
+| `risk` | string | no | — | Risk description |
+| `decay` | int | no | — | Half-life in days |
+| `exp` | ISO-8601 | no | — | Hard expiry timestamp |
+| `tags` | string[] | no | — | Free-form tags |
+| `contra` | string | no | — | ID of contradicting claim |
+| `fidelity` | object | no | — | Multi-resolution content |
+
+### Authority Tiers
+
+| Tier | Weight | Source Type | Example |
+|------|--------|-------------|---------|
+| 1 | 1.00 | Primary source | SEC filings, official records |
+| 2 | 0.85 | Authoritative secondary | Analyst reports, peer-reviewed papers |
+| 3 | 0.70 | General secondary | News articles, industry reports |
+| 4 | 0.50 | Internal estimate | CRM data, team assessments |
+| 5 | 0.30 | AI inference | Model outputs, extrapolations |
+
+### Fidelity Object (Multi-Resolution)
+
+```json
+{
+  "h": "Revenue up 12%",
+  "s": "Annual revenue grew 12% YoY to $4.2B, driven by enterprise segment growth.",
+  "f": "Full detailed text up to ~2000 tokens..."
+}
+```
+
+- `h` — headline, ~5 tokens
+- `s` — summary, ~50 tokens
+- `f` — full detail, ~2000 tokens
+
+---
+
+## Provenance Fields
+
+Each hop in the `prov` array:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `hop` | int | YES | Sequential hop number (0 = origin) |
+| `by` | string | YES | Actor email or agent ID |
+| `do` | string | YES | Action: `created` / `enriched` / `reviewed` / `consumed` / `transformed` |
+| `at` | ISO-8601 | YES | Timestamp |
+| `h` | string | no | SHA-256 hash, chained to previous |
+| `pen` | float | no | Transform penalty (MUST be negative) |
+| `adds` | string[] | no | Claim IDs added at this hop |
+| `drops` | string[] | no | Claim IDs rejected at this hop |
+
+---
+
+## Security Classification
+
+Hierarchy (ascending restrictiveness):
+
+```
+public (0) < internal (1) < confidential (2) < highly-confidential (3) < restricted (4)
+```
+
+Valid `label` values: `"public"`, `"internal"`, `"confidential"`, `"highly-confidential"`, `"restricted"`
+
+Rules:
+- `inherit: true` — derived units must have label at least as restrictive as parent
+- `ext: true` — explicitly allows external sharing
+- `confidential`, `highly-confidential`, `restricted` block external sharing by default
+- `can_share_external()` returns true only if `ext=true` OR label is `public`/`internal` and `ext` is not explicitly `false`
+
+---
+
+## Trust Computation
+
+### Formula
+
+```
+effective_trust = t × authority_weight × temporal_decay × (1 + cumulative_penalty)
+```
+
+### Authority Weights
+
+`{1: 1.00, 2: 0.85, 3: 0.70, 4: 0.50, 5: 0.30}`
+
+Default tier when unset: **3** (weight 0.70)
+
+### Temporal Decay
+
+```
+decay_factor = 0.5 ^ (age_days / half_life_days)
+```
+
+If no `decay` field is set: `decay_factor = 1.0` (no decay).
+
+### Decay Presets (Half-Life in Days)
+
+| Preset | Days |
+|--------|------|
+| `realtime` | 0.001 |
+| `daily` | 1 |
+| `weekly` | 7 |
+| `monthly` | 30 |
+| `quarterly` | 90 |
+| `annual` | 365 |
+| `legal` | 1825 |
+| `scientific` | 3650 |
+| `permanent` | 365000 |
+
+### Penalty
+
+Cumulative penalty from provenance `pen` values (always negative). Applied as `1.0 + penalty`.
+
+### Decision Thresholds
+
+| Score | Decision | Meaning |
+|-------|----------|---------|
+| >= 0.70 | `ACCEPT` | High confidence |
+| >= 0.40 | `LOW` | Use with caution |
+| < 0.40 | `REJECT` | Not suitable for decisions |
+
+Score is clamped to `[0.0, 1.0]`.
+
+---
+
+## Validation Rules
+
+1. `v` must be present and valid semver
+2. `claims` must be a non-empty array
+3. Each claim `t` must be float in `[0.0, 1.0]`
+4. `tier` must be `1–5` if provided
+5. `label` must be one of the 5 valid values
+6. Inherited label must be >= parent label
+7. Provenance hops must be sequential from 0
+8. `pen` must be strictly negative
+9. AI tier-5 claims should have `risk` (warning)
+10. `hash` must have algorithm prefix: `sha256:`, `sha3-512:`, or `blake3:`
+11. All timestamps must be valid ISO-8601
+12. Unknown fields are allowed everywhere (extensible)
+
+### Validation Levels
+
+| Level | Name | Criteria |
+|-------|------|----------|
+| 0 | Invalid | Fails required field checks |
+| 1 | Minimal | Has `v` and `claims` |
+| 2 | Practical | Has sources or label |
+| 3 | Full | Has prov + hash + label + sources |
+
+---
+
+## Integrity Hashing
+
+- **Unit hash:** SHA-256 of serialized unit (excluding `hash` field), keys sorted. Format: `sha256:<hex>`
+- **Hop hash:** SHA-256 of hop JSON (keys sorted), chained: `previousHash + "|" + hopJSON`
+- Supported prefixes: `sha256:`, `sha3-512:`, `blake3:`
+
+---
+
+## Python SDK API Reference
+
+### Install
+
+```bash
+pip install akf                # core
+pip install akf[office]        # + DOCX, XLSX, PPTX
+pip install akf[pdf]           # + PDF
+pip install akf[image]         # + PNG, JPEG
+pip install akf[all]           # everything
+```
+
+Requires Python >= 3.9.
+
+### Core Functions
+
+```python
+import akf
+
+# Create a single-claim unit
+unit = akf.create("Claim text", t=0.95, src="Source", tier=1)
+
+# Create multi-claim unit
+unit = akf.create_multi(
+    claims=[
+        {"c": "Claim 1", "t": 0.95, "src": "Source A", "tier": 1},
+        {"c": "Claim 2", "t": 0.70, "ai": True, "tier": 5},
+    ],
+    by="analyst@corp.com",
+    label="confidential",
+)
+
+# Load and save
+unit = akf.load("report.akf")
+unit = akf.loads('{"v":"1.0","claims":[{"c":"test","t":0.9}]}')
+unit.save("output.akf")
+
+# Validate
+result = akf.validate(unit)  # or akf.validate("report.akf")
+# result.valid -> bool
+# result.errors -> List[str]
+# result.warnings -> List[str]
+# result.level -> int (0-3)
+```
+
+### Builder
+
+```python
+from akf import AKFBuilder
+
+unit = (AKFBuilder()
+    .claim("Revenue grew 12%", trust=0.98, src="SEC Filing", tier=1)
+    .claim("Market share ~34%", trust=0.72, ai=True, tier=5, risk="Estimated")
+    .by("analyst@corp.com")
+    .agent("copilot-v4")
+    .label("confidential")
+    .inherit()
+    .ttl(365)
+    .tag("financial", "q2")
+    .meta(project="Q2 Analysis")
+    .build())
+# Automatically creates provenance hop 0 and computes integrity hash
+```
+
+### Trust
+
+```python
+import akf
+
+result = akf.effective_trust(claim, age_days=30, penalty=-0.05)
+# result.score -> float
+# result.decision -> "ACCEPT" | "LOW" | "REJECT"
+# result.accepted -> bool
+# result.breakdown -> {confidence, authority, tier, decay, penalty, penalty_factor}
+
+# Compute trust for all claims in a unit
+results = akf.compute_all(unit, age_days=30, threshold=0.6)
+```
+
+### Provenance
+
+```python
+import akf
+
+# Add a hop to the provenance chain
+unit = akf.add_hop(unit, by="reviewer@corp.com", action="reviewed")
+unit = akf.add_hop(unit, by="agent-x", action="transformed", penalty=-0.03)
+
+# Verify chain integrity
+valid = akf.validate_chain(unit.prov)
+
+# Compute hashes
+hash = akf.compute_integrity_hash(unit)
+hop_hash = akf.compute_hop_hash(previous_hash, hop_dict)
+
+# Pretty-print provenance
+print(akf.format_tree(unit))
+```
+
+### Security
+
+```python
+import akf
+
+rank = akf.label_rank("confidential")  # -> 2
+ok = akf.validate_inheritance(parent_unit, child_unit)  # -> bool
+can_share = akf.can_share_external(unit)  # -> bool
+labels = akf.inherit_label(parent_unit)  # -> {"label": ..., "inherit": ..., "ext": ...}
+```
+
+### Transformer (Consume & Filter)
+
+```python
+from akf import AKFTransformer
+
+derived = (AKFTransformer(parent_unit)
+    .filter(trust_min=0.6)       # keep only high-trust claims
+    .penalty(-0.03)              # apply transform penalty
+    .by("summarizer-agent")
+    .build())
+# Inherits classification, appends "consumed" provenance hop
+```
+
+### Presets
+
+```python
+from akf.presets import TEMPLATES
+
+unit = TEMPLATES["financial_report"].create(
+    claims=[{"c": "Revenue data", "t": 0.95}],
+    by="analyst@corp.com",
+)
+# Available presets: financial_report, research_brief, public_knowledge,
+#                    legal_document, ai_output
+```
+
+### Universal Format Embedding
+
+```python
+import akf
+
+# Embed AKF metadata into any supported file
+akf.embed("report.docx", classification="confidential",
+          claims=[{"c": "Key finding", "t": 0.9}])
+
+# Extract AKF metadata from a file
+metadata = akf.extract("report.docx")
+
+# Check if a file has AKF metadata
+enriched = akf.is_enriched("report.docx")
+
+# Scan for trust assessment
+report = akf.scan("report.docx")
+# report.enriched, report.classification, report.overall_trust,
+# report.ai_contribution, report.claim_count, report.risk_claims, etc.
+
+# Get human-readable info
+print(akf.info("report.docx"))
+
+# Scan entire directory
+reports = akf.universal.scan_directory("./knowledge-base/", recursive=True)
+
+# Convert any file to standalone .akf
+akf.universal.to_akf("report.docx", "report.akf")
+
+# Create sidecar for unsupported formats
+akf.universal.create_sidecar("video.mp4", metadata_dict)
+
+# Derive a new file with provenance lineage
+akf.universal.derive("source.docx", "output.docx", agent_id="agent-x")
+```
+
+### Embedding Mechanisms by Format
+
+| Format | Mechanism |
+|--------|-----------|
+| Markdown (`.md`, `.mdx`) | YAML frontmatter |
+| HTML (`.html`, `.htm`) | `<script type="application/ld+json">` |
+| JSON (`.json`) | `_akf` reserved key |
+| DOCX (`.docx`) | OOXML custom XML part |
+| XLSX (`.xlsx`) | OOXML custom XML part |
+| PPTX (`.pptx`) | OOXML custom XML part |
+| PDF (`.pdf`) | PDF metadata |
+| Images (`.png`, `.jpg`, `.tiff`, `.webp`) | EXIF/XMP metadata |
+| Email (`.eml`, `.msg`) | Email headers |
+| Everything else | Sidecar `.akf.json` file |
+
+---
+
+## TypeScript SDK API Reference
+
+### Install
+
+```bash
+npm install akf
+```
+
+ES Module, TypeScript 5.7+.
+
+### Core Functions
+
+```typescript
+import { create, createMulti, validate, toJSON, fromJSON } from 'akf';
+
+// Create single-claim unit
+const unit = create("Claim text", 0.95, { src: "Source", tier: 1 });
+
+// Create multi-claim unit
+const unit2 = createMulti(
+  [
+    { c: "Claim 1", t: 0.95, src: "Source A", tier: 1 },
+    { c: "Claim 2", t: 0.70, ai: true, tier: 5 },
+  ],
+  { by: "analyst@corp.com", label: "confidential" }
+);
+
+// Serialize / deserialize
+const json = toJSON(unit, 2);
+const parsed = fromJSON(json);
+
+// Validate
+const result = validate(unit);
+// result.valid, result.errors, result.warnings, result.level
+```
+
+### Types
+
+```typescript
+import type { AKFUnit, Claim, ProvHop, Fidelity, ValidationResult, TrustResult } from 'akf';
+
+interface AKFUnit {
+  v: string;
+  claims: Claim[];
+  id?: string;
+  by?: string;
+  agent?: string;
+  at?: string;
+  label?: string;
+  inherit?: boolean;
+  ext?: boolean;
+  ttl?: number;
+  prov?: ProvHop[];
+  hash?: string;
+  meta?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+interface Claim {
+  c: string;
+  t: number;
+  id?: string;
+  src?: string;
+  uri?: string;
+  tier?: number;
+  ver?: boolean;
+  ver_by?: string;
+  ai?: boolean;
+  risk?: string;
+  decay?: number;
+  exp?: string;
+  tags?: string[];
+  contra?: string;
+  fidelity?: Fidelity;
+  [key: string]: unknown;
+}
+```
+
+### Builder
+
+```typescript
+import { AKFBuilder } from 'akf';
+
+const unit = new AKFBuilder()
+  .claim("Revenue grew 12%", 0.98, { src: "SEC Filing", tier: 1 })
+  .claim("Market share ~34%", 0.72, { ai: true, tier: 5, risk: "Estimated" })
+  .by("analyst@corp.com")
+  .agent("copilot-v4")
+  .label("confidential")
+  .inherit()
+  .ttl(365)
+  .tag("financial", "q2")
+  .meta({ project: "Q2 Analysis" })
+  .build();
+```
+
+### Trust
+
+```typescript
+import { effectiveTrust, AUTHORITY_WEIGHTS, DECAY_PRESETS } from 'akf';
+
+const result = effectiveTrust(claim, 30, -0.05);
+// result.score, result.decision ("ACCEPT"|"LOW"|"REJECT")
+// result.breakdown.{confidence, authority, tier, decay, penalty, penalty_factor}
+```
+
+### Provenance
+
+```typescript
+import {
+  addHop, validateChain, computeIntegrityHash, computeHopHash, formatTree
+} from 'akf';
+
+const updated = addHop(unit, "reviewer@corp.com", "reviewed");
+const withPenalty = addHop(unit, "agent-x", "transformed", { penalty: -0.03 });
+
+const valid = validateChain(unit.prov!);
+const hash = computeIntegrityHash(unit);
+console.log(formatTree(unit));
+```
+
+### Security
+
+```typescript
+import { labelRank, validateInheritance, canShareExternal, inheritLabel, HIERARCHY } from 'akf';
+
+labelRank("confidential");                    // 2
+validateInheritance(parentUnit, childUnit);    // boolean
+canShareExternal(unit);                       // boolean
+inheritLabel(parentUnit);                     // { label, inherit, ext }
+```
+
+### Transformer
+
+```typescript
+import { AKFTransformer } from 'akf';
+
+const derived = new AKFTransformer(parentUnit)
+  .filter(0.6)
+  .penalty(-0.03)
+  .by("summarizer-agent")
+  .build();
+```
+
+---
+
+## CLI Reference
+
+### Standalone .akf Commands
+
+```bash
+akf create report.akf --claim "Revenue grew 12%" --trust 0.98 --src "SEC" --by analyst@corp.com --label confidential
+akf validate report.akf
+akf inspect report.akf
+akf trust report.akf
+akf consume report.akf --output brief.akf --threshold 0.6 --agent summarizer
+akf provenance report.akf --format tree
+akf enrich report.akf --agent copilot --claim "New insight" --trust 0.75
+akf diff report.akf brief.akf
+```
+
+### Universal Format Commands
+
+```bash
+akf embed report.docx --classification confidential --claim "Key finding" --trust 0.98
+akf extract report.docx
+akf info report.docx
+akf scan report.docx
+akf scan ./knowledge-base/ --recursive
+akf convert report.docx --output report.akf
+akf sidecar video.mp4 --classification internal
+akf formats
+```
+
+---
+
+## Common Use Cases
+
+### 1. AI Agent Creating a Research Brief
+
+```python
+import akf
+
+unit = (akf.AKFBuilder()
+    .claim("Global EV market reached $500B in 2024",
+           trust=0.92, src="Bloomberg NEF", tier=2, uri="https://bnef.com/report")
+    .claim("Tesla's market share declined to 18%",
+           trust=0.78, src="Industry estimate", tier=3, ai=True,
+           risk="Multiple conflicting sources")
+    .by("research-agent-v2")
+    .agent("research-agent-v2")
+    .label("internal")
+    .build())
+
+unit.save("ev-market-brief.akf")
+```
+
+### 2. Consuming and Filtering Upstream Knowledge
+
+```python
+from akf import AKFTransformer
+
+upstream = akf.load("market-data.akf")
+
+# Keep only high-trust claims, apply transform penalty
+filtered = (AKFTransformer(upstream)
+    .filter(trust_min=0.7)
+    .penalty(-0.03)
+    .by("downstream-agent")
+    .build())
+```
+
+### 3. Embedding Trust Metadata into a Word Document
+
+```python
+import akf
+
+akf.embed("quarterly-report.docx",
+    classification="confidential",
+    claims=[
+        {"c": "Revenue exceeded targets by 15%", "t": 0.95, "ver": True},
+        {"c": "Projected growth of 20% next quarter", "t": 0.60, "ai": True},
+    ])
+
+# Later, extract it
+metadata = akf.extract("quarterly-report.docx")
+```
+
+### 4. Scanning a Knowledge Base for Risk
+
+```python
+import akf
+
+reports = akf.universal.scan_directory("./knowledge-base/", recursive=True)
+
+for report in reports:
+    if report.risk_claims:
+        print(f"{report.format}: {len(report.risk_claims)} risk claims")
+    if report.overall_trust and report.overall_trust < 0.5:
+        print(f"LOW TRUST: {report.format} ({report.overall_trust:.2f})")
+```
+
+### 5. TypeScript: Building and Validating
+
+```typescript
+import { AKFBuilder, validate, effectiveTrust } from 'akf';
+
+const unit = new AKFBuilder()
+  .claim("API latency p99 < 200ms", 0.88, {
+    src: "APM Dashboard",
+    tier: 2,
+    tags: ["performance", "sla"],
+  })
+  .claim("No security vulnerabilities found", 0.95, {
+    src: "Snyk scan",
+    tier: 1,
+    ver: true,
+  })
+  .by("ci-pipeline")
+  .agent("deploy-gate-v1")
+  .label("internal")
+  .build();
+
+const validation = validate(unit);
+console.log(`Valid: ${validation.valid}, Level: ${validation.level}`);
+
+for (const claim of unit.claims) {
+  const trust = effectiveTrust(claim);
+  console.log(`"${claim.c}" -> ${trust.decision} (${trust.score.toFixed(2)})`);
+}
+```
+
+### 6. Provenance Chain with Multiple Agents
+
+```python
+import akf
+
+# Agent 1 creates
+unit = akf.create("Initial finding", t=0.85, src="Database query", tier=2)
+
+# Agent 2 enriches
+unit = akf.add_hop(unit, by="enrichment-agent", action="enriched")
+
+# Human reviews
+unit = akf.add_hop(unit, by="reviewer@corp.com", action="reviewed")
+
+# Agent 3 transforms with penalty
+unit = akf.add_hop(unit, by="summarizer", action="transformed", penalty=-0.05)
+
+# Print provenance tree
+print(akf.format_tree(unit))
+
+# Verify chain integrity
+assert akf.validate_chain(unit.prov)
+```
+
+---
+
+## Links
+
+- GitHub: https://github.com/arunma/akf
+- Spec: https://github.com/arunma/akf/blob/main/spec/akf-v1.0-spec.md
+- JSON Schema: https://github.com/arunma/akf/blob/main/spec/akf-v1.0.schema.json
+- Concise summary: https://akf.dev/llms.txt
+- License: MIT
