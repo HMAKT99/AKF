@@ -7,14 +7,6 @@ export default function Footer() {
           <span className="text-sm text-text-tertiary">MIT License</span>
         </div>
         <p className="text-sm text-text-tertiary">Built for the AI era.</p>
-        <a
-          href="https://github.com/HMAKT99/AKF"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm text-text-secondary hover:text-text-primary transition-colors"
-        >
-          github.com/HMAKT99/AKF
-        </a>
       </div>
     </footer>
   );
