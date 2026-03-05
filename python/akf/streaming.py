@@ -236,3 +236,75 @@ def iter_stream(akfl_path: str) -> Generator[dict, None, None]:
             if not raw_line:
                 continue
             yield json.loads(raw_line)
+
+
+class AKFStream:
+    """Context manager for streaming trust metadata alongside content generation.
+
+    Usage::
+
+        with AKFStream("output.md", model="gpt-4o") as s:
+            for chunk in llm.generate():
+                s.write(chunk)
+        # s.unit contains the collected AKF unit
+
+    Each ``write()`` call emits an incremental claim into the stream.
+    On exit, the stream is finalized and the collected AKF unit is available.
+    """
+
+    def __init__(
+        self,
+        output_path: Optional[str] = None,
+        *,
+        agent: Optional[str] = None,
+        model: Optional[str] = None,
+        confidence: float = 0.7,
+        ai_generated: bool = True,
+        **kwargs: Any,
+    ) -> None:
+        self.output_path = output_path
+        self.agent = agent
+        self.model = model
+        self.confidence = confidence
+        self.ai_generated = ai_generated
+        self.extra = kwargs
+        self._session: Optional[StreamSession] = None
+        self.unit: Optional[AKF] = None
+
+    def __enter__(self) -> "AKFStream":
+        akfl_path = None
+        if self.output_path:
+            akfl_path = self.output_path + ".akfl"
+        self._session = stream_start(
+            agent_id=self.agent or self.model,
+            output_path=akfl_path,
+            model=self.model,
+            **self.extra,
+        )
+        return self
+
+    def write(self, content: str, confidence: Optional[float] = None, **kwargs: Any) -> Claim:
+        """Write a content chunk with trust metadata.
+
+        Args:
+            content: The content chunk to record.
+            confidence: Override default confidence for this chunk.
+            **kwargs: Additional claim fields.
+
+        Returns:
+            The created Claim object.
+        """
+        if self._session is None:
+            raise RuntimeError("AKFStream not started — use as context manager")
+        return stream_claim(
+            self._session,
+            content=content,
+            confidence=confidence if confidence is not None else self.confidence,
+            ai_generated=self.ai_generated,
+            **kwargs,
+        )
+
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        if self._session is not None:
+            self.unit = stream_end(self._session)
+        return None

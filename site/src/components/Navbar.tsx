@@ -5,6 +5,8 @@ const anchorLinks = [
   { href: '#workflow', label: 'Workflow' },
   { href: '#sdk', label: 'SDK' },
   { href: '#formats', label: 'Formats' },
+  { href: '#agents', label: 'Agents' },
+  { href: '#download', label: 'Download' },
 ];
 
 export default function Navbar() {
@@ -29,6 +31,12 @@ export default function Navbar() {
               {link.label}
             </a>
           ))}
+          <Link
+            to="/personas"
+            className="text-sm text-text-secondary hover:text-text-primary transition-colors hidden sm:inline"
+          >
+            Personas
+          </Link>
           <Link
             to="/about"
             className="text-sm text-text-secondary hover:text-text-primary transition-colors hidden sm:inline"
@@ -69,6 +77,13 @@ export default function Navbar() {
               {link.label}
             </a>
           ))}
+          <Link
+            to="/personas"
+            onClick={() => setMenuOpen(false)}
+            className="text-sm text-text-secondary hover:text-text-primary transition-colors py-2"
+          >
+            Personas
+          </Link>
           <Link
             to="/about"
             onClick={() => setMenuOpen(false)}

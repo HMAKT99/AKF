@@ -567,6 +567,20 @@ class AKF(BaseModel):
                 data["created"] = datetime.now(timezone.utc).isoformat()
         return data
 
+    # --- Convenience properties ---
+
+    @property
+    def trust_score(self) -> float:
+        """Computed average confidence across all claims.
+
+        Returns the mean confidence of all claims in the unit as a
+        quick trust indicator. For detailed per-claim trust scores
+        with authority weighting and decay, use ``effective_trust()``.
+        """
+        if not self.claims:
+            return 0.0
+        return sum(c.confidence for c in self.claims) / len(self.claims)
+
     # --- Convenience methods ---
 
     def to_dict(self, compact: bool = True) -> dict:

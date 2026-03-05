@@ -5,6 +5,12 @@ Usage:
     akf.stamp("Fixed auth bypass", kind="code_change",
               evidence=["42/42 tests passed", "mypy: 0 errors"],
               agent="claude-code", model="claude-sonnet-4-20250514")
+
+    # File-level stamping
+    unit = akf.stamp_file("report.pdf",
+              model="gpt-4o",
+              claims=["Summary verified by legal team"],
+              trust_score=0.92)
 """
 
 import re
@@ -145,5 +151,73 @@ def stamp(
         inherit_classification=True,
         allow_external=False,
     )
+
+    return unit
+
+
+def stamp_file(
+    filepath: str,
+    *,
+    model: Optional[str] = None,
+    claims: Optional[List[str]] = None,
+    trust_score: float = 0.7,
+    agent: Optional[str] = None,
+    classification: str = "internal",
+    ai_generated: bool = True,
+    evidence: Optional[list] = None,
+    **kwargs,
+) -> AKF:
+    """Stamp a file with AKF trust metadata.
+
+    Creates an AKF unit from the provided claims and embeds it into
+    the target file using the universal format layer.
+
+    Args:
+        filepath: Path to the file to stamp.
+        model: AI model identifier (e.g. "gpt-4o").
+        claims: List of claim strings to embed.
+        trust_score: Default confidence for each claim (0.0-1.0).
+        agent: Agent identifier.
+        classification: Security classification label.
+        ai_generated: Whether claims are AI-generated.
+        evidence: List of evidence items (strings, dicts, or Evidence).
+        **kwargs: Extra fields passed to each Claim.
+
+    Returns:
+        The created AKF unit.
+    """
+    claim_texts = claims or [f"Trust metadata for {filepath}"]
+
+    evidence_objects = None
+    if evidence is not None:
+        evidence_objects = _to_evidence_list(evidence)
+
+    claim_list = []
+    for text in claim_texts:
+        claim_kwargs = {
+            "ai_generated": ai_generated,
+            "source": kwargs.pop("source", "unspecified") if not claim_list else "unspecified",
+            "authority_tier": kwargs.pop("authority_tier", 5 if ai_generated else 3) if not claim_list else (5 if ai_generated else 3),
+            "verified": kwargs.pop("verified", False) if not claim_list else False,
+        }
+        if evidence_objects and not claim_list:
+            claim_kwargs["evidence"] = evidence_objects
+        claim_list.append(
+            Claim(content=text, confidence=trust_score, **claim_kwargs)
+        )
+
+    unit = AKF(
+        version="1.0",
+        claims=claim_list,
+        agent=agent,
+        model=model,
+        classification=classification,
+        inherit_classification=True,
+        allow_external=False,
+    )
+
+    # Embed into the file using universal format layer
+    from .universal import embed as _embed
+    _embed(filepath, unit=unit)
 
     return unit

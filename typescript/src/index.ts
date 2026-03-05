@@ -57,3 +57,23 @@ export {
 
 // Transform
 export { AKFTransformer } from "./transform.js";
+
+// Detection classes
+export {
+  detectAiWithoutReview,
+  detectTrustBelowThreshold,
+  detectHallucinationRisk,
+  detectKnowledgeLaundering,
+  detectClassificationDowngrade,
+  detectStaleClaims,
+  detectUngroundedClaims,
+  detectTrustDegradationChain,
+  detectExcessiveAiConcentration,
+  detectProvenanceGap,
+  runAllDetections,
+} from "./detection.js";
+export type { DetectionResult, DetectionReport } from "./detection.js";
+
+// Compliance
+export { audit } from "./compliance.js";
+export type { AuditResult, AuditCheck } from "./compliance.js";

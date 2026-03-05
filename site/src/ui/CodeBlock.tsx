@@ -4,12 +4,17 @@ interface CodeBlockProps {
   filename?: string;
 }
 
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 function highlightJSON(json: string): string {
-  return json.replace(
-    /("(\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g,
+  const escaped = escapeHtml(json);
+  return escaped.replace(
+    /(&quot;(?:\\u[a-fA-F0-9]{4}|\\[^u]|[^\\&])*&quot;(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g,
     (match) => {
       let cls = 'text-emerald-400'; // number
-      if (/^"/.test(match)) {
+      if (/^&quot;/.test(match)) {
         if (/:$/.test(match)) {
           cls = 'text-sky-400'; // key
         } else {

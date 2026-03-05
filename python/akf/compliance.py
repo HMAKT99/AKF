@@ -39,18 +39,29 @@ def _load_unit(target: Union[str, Path, AKF]) -> AKF:
     return loads(str(target))
 
 
-def audit(target: Union[str, Path, AKF]) -> AuditResult:
-    """Run a general compliance audit on an AKF unit.
+def audit(
+    target: Union[str, Path, AKF],
+    regulation: Optional[str] = None,
+) -> AuditResult:
+    """Run a compliance audit on an AKF unit.
 
     Checks for: provenance, trust scores, AI labeling, classification,
     integrity hash, source attribution, origin tracking, reviews, freshness.
 
+    If a regulation is specified, delegates to ``check_regulation()`` for
+    a regulation-specific audit instead.
+
     Args:
         target: AKF unit, file path, or JSON string.
+        regulation: Optional regulation code (e.g. "eu_ai_act", "hipaa",
+            "sox", "gdpr", "nist_ai", "iso_42001"). If provided, runs
+            regulation-specific checks instead of the general audit.
 
     Returns:
         AuditResult with compliance score and recommendations.
     """
+    if regulation is not None:
+        return check_regulation(target, regulation)
     unit = _load_unit(target)
     checks: List[Dict[str, Any]] = []
     score_points = 0

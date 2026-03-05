@@ -48,9 +48,17 @@ from .compliance import (
 from .view import show, to_html, to_markdown, executive_summary
 from .data import load_dataset, quality_report, merge, filter_claims
 from .knowledge_base import KnowledgeBase
-from .stamp import stamp
+from .stamp import stamp, stamp_file
 from .git_ops import stamp_commit, read_commit, trust_log
-from .streaming import StreamSession, stream_start, stream_claim, stream_end, collect_stream, iter_stream
+from .streaming import StreamSession, AKFStream, stream_start, stream_claim, stream_end, collect_stream, iter_stream
+from .detection import (
+    detect_ai_without_review, detect_trust_below_threshold,
+    detect_hallucination_risk, detect_knowledge_laundering,
+    detect_classification_downgrade, detect_stale_claims,
+    detect_ungrounded_claims, detect_trust_degradation_chain,
+    detect_excessive_ai_concentration, detect_provenance_gap,
+    run_all_detections, DetectionResult, DetectionReport,
+)
 from .i18n import t as translate
 
 # Universal format layer — lazy imports to avoid optional dependency issues
@@ -128,6 +136,28 @@ def init(path=".", git_hooks=False, agent=None, classification="internal"):
             hook.chmod(0o755)
 
     return str(config_path)
+
+
+def stream(output_path=None, *, agent=None, model=None, confidence=0.7, **kwargs):
+    """Create a streaming context manager for incremental trust metadata.
+
+    Usage::
+
+        with akf.stream("output.md", model="gpt-4o") as s:
+            for chunk in llm.generate():
+                s.write(chunk)
+
+    Args:
+        output_path: Path for the output file.
+        agent: Agent identifier.
+        model: AI model identifier.
+        confidence: Default confidence for each write.
+        **kwargs: Additional stream parameters.
+
+    Returns:
+        AKFStream context manager.
+    """
+    return AKFStream(output_path, agent=agent, model=model, confidence=confidence, **kwargs)
 
 
 def read(filepath):
@@ -233,12 +263,29 @@ __all__ = [
     "export_audit",
     "verify_human_oversight",
     # Streaming
+    "AKFStream",
     "StreamSession",
     "collect_stream",
     "iter_stream",
     "stream_claim",
     "stream_end",
     "stream_start",
+    # Detection classes
+    "DetectionReport",
+    "DetectionResult",
+    "detect_ai_without_review",
+    "detect_classification_downgrade",
+    "detect_excessive_ai_concentration",
+    "detect_hallucination_risk",
+    "detect_knowledge_laundering",
+    "detect_provenance_gap",
+    "detect_stale_claims",
+    "detect_trust_below_threshold",
+    "detect_trust_degradation_chain",
+    "detect_ungrounded_claims",
+    "run_all_detections",
+    # Convenience
+    "stream",
     # i18n
     "translate",
     # View
@@ -253,6 +300,7 @@ __all__ = [
     "quality_report",
     # Stamp & Git
     "stamp",
+    "stamp_file",
     "stamp_commit",
     "read_commit",
     "trust_log",
