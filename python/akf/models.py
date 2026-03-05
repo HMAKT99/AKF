@@ -27,8 +27,18 @@ _GENERATION_PARAMS_COMPACT = {
     "temperature": "temp",
     "top_p": "top_p",
     "max_tokens": "max_tok",
+    "tokens_input": "in_tok",
+    "tokens_output": "out_tok",
+    "tokens_total": "tot_tok",
+    "cost_usd": "cost",
+    "prompt_hash": "p_hash",
     "system_prompt_hash": "sys_hash",
+    "tools_used": "tools_used",
     "tool_names": "tools",
+    "context_sources": "ctx_src",
+    "context_window_used_pct": "ctx_pct",
+    "cached_tokens": "cache_tok",
+    "latency_ms": "lat_ms",
 }
 _ORIGIN_COMPACT = {
     "type": "type",
@@ -163,19 +173,33 @@ class Evidence(BaseModel):
 # ---------------------------------------------------------------------------
 
 class GenerationParams(BaseModel):
-    """Parameters used during AI generation."""
+    """Parameters used during AI generation (Pillar 3)."""
 
     model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     temperature: Optional[float] = Field(None, validation_alias=AliasChoices("temp", "temperature"))
     top_p: Optional[float] = None
     max_tokens: Optional[int] = Field(None, validation_alias=AliasChoices("max_tok", "max_tokens"))
+    tokens_input: Optional[int] = Field(None, validation_alias=AliasChoices("in_tok", "tokens_input"))
+    tokens_output: Optional[int] = Field(None, validation_alias=AliasChoices("out_tok", "tokens_output"))
+    tokens_total: Optional[int] = Field(None, validation_alias=AliasChoices("tot_tok", "tokens_total"))
+    cost_usd: Optional[float] = Field(None, validation_alias=AliasChoices("cost", "cost_usd"))
+    prompt_hash: Optional[str] = Field(None, validation_alias=AliasChoices("p_hash", "prompt_hash"))
     system_prompt_hash: Optional[str] = Field(
         None, validation_alias=AliasChoices("sys_hash", "system_prompt_hash")
+    )
+    tools_used: Optional[List[str]] = Field(
+        None, validation_alias=AliasChoices("tools_used",)
     )
     tool_names: Optional[List[str]] = Field(
         None, validation_alias=AliasChoices("tools", "tool_names")
     )
+    context_sources: Optional[List[str]] = Field(None, validation_alias=AliasChoices("ctx_src", "context_sources"))
+    context_window_used_pct: Optional[float] = Field(
+        None, validation_alias=AliasChoices("ctx_pct", "context_window_used_pct")
+    )
+    cached_tokens: Optional[int] = Field(None, validation_alias=AliasChoices("cache_tok", "cached_tokens"))
+    latency_ms: Optional[float] = Field(None, validation_alias=AliasChoices("lat_ms", "latency_ms"))
 
     def to_dict(self, compact: bool = False) -> dict:
         d = _strip_none(self.model_dump())
@@ -189,7 +213,8 @@ class Origin(BaseModel):
 
     model_config = ConfigDict(extra="allow", populate_by_name=True)
 
-    type: Literal["human", "ai", "human_assisted_by_ai", "ai_supervised_by_human", "ai_chain"] = Field(
+    type: Literal["human", "ai", "human_assisted_by_ai", "ai_supervised_by_human", "ai_chain",
+                   "collaboration", "multi_agent"] = Field(
         validation_alias=AliasChoices("type",)
     )
     model: Optional[str] = None
@@ -198,9 +223,24 @@ class Origin(BaseModel):
     parameters: Optional[GenerationParams] = Field(
         None, validation_alias=AliasChoices("params", "parameters")
     )
+    generation: Optional[GenerationParams] = Field(
+        None, validation_alias=AliasChoices("generation",)
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def _unify_generation(cls, data: Any) -> Any:
+        """Accept 'generation' as alias for 'parameters' — merge into parameters."""
+        if isinstance(data, dict):
+            gen = data.pop("generation", None)
+            if gen is not None and data.get("parameters") is None and data.get("params") is None:
+                data["parameters"] = gen
+        return data
 
     def to_dict(self, compact: bool = False) -> dict:
         d = _strip_none(self.model_dump())
+        # Remove the generation field from output — parameters is canonical
+        d.pop("generation", None)
         if self.parameters is not None:
             d["parameters"] = self.parameters.to_dict(compact=compact)
         if compact:
@@ -400,6 +440,11 @@ class Claim(BaseModel):
     annotations: Optional[List[Annotation]] = None
     cost: Optional[CostMetadata] = None
     supersedes: Optional[str] = Field(None, validation_alias=AliasChoices("sup", "supersedes"))
+    # Freshness / dependency fields
+    expires_at: Optional[str] = Field(None, validation_alias=AliasChoices("exp_at", "expires_at"))
+    verified_at: Optional[str] = Field(None, validation_alias=AliasChoices("ver_at", "verified_at"))
+    depends_on: Optional[List[str]] = Field(None, validation_alias=AliasChoices("deps", "depends_on"))
+    relationship: Optional[str] = Field(None, validation_alias=AliasChoices("rel", "relationship"))
 
     @model_validator(mode="before")
     @classmethod

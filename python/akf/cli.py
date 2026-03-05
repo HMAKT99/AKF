@@ -823,3 +823,62 @@ def kb_prune_cmd(directory, max_age, min_trust) -> None:
     kb = KnowledgeBase(directory)
     pruned = kb.prune(max_age_days=max_age, min_trust=min_trust)
     click.secho(f"Pruned {pruned} claim(s)", fg="green")
+
+
+@main.command("stamp")
+@click.argument("file", type=click.Path(exists=True))
+@click.option("--label", default=None, help="Classification label")
+@click.option("--format", "fmt", default="auto", help="Output format: auto, embed, sidecar")
+def stamp_cmd(file, label, fmt):
+    """Add AKF trust metadata to any file.
+
+    Stamps the file with trust scores, provenance, and classification.
+    The file remains openable in its native application.
+    """
+    from . import universal as akf_u
+
+    meta = akf_u.extract(file)
+    claims_count = 0
+    avg_trust = 0.0
+    classification = label or "internal"
+
+    if meta:
+        claims = meta.get("claims", [])
+        claims_count = len(claims)
+        if claims_count > 0:
+            avg_trust = sum(
+                c.get("confidence", c.get("t", 0)) for c in claims
+            ) / claims_count
+        classification = label or meta.get("classification") or meta.get("label") or "internal"
+
+    metadata = {}
+    if label:
+        metadata["classification"] = label
+
+    if fmt == "sidecar":
+        from . import sidecar
+        sidecar.create(file, metadata)
+    else:
+        akf_u.embed(file, metadata=metadata if metadata else None,
+                    classification=label)
+
+    click.echo(
+        f"\u2713 Stamped {file} ({claims_count} claims, avg trust: {avg_trust:.2f}, label: {classification})"
+    )
+
+
+@main.command("freshness")
+@click.argument("file", type=click.Path(exists=True))
+def freshness_cmd(file):
+    """Check freshness of all claims in a file."""
+    from .trust import freshness_status as _freshness_status
+
+    unit = load(file)
+    for claim in unit.claims or []:
+        status = _freshness_status(claim)
+        icon = {"fresh": "+", "stale": "~", "expired": "!", "no_expiry": "-"}.get(status, "?")
+        preview = (claim.content[:60] + "...") if len(claim.content) > 60 else claim.content
+        expires = getattr(claim, "expires_at", None) or "never"
+        click.echo(f"  [{icon}] {status:10s} {preview}")
+        if expires != "never":
+            click.echo(f"              expires: {expires}")

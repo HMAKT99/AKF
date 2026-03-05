@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import statistics
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from enum import Enum
 from typing import List, Optional
 
@@ -33,8 +34,10 @@ DECAY_PRESETS: dict[str, float] = {
 ORIGIN_WEIGHTS: dict[str, float] = {
     "human": 1.0,
     "ai_supervised_by_human": 0.9,
+    "collaboration": 0.85,
     "human_assisted_by_ai": 0.85,
     "ai": 0.7,
+    "multi_agent": 0.60,
     "ai_chain": 0.5,
 }
 
@@ -317,3 +320,31 @@ def trust_summary(unit: AKF) -> dict:
         "grounded_pct": round(grounded_count / len(unit.claims), 4),
         "ai_pct": round(ai_count / len(unit.claims), 4),
     }
+
+
+# ---------------------------------------------------------------------------
+# v1.1 — Claim freshness helpers
+# ---------------------------------------------------------------------------
+
+def is_expired(claim: Claim) -> bool:
+    """Check if a claim has passed its expiry date."""
+    expires = getattr(claim, "expires_at", None)
+    if not expires:
+        return False
+    try:
+        expiry_dt = datetime.fromisoformat(expires.replace("Z", "+00:00"))
+        return datetime.now(timezone.utc) > expiry_dt
+    except (ValueError, TypeError):
+        return False
+
+
+def freshness_status(claim: Claim) -> str:
+    """Returns: 'fresh', 'stale', 'expired', or 'no_expiry'."""
+    if not getattr(claim, "expires_at", None):
+        return "no_expiry"
+    if is_expired(claim):
+        return "expired"
+    verified = getattr(claim, "verified_at", None)
+    if not verified:
+        return "stale"
+    return "fresh"

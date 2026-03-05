@@ -27,12 +27,14 @@ from .builder import AKFBuilder
 from .trust import (
     effective_trust, compute_all, explain_trust, TrustResult, TrustLevel,
     AUTHORITY_WEIGHTS, calibrated_trust, resolve_conflict, trust_summary,
+    is_expired, freshness_status,
 )
 from .provenance import add_hop, format_tree, compute_integrity_hash
 from .security import (
     validate_inheritance, can_share_external, inherit_label, security_score,
-    purview_signals, detect_laundering, SecurityScore,
+    purview_signals, detect_laundering, SecurityScore, SecurityReport,
     check_access, verify_trust_anchor, redaction_report, compute_security_hash,
+    full_report,
 )
 from .transform import AKFTransformer
 from .agent import (
@@ -52,6 +54,11 @@ from .streaming import StreamSession, stream_start, stream_claim, stream_end, co
 from .i18n import t as translate
 
 # Universal format layer — lazy imports to avoid optional dependency issues
+def save(unit, filepath, compact=True):
+    """Save an AKF unit to a file."""
+    unit.save(filepath, compact=compact)
+
+
 def embed(filepath, **kwargs):
     """Embed AKF metadata into any supported file format."""
     from .universal import embed as _embed
@@ -187,6 +194,7 @@ __all__ = [
     "inherit_label",
     "load",
     "loads",
+    "save",
     "validate",
     "validate_inheritance",
     # Trust extras
@@ -194,6 +202,8 @@ __all__ = [
     "calibrated_trust",
     "resolve_conflict",
     "trust_summary",
+    "is_expired",
+    "freshness_status",
     # Security extras
     "check_access",
     "compute_security_hash",
@@ -201,6 +211,8 @@ __all__ = [
     "purview_signals",
     "redaction_report",
     "security_score",
+    "SecurityReport",
+    "full_report",
     "verify_trust_anchor",
     # Agent
     "consume",

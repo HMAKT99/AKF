@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Optional
 
 from .models import AKF
@@ -342,3 +342,136 @@ def compute_security_hash(unit: AKF) -> str:
     canonical = json.dumps(d, sort_keys=True, ensure_ascii=False)
     hash_hex = hashlib.sha256(canonical.encode()).hexdigest()
     return f"sha256:{hash_hex}"
+
+
+# ---------------------------------------------------------------------------
+# v1.1 — Full security report
+# ---------------------------------------------------------------------------
+
+@dataclass
+class SecurityReport:
+    """Comprehensive security assessment of an AKF unit."""
+
+    score: float
+    has_classification: bool
+    classification: str
+    has_integrity_hash: bool
+    integrity_hash_short: str
+    has_provenance: bool
+    provenance_summary: str
+    all_origins_tagged: bool
+    untagged_claims: int
+    review_coverage: float
+    reviewed_claims: int
+    total_claims: int
+    can_share_external: bool
+    redaction_needed: bool
+    redaction_items: List[str] = field(default_factory=list)
+
+    @property
+    def grade(self) -> str:
+        s = self.score
+        if s >= 9.5:
+            return "A+"
+        if s >= 9.0:
+            return "A"
+        if s >= 8.0:
+            return "A-"
+        if s >= 7.5:
+            return "B+"
+        if s >= 7.0:
+            return "B"
+        if s >= 6.0:
+            return "B-"
+        if s >= 5.0:
+            return "C"
+        if s >= 4.0:
+            return "D"
+        return "F"
+
+    def to_dict(self) -> dict:
+        d = asdict(self)
+        d["grade"] = self.grade
+        return d
+
+
+def full_report(unit: AKF) -> SecurityReport:
+    """Generate comprehensive security report for an AKF unit."""
+    claims = unit.claims or []
+    total = len(claims)
+
+    # Classification
+    classification = unit.classification or "unset"
+    has_classification = classification != "unset"
+
+    # Integrity hash
+    integrity_hash = unit.integrity_hash
+    has_hash = integrity_hash is not None
+
+    # Provenance
+    prov = unit.prov or []
+    has_prov = len(prov) > 0
+    anchor = prov[0].actor if prov else "unknown"
+    prov_summary = f"{len(prov)} hops, anchored to {anchor}" if prov else "No provenance"
+
+    # Origin tracking
+    untagged = sum(
+        1 for c in claims
+        if not getattr(c, "origin", None) and getattr(c, "ai_generated", False)
+    )
+    all_tagged = untagged == 0
+
+    # Reviews
+    reviewed = sum(1 for c in claims if getattr(c, "reviews", None))
+    review_cov = reviewed / total if total > 0 else 0
+
+    # External sharing
+    restricted_labels = {"confidential", "highly-confidential", "restricted"}
+    can_share = classification not in restricted_labels
+
+    # Redaction
+    redaction_items: List[str] = []
+    for c in claims:
+        issues: List[str] = []
+        if getattr(c, "ai_generated", False) and not getattr(c, "risk", None):
+            issues.append("no risk description")
+        if getattr(c, "ai_generated", False):
+            issues.append("AI-generated")
+        if not getattr(c, "reviews", None):
+            issues.append("unreviewed")
+        if issues and not can_share:
+            preview = (c.content[:50] + "...") if len(c.content) > 50 else c.content
+            redaction_items.append(f'Claim "{preview}" \u2014 {", ".join(issues)}')
+
+    # Score (10-point scale)
+    score = 0.0
+    if has_classification:
+        score += 2.0
+    if has_hash:
+        score += 2.0
+    if has_prov:
+        score += 1.5
+    if all_tagged:
+        score += 1.5
+    if review_cov > 0:
+        score += min(review_cov * 2.0, 2.0)
+    if can_share or not redaction_items:
+        score += 1.0
+
+    return SecurityReport(
+        score=min(score, 10.0),
+        has_classification=has_classification,
+        classification=classification,
+        has_integrity_hash=has_hash,
+        integrity_hash_short=(integrity_hash[:14] + "..." if integrity_hash else "none"),
+        has_provenance=has_prov,
+        provenance_summary=prov_summary,
+        all_origins_tagged=all_tagged,
+        untagged_claims=untagged,
+        review_coverage=review_cov,
+        reviewed_claims=reviewed,
+        total_claims=total,
+        can_share_external=can_share,
+        redaction_needed=len(redaction_items) > 0,
+        redaction_items=redaction_items,
+    )
