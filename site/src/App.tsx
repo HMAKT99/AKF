@@ -15,6 +15,7 @@ import AboutCreator from './components/AboutCreator';
 import PersonasPage from './components/PersonasPage';
 import ComparePage from './components/ComparePage';
 import GetStartedPage from './components/GetStartedPage';
+import ConvertPage from './components/ConvertPage';
 import Footer from './components/Footer';
 
 function HomePage() {
@@ -76,6 +77,7 @@ export default function App() {
             <Route path="/personas" element={<PersonasPage />} />
             <Route path="/compare" element={<ComparePage />} />
             <Route path="/get-started" element={<GetStartedPage />} />
+            <Route path="/convert-to-akf" element={<ConvertPage />} />
           </Routes>
         </main>
         <Footer />
