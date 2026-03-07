@@ -209,6 +209,16 @@ def extract(filepath: str) -> Optional[Dict[str, Any]]:
     Returns:
         Metadata dict, or None if no AKF metadata found.
     """
+    # Native .akf files: load directly via core
+    ext = _get_extension(filepath)
+    if ext == "akf":
+        from .core import load as _load_akf
+        try:
+            unit = _load_akf(filepath)
+            return json.loads(unit.model_dump_json(by_alias=True, exclude_none=True))
+        except Exception:
+            return None
+
     handler = _resolve_handler(filepath)
     if handler is not None:
         result = handler.extract(filepath)

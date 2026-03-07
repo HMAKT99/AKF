@@ -537,7 +537,7 @@ def sidecar_cmd(file, classification, agent) -> None:
 
 @main.command("convert")
 @click.argument("file_or_dir", type=click.Path(exists=True))
-@click.option("--output", "-o", required=True, type=click.Path(), help="Output .akf file or directory")
+@click.option("--output", "-o", required=False, default=None, type=click.Path(), help="Output .akf file or directory")
 @click.option("--recursive", "-r", is_flag=True, help="Recurse into subdirectories")
 @click.option("--mode", "-m", type=click.Choice(["extract", "enrich", "both"]), default="both",
               help="extract=metadata only, enrich=baseline only, both=auto")
@@ -550,8 +550,10 @@ def convert_cmd(file_or_dir, output, recursive, mode, overwrite, agent) -> None:
 
     target = Path(file_or_dir)
     if target.is_dir():
+        # Default output to input dir when not specified
+        out_dir = output if output else str(target)
         result = akf_u.convert_directory(
-            str(target), output_dir=output, recursive=recursive,
+            str(target), output_dir=out_dir, recursive=recursive,
             mode=mode, overwrite=overwrite, agent=agent,
         )
         click.secho(
@@ -562,19 +564,21 @@ def convert_cmd(file_or_dir, output, recursive, mode, overwrite, agent) -> None:
         for err in result.errors:
             click.secho("  {}".format(err), fg="red")
     else:
+        # Default output to <filename>.akf in same directory
+        out_path = output if output else str(target) + ".akf"
         # Single-file mode: try extract first, fall back to enrich
         if mode in ("extract", "both"):
             try:
-                akf_u.to_akf(str(target), output)
-                click.secho("Converted {} -> {}".format(file_or_dir, output), fg="green")
+                akf_u.to_akf(str(target), out_path)
+                click.secho("Converted {} -> {}".format(file_or_dir, out_path), fg="green")
                 return
             except ValueError:
                 if mode == "extract":
                     click.secho("No AKF metadata found in {}".format(file_or_dir), fg="red")
                     sys.exit(1)
         # enrich or both-fallback
-        akf_u._enrich_to_akf(str(target), output, agent)
-        click.secho("Enriched {} -> {}".format(file_or_dir, output), fg="green")
+        akf_u._enrich_to_akf(str(target), out_path, agent)
+        click.secho("Enriched {} -> {}".format(file_or_dir, out_path), fg="green")
 
 
 @main.command("formats")
@@ -652,13 +656,22 @@ def audit_cmd(file, regulation, trail, export_fmt) -> None:
     from .compliance import audit, check_regulation, audit_trail, export_audit
 
     if trail:
-        click.echo(audit_trail(file, format="text"))
+        try:
+            click.echo(audit_trail(file, format="text"))
+        except (ValueError, json.JSONDecodeError) as e:
+            click.secho(f"Error: {e}", fg="red")
+            sys.exit(1)
         return
 
-    if regulation:
-        result = check_regulation(file, regulation)
-    else:
-        result = audit(file)
+    try:
+        if regulation:
+            result = check_regulation(file, regulation)
+        else:
+            result = audit(file)
+    except (ValueError, json.JSONDecodeError) as e:
+        click.secho(f"Error: Could not audit {file}: {e}", fg="red")
+        click.echo(f"  Tip: Run 'akf embed {file}' or 'akf stamp {file}' to add metadata first")
+        sys.exit(1)
 
     if export_fmt:
         click.echo(export_audit(result, format=export_fmt))

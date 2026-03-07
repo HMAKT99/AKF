@@ -30,12 +30,44 @@ class AuditResult:
 
 
 def _load_unit(target: Union[str, Path, AKF]) -> AKF:
-    """Resolve target to an AKF unit."""
+    """Resolve target to an AKF unit.
+
+    For .akf files, loads directly. For other formats (PDF, DOCX, MD, etc.),
+    extracts metadata via universal.extract() and builds an AKF unit from it.
+    """
     if isinstance(target, AKF):
         return target
     path = Path(target)
     if path.exists():
-        return load(path)
+        if path.suffix == ".akf":
+            return load(path)
+        # Non-AKF file: extract metadata via universal API
+        from . import universal as akf_u
+        meta = akf_u.extract(str(path))
+        if meta is not None:
+            from .core import create_multi
+            claims = meta.get("claims", [])
+            envelope: Dict[str, Any] = {}
+            if meta.get("classification"):
+                envelope["label"] = meta["classification"]
+            unit = create_multi(claims if claims else [], **envelope)
+            # Copy provenance if present
+            if meta.get("provenance"):
+                from .models import ProvHop
+                hops = []
+                for i, p in enumerate(meta["provenance"]):
+                    hop_data: Dict[str, Any] = {
+                        "hop": i,
+                        "actor": p.get("actor", p.get("by", "unknown")),
+                        "action": p.get("action", p.get("do", "unknown")),
+                        "timestamp": p.get("at", p.get("timestamp", "")),
+                    }
+                    if p.get("hash") or p.get("h"):
+                        hop_data["hash"] = p.get("hash", p.get("h"))
+                    hops.append(ProvHop(**hop_data))
+                unit = unit.model_copy(update={"prov": hops})
+            return unit
+        raise ValueError(f"No AKF metadata found in {path}")
     return loads(str(target))
 
 
