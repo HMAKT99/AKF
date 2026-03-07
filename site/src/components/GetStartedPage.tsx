@@ -91,7 +91,7 @@ akf scan --recursive ./shared-drive/
 
 # 3 files flagged: unreviewed AI content`,
     snippetLang: 'bash',
-    outcome: 'Detect unreviewed AI content, trust degradation, and classification drift across your org.',
+    outcome: 'Detect unreviewed AI content, trust degradation, and classification downgrade across your org.',
   },
   {
     id: 'governance',
@@ -103,7 +103,7 @@ akf scan --recursive ./shared-drive/
     ),
     pain: '"We can\'t prove AI transparency to regulators."',
     snippet: `# Generate compliance report for EU AI Act
-akf audit --framework eu-ai-act ./reports/
+akf audit --regulation eu_ai_act ./reports/
 
 # 47 files audited, 100% compliant`,
     snippetLang: 'bash',
@@ -141,14 +141,14 @@ const frameworks = [
 const detections = [
   'Unreviewed AI content',
   'Trust score degradation',
-  'Classification drift',
+  'Classification downgrade',
   'Provenance gaps',
   'Model hallucination risk',
   'Knowledge laundering',
   'Excessive AI concentration',
-  'Missing human review',
-  'Tampered metadata',
-  'Confidence inflation',
+  'Ungrounded claims',
+  'Stale claims',
+  'Trust degradation chain',
 ];
 
 /* ── Simple syntax highlight ── */
@@ -383,7 +383,7 @@ export default function GetStartedPage() {
 
           {/* CLI commands */}
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            {['akf audit', 'akf scan', 'akf detect'].map((cmd) => (
+            {['akf audit', 'akf scan', 'akf stamp'].map((cmd) => (
               <code
                 key={cmd}
                 className="px-3 py-1.5 rounded-md bg-surface-raised border border-border-subtle text-xs font-mono text-accent"

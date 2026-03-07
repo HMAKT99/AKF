@@ -23,7 +23,7 @@ const formatGroups = [
     category: 'Media',
     formats: [
       { ext: '.png', label: 'PNG', method: 'Native' },
-      { ext: '.jpg', label: 'JPEG', method: 'Sidecar' },
+      { ext: '.jpg', label: 'JPEG', method: 'Native' },
       { ext: '.mp4', label: 'Video', method: 'Sidecar' },
       { ext: '.mp3', label: 'Audio', method: 'Sidecar' },
     ],
@@ -65,7 +65,8 @@ export default function ConvertPage() {
             <div className="bg-gray-900 rounded-xl px-6 py-3.5 border border-gray-700">
               <code className="text-base sm:text-lg font-mono">
                 <span className="text-gray-500">$ </span>
-                <span className="text-emerald-400">akf enrich</span>
+                <span className="text-emerald-400">akf convert</span>
+                <span className="text-sky-400"> --recursive</span>
                 <span className="text-gray-300"> ./your-files/</span>
               </code>
             </div>
@@ -142,7 +143,7 @@ No idea what's AI-generated.`}</pre>
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <span className="w-2 h-2 rounded-full bg-accent" />
-                <p className="text-xs font-mono text-accent uppercase tracking-wider">After <code className="text-[10px] bg-accent/10 px-1.5 py-0.5 rounded">akf enrich ./</code></p>
+                <p className="text-xs font-mono text-accent uppercase tracking-wider">After <code className="text-[10px] bg-accent/10 px-1.5 py-0.5 rounded">akf convert --recursive ./</code></p>
               </div>
               <div className="rounded-xl border border-accent/20 bg-surface-raised p-5 h-full">
                 <pre className="text-[13px] font-mono text-text-secondary leading-relaxed whitespace-pre-wrap">{`quarterly-report.docx  `}<span className="text-emerald-500">SHA-256 ✓  embedded</span>{`
@@ -295,12 +296,12 @@ data-pipeline.py      `}<span className="text-emerald-500">SHA-256 ✓  embedded
                   <span className="w-2 h-2 rounded-full bg-[#febc2e]" />
                   <span className="w-2 h-2 rounded-full bg-[#28c840]" />
                 </div>
-                <pre className="px-4 py-4 text-[13px] font-mono text-gray-300 leading-relaxed overflow-x-auto"><span className="text-gray-500"># Enrich a folder of documents</span>{'\n'}<span className="text-emerald-400">akf enrich</span> ~/Documents/reports/{'\n\n'}<span className="text-gray-500"># Preview changes first</span>{'\n'}<span className="text-emerald-400">akf enrich</span> ./data/ <span className="text-sky-400">--dry-run</span>{'\n\n'}<span className="text-gray-500"># Then audit for compliance</span>{'\n'}<span className="text-emerald-400">akf audit</span> ./reports/ <span className="text-sky-400">--framework</span> eu-ai-act</pre>
+                <pre className="px-4 py-4 text-[13px] font-mono text-gray-300 leading-relaxed overflow-x-auto"><span className="text-gray-500"># Convert a folder of documents</span>{'\n'}<span className="text-emerald-400">akf convert</span> <span className="text-sky-400">--recursive</span> ~/Documents/reports/{'\n\n'}<span className="text-gray-500"># Convert with enrichment mode</span>{'\n'}<span className="text-emerald-400">akf convert</span> <span className="text-sky-400">--recursive --mode</span> enrich ./data/{'\n\n'}<span className="text-gray-500"># Then audit for compliance</span>{'\n'}<span className="text-emerald-400">akf audit</span> ./reports/ <span className="text-sky-400">--regulation</span> eu_ai_act</pre>
               </div>
               <div className="px-6 py-4 flex gap-4 text-xs text-text-tertiary">
                 <span><span className="font-semibold text-text-secondary">20+</span> formats</span>
-                <span><span className="font-semibold text-text-secondary">--parallel</span> support</span>
-                <span><span className="font-semibold text-text-secondary">--dry-run</span> preview</span>
+                <span><span className="font-semibold text-text-secondary">--recursive</span> folders</span>
+                <span><span className="font-semibold text-text-secondary">--mode</span> enrich</span>
               </div>
             </div>
 
@@ -320,7 +321,7 @@ data-pipeline.py      `}<span className="text-emerald-500">SHA-256 ✓  embedded
                         <span className="text-blue-500 font-bold text-xs">M</span>
                       </div>
                       <span className="text-sm font-semibold text-text-primary">Microsoft Office Add-in</span>
-                      <span className="text-[10px] text-text-tertiary">Word · Excel · PowerPoint</span>
+                      <span className="text-[10px] text-amber-400 font-medium">Coming Soon</span>
                     </div>
                     <ul className="space-y-1.5 text-sm text-text-secondary ml-9">
                       <li className="flex items-center gap-2">
@@ -344,7 +345,7 @@ data-pipeline.py      `}<span className="text-emerald-500">SHA-256 ✓  embedded
                         <span className="text-emerald-500 font-bold text-xs">G</span>
                       </div>
                       <span className="text-sm font-semibold text-text-primary">Google Workspace Add-on</span>
-                      <span className="text-[10px] text-text-tertiary">Docs · Sheets · Slides</span>
+                      <span className="text-[10px] text-amber-400 font-medium">Coming Soon</span>
                     </div>
                     <ul className="space-y-1.5 text-sm text-text-secondary ml-9">
                       <li className="flex items-center gap-2">
@@ -417,14 +418,14 @@ data-pipeline.py      `}<span className="text-emerald-500">SHA-256 ✓  embedded
           <div className="inline-flex flex-col sm:flex-row gap-3 mb-8">
             <div className="bg-gray-900 rounded-xl px-6 py-3.5 border border-gray-700">
               <code className="text-base font-mono">
-                <span className="text-gray-500">python </span>
+                <span className="text-gray-500">$ </span>
                 <span className="text-emerald-400">pip install</span>
                 <span className="text-gray-300"> akf</span>
               </code>
             </div>
             <div className="bg-gray-900 rounded-xl px-6 py-3.5 border border-gray-700">
               <code className="text-base font-mono">
-                <span className="text-gray-500">npm </span>
+                <span className="text-gray-500">$ </span>
                 <span className="text-emerald-400">npm install</span>
                 <span className="text-gray-300"> akf-format</span>
               </code>

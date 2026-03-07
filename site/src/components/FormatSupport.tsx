@@ -6,7 +6,8 @@ const formats = [
   { format: '.pdf', method: 'PDF metadata stream', description: 'Embedded in PDF metadata' },
   { format: '.html', method: 'JSON-LD <script>', description: 'application/akf+json script tag' },
   { format: '.md', method: 'YAML frontmatter', description: 'Structured frontmatter block' },
-  { format: '.png .jpg', method: 'EXIF / XMP metadata', description: 'Image metadata fields' },
+  { format: '.png', method: 'EXIF / XMP metadata', description: 'Image metadata fields' },
+  { format: '.jpg', method: 'EXIF / XMP metadata', description: 'Image metadata fields' },
   { format: '.json', method: 'Reserved _akf key', description: 'Top-level _akf property' },
   { format: 'Everything else', method: 'Sidecar .akf.json', description: 'Companion file alongside the original' },
 ];

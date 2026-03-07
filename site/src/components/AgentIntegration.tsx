@@ -2,7 +2,7 @@ import SectionHeading from '../ui/SectionHeading';
 
 const mcpTools = [
   {
-    name: 'akf_create',
+    name: 'create_claim',
     description: 'Create trust metadata with claims and provenance',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -11,7 +11,7 @@ const mcpTools = [
     ),
   },
   {
-    name: 'akf_validate',
+    name: 'validate_file',
     description: 'Validate AKF files against the schema',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -20,7 +20,7 @@ const mcpTools = [
     ),
   },
   {
-    name: 'akf_scan',
+    name: 'scan_file',
     description: 'Security scan any file for trust metadata',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -29,7 +29,7 @@ const mcpTools = [
     ),
   },
   {
-    name: 'akf_trust',
+    name: 'trust_score',
     description: 'Compute effective trust scores for claims',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -42,8 +42,8 @@ const mcpTools = [
 const frameworks = [
   {
     name: 'LangChain',
-    status: 'Ready',
-    statusColor: 'text-emerald-400',
+    status: 'Beta',
+    statusColor: 'text-amber-400',
     description: 'Callback handler + document loader',
   },
   {
@@ -54,8 +54,8 @@ const frameworks = [
   },
   {
     name: 'CrewAI',
-    status: 'Beta',
-    statusColor: 'text-amber-400',
+    status: 'Ready',
+    statusColor: 'text-emerald-400',
     description: 'Trust-aware agent tools',
   },
 ];
