@@ -2,8 +2,9 @@ import { Link } from 'react-router-dom';
 import SectionHeading from '../ui/SectionHeading';
 
 const stats = [
-  { value: '56%', label: 'fewer tokens', detail: 'vs verbose alternatives' },
-  { value: '<2KB', label: 'for 5 claims', detail: 'compact format' },
+  { value: '~15', label: 'tokens per stamp', detail: 'smaller than a tweet' },
+  { value: '20+', label: 'formats supported', detail: 'DOCX, PDF, MD, images, code' },
+  { value: '95%', label: 'LLM accuracy', detail: 'valid from one example' },
   { value: '0.1s', label: 'streaming', detail: 'real-time trust' },
 ];
 
@@ -65,7 +66,7 @@ export default function ValueProps() {
         />
 
         {/* Stats grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-16">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-16">
           {stats.map((stat) => (
             <div
               key={stat.label}

@@ -394,7 +394,33 @@ export default function GetStartedPage() {
           </div>
         </section>
 
-        {/* ── SECTION 5: Get Started Now ── */}
+        {/* ── SECTION 5: Download Brochure ── */}
+        <section className="mb-20">
+          <div className="rounded-xl border border-border-subtle bg-surface-raised p-8 text-center">
+            <div className="w-12 h-12 rounded-lg bg-accent/10 text-accent flex items-center justify-center mx-auto mb-4">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-text-primary mb-2">Download the Brochure</h2>
+            <p className="text-text-secondary mb-6 max-w-lg mx-auto">
+              Get the full getting started guide with all 5 persona walkthroughs, CLI reference, compliance frameworks, and code examples.
+            </p>
+            <a
+              href="https://github.com/HMAKT99/AKF/blob/main/docs/getting-started-guide.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-accent hover:bg-accent-hover text-white font-medium text-sm transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+              Download Getting Started Guide
+            </a>
+          </div>
+        </section>
+
+        {/* ── SECTION 6: Get Started Now ── */}
         <section className="text-center">
           <h2 className="text-2xl sm:text-3xl font-bold text-text-primary mb-2">Get Started Now</h2>
           <p className="text-text-secondary mb-8">Pick your language and go.</p>
@@ -423,17 +449,6 @@ export default function GetStartedPage() {
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-surface-raised border border-border-subtle hover:border-accent/40 text-text-primary font-medium text-sm transition-colors"
             >
               npm
-            </a>
-            <a
-              href="https://github.com/HMAKT99/AKF/blob/main/docs/getting-started-guide.md"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-surface-raised border border-border-subtle hover:border-accent/40 text-text-primary font-medium text-sm transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-              </svg>
-              Brochure (PDF)
             </a>
           </div>
 

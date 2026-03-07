@@ -20,8 +20,24 @@
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   },
-  "engines": { "node": ">=16" },
-  "files": ["dist", "README.md", "LICENSE"],
-  "keywords": ["akf", "trust", "metadata", "ai", "provenance", "agent-knowledge-format"],
-  "license": "MIT"
+  "engines": {
+    "node": ">=16"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "akf",
+    "trust",
+    "metadata",
+    "ai",
+    "provenance",
+    "agent-knowledge-format"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "akf-format": "^1.0.0"
+  }
 }
