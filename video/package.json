@@ -1,0 +1,26 @@
+{
+  "name": "akf-video",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "remotion studio src/index.ts",
+    "build": "remotion render src/index.ts AKFDemo out/akf-demo.mp4",
+    "build:gif": "remotion render src/index.ts AKFDemo out/akf-demo.gif --image-format png"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.275",
+    "@remotion/player": "4.0.275",
+    "@remotion/renderer": "4.0.275",
+    "@remotion/tailwind-v4": "^4.0.275",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "remotion": "4.0.275"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "~5.6.2"
+  }
+}
