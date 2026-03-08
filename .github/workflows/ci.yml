@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd python
-          pip install -e ".[dev]"
+          pip install -e ".[all,dev]"
       - name: Run tests
         run: |
           cd python

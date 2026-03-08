@@ -71,15 +71,15 @@ def make_text(path, content="Plain text content."):
 
 
 def make_docx(path, text="Test DOCX content"):
-    from docx import Document
-    doc = Document()
+    docx = pytest.importorskip("docx", reason="python-docx not installed")
+    doc = docx.Document()
     doc.add_paragraph(text)
     doc.save(path)
 
 
 def make_xlsx(path):
-    from openpyxl import Workbook
-    wb = Workbook()
+    openpyxl = pytest.importorskip("openpyxl", reason="openpyxl not installed")
+    wb = openpyxl.Workbook()
     ws = wb.active
     ws["A1"] = "Revenue"
     ws["B1"] = 4200000
@@ -89,16 +89,16 @@ def make_xlsx(path):
 
 
 def make_pptx(path, title="Test Slide"):
-    from pptx import Presentation
-    prs = Presentation()
+    pptx = pytest.importorskip("pptx", reason="python-pptx not installed")
+    prs = pptx.Presentation()
     slide = prs.slides.add_slide(prs.slide_layouts[0])
     slide.shapes.title.text = title
     prs.save(path)
 
 
 def make_image(path, fmt="PNG", size=(100, 100)):
-    from PIL import Image
-    img = Image.new("RGB", size, color=(73, 109, 137))
+    PIL = pytest.importorskip("PIL", reason="Pillow not installed")
+    img = PIL.Image.new("RGB", size, color=(73, 109, 137))
     img.save(path, fmt)
 
 
