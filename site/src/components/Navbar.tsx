@@ -57,12 +57,6 @@ export default function Navbar() {
             Convert to AKF
           </Link>
           <Link
-            to="/about"
-            className="text-sm text-text-secondary hover:text-text-primary transition-colors hidden sm:inline"
-          >
-            About
-          </Link>
-          <Link
             to="/get-started"
             className="hidden sm:inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-accent hover:bg-accent-hover text-white text-sm font-medium transition-colors"
           >
@@ -140,13 +134,6 @@ export default function Navbar() {
             className="text-sm text-text-secondary hover:text-text-primary transition-colors py-2"
           >
             Convert to AKF
-          </Link>
-          <Link
-            to="/about"
-            onClick={() => setMenuOpen(false)}
-            className="text-sm text-text-secondary hover:text-text-primary transition-colors py-2"
-          >
-            About
           </Link>
           <Link
             to="/get-started"

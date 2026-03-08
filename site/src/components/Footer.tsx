@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export default function Footer() {
   return (
     <footer className="border-t border-border-subtle py-12 px-6">
@@ -5,6 +7,7 @@ export default function Footer() {
         <div className="flex items-center gap-4">
           <span className="text-accent font-mono font-bold">.akf</span>
           <span className="text-sm text-text-tertiary">MIT License</span>
+          <Link to="/about" className="text-sm text-text-tertiary hover:text-text-primary transition-colors">About</Link>
         </div>
         <p className="text-sm text-text-tertiary">Built for the AI era.</p>
       </div>
