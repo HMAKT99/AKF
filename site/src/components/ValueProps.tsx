@@ -58,7 +58,7 @@ const personaPreviews = [
 
 export default function ValueProps() {
   return (
-    <section className="py-20 px-6">
+    <section id="ai-native" className="py-20 px-6">
       <div className="max-w-4xl mx-auto">
         <SectionHeading
           title="AI-native by design"

@@ -1,10 +1,22 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const isHome = location.pathname === '/';
+
+  const scrollToSection = (id: string) => {
+    if (isHome) {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      navigate('/');
+      setTimeout(() => {
+        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-md border-b border-border-subtle">
@@ -20,18 +32,24 @@ export default function Navbar() {
           >
             Home
           </Link>
-          <Link
-            to="/why-akf"
+          <button
+            onClick={() => scrollToSection('ai-native')}
             className="text-sm text-text-secondary hover:text-text-primary transition-colors hidden sm:inline"
           >
             Why AKF
-          </Link>
-          <a
-            href={isHome ? '#enterprise' : '/#enterprise'}
+          </button>
+          <button
+            onClick={() => scrollToSection('enterprise')}
             className="text-sm text-text-secondary hover:text-text-primary transition-colors hidden sm:inline"
           >
             Enterprise
-          </a>
+          </button>
+          <Link
+            to="/akf-vs-md"
+            className="text-sm text-text-secondary hover:text-text-primary transition-colors hidden sm:inline"
+          >
+            AKF vs MD
+          </Link>
           <Link
             to="/personas"
             className="text-sm text-text-secondary hover:text-text-primary transition-colors hidden sm:inline"
@@ -42,13 +60,7 @@ export default function Navbar() {
             to="/validate"
             className="text-sm text-text-secondary hover:text-text-primary transition-colors hidden sm:inline"
           >
-            Validate
-          </Link>
-          <Link
-            to="/audit"
-            className="text-sm text-text-secondary hover:text-text-primary transition-colors hidden sm:inline"
-          >
-            Audit
+            Validate & Audit
           </Link>
           <Link
             to="/convert-to-akf"
@@ -93,20 +105,25 @@ export default function Navbar() {
           >
             Home
           </Link>
-          <Link
-            to="/why-akf"
-            onClick={() => setMenuOpen(false)}
-            className="text-sm text-text-secondary hover:text-text-primary transition-colors py-2"
+          <button
+            onClick={() => { scrollToSection('ai-native'); setMenuOpen(false); }}
+            className="text-sm text-text-secondary hover:text-text-primary transition-colors py-2 text-left"
           >
             Why AKF
-          </Link>
-          <a
-            href={isHome ? '#enterprise' : '/#enterprise'}
+          </button>
+          <button
+            onClick={() => { scrollToSection('enterprise'); setMenuOpen(false); }}
+            className="text-sm text-text-secondary hover:text-text-primary transition-colors py-2 text-left"
+          >
+            Enterprise
+          </button>
+          <Link
+            to="/akf-vs-md"
             onClick={() => setMenuOpen(false)}
             className="text-sm text-text-secondary hover:text-text-primary transition-colors py-2"
           >
-            Enterprise
-          </a>
+            AKF vs MD
+          </Link>
           <Link
             to="/personas"
             onClick={() => setMenuOpen(false)}
@@ -119,14 +136,7 @@ export default function Navbar() {
             onClick={() => setMenuOpen(false)}
             className="text-sm text-text-secondary hover:text-text-primary transition-colors py-2"
           >
-            Validate
-          </Link>
-          <Link
-            to="/audit"
-            onClick={() => setMenuOpen(false)}
-            className="text-sm text-text-secondary hover:text-text-primary transition-colors py-2"
-          >
-            Audit
+            Validate & Audit
           </Link>
           <Link
             to="/convert-to-akf"
