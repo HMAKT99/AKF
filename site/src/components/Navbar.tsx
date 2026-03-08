@@ -53,6 +53,12 @@ export default function Navbar() {
             Audit
           </Link>
           <Link
+            to="/convert-to-akf"
+            className="text-sm text-text-secondary hover:text-text-primary transition-colors hidden sm:inline"
+          >
+            Convert to AKF
+          </Link>
+          <Link
             to="/compare"
             className="text-sm text-text-secondary hover:text-text-primary transition-colors hidden sm:inline"
           >
@@ -131,6 +137,13 @@ export default function Navbar() {
             className="text-sm text-text-secondary hover:text-text-primary transition-colors py-2"
           >
             Audit
+          </Link>
+          <Link
+            to="/convert-to-akf"
+            onClick={() => setMenuOpen(false)}
+            className="text-sm text-text-secondary hover:text-text-primary transition-colors py-2"
+          >
+            Convert to AKF
           </Link>
           <Link
             to="/compare"
