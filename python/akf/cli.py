@@ -1,4 +1,4 @@
-"""AKF v1.0 — Command-line interface."""
+"""AKF v1.1 — Command-line interface."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ from .trust import compute_all, effective_trust
 def main(ctx) -> None:
     """AKF — Agent Knowledge Format CLI."""
     if ctx.invoked_subcommand is None:
-        click.secho("AKF — Agent Knowledge Format v1.0", bold=True)
+        click.secho("AKF — Agent Knowledge Format v1.1", bold=True)
         click.echo()
         click.echo("The trust metadata standard for every file AI touches.")
         click.echo()
@@ -1123,3 +1123,78 @@ def batch_cmd(manifest, parallel):
         icon = "\u2705" if r.get("status") != "error" else "\u274c"
         msg = r.get("error", r.get("status", ""))
         click.echo(f"  {icon} {r['action']} {r['file']} — {msg}")
+
+
+@main.command("report")
+@click.argument("paths", nargs=-1, type=click.Path())
+@click.option("--format", "fmt", default="markdown",
+              type=click.Choice(["markdown", "json", "html", "csv", "pdf"]),
+              help="Output format")
+@click.option("--output", "-o", "output_file", default=None,
+              type=click.Path(), help="Save report to file")
+@click.option("--top", default=5, type=int, help="Number of top risks to show")
+def report_cmd(paths, fmt, output_file, top) -> None:
+    """Generate an enterprise trust posture report across AKF files.
+
+    Accepts file paths or a directory. Defaults to current directory.
+
+    Examples:
+
+        akf report                          # scan current dir
+
+        akf report /tmp/r1.akf /tmp/r2.akf  # specific files
+
+        akf report /tmp/ --format json      # directory, JSON output
+
+        akf report /tmp/ -o report.md       # save to file
+    """
+    from .report import enterprise_report
+
+    # PDF requires --output (can't echo bytes to stdout)
+    if fmt == "pdf" and not output_file:
+        click.secho("PDF format requires --output/-o flag (e.g. akf report . --format pdf -o report.pdf)", fg="red")
+        raise SystemExit(1)
+
+    targets = list(paths) if paths else ["."]
+
+    # Single path or list
+    if len(targets) == 1:
+        target = targets[0]
+    else:
+        target = targets
+
+    report = enterprise_report(target, format=fmt, top=top)
+
+    if report.total_files == 0:
+        click.secho("No .akf files found.", fg="yellow")
+        click.echo()
+        click.echo("Get started in 3 steps:")
+        click.echo()
+        click.secho("  1. Initialize AKF in your project:", bold=True)
+        click.echo("     akf init")
+        click.echo()
+        click.secho("  2. Create trust metadata for your files:", bold=True)
+        click.echo("     akf create out.akf -c 'Your claim' -t 0.95 --src 'source'")
+        click.echo("     akf stamp myfile.py              # stamp an existing file")
+        click.echo("     akf embed report.docx             # embed into Office/PDF")
+        click.echo()
+        click.secho("  3. Run the report again:", bold=True)
+        click.echo("     akf report .")
+        click.echo()
+        click.echo("Run 'akf create --demo' for an interactive walkthrough.")
+        return
+
+    try:
+        rendered = report.render(format=fmt)
+    except ImportError as e:
+        click.secho(str(e), fg="red")
+        raise SystemExit(1)
+
+    if output_file:
+        if isinstance(rendered, (bytes, bytearray)):
+            Path(output_file).write_bytes(rendered)
+        else:
+            Path(output_file).write_text(rendered)
+        click.secho(f"Report saved to {output_file} ({report.total_files} files, {report.total_claims} claims)", fg="green")
+    else:
+        click.echo(rendered)

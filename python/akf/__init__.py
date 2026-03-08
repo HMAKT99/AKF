@@ -1,4 +1,4 @@
-"""AKF — Agent Knowledge Format v1.0.
+"""AKF — Agent Knowledge Format v1.1.
 
 The trust metadata standard for every file AI touches.
 
@@ -48,6 +48,7 @@ from .compliance import (
 )
 from .view import show, to_html, to_markdown, executive_summary
 from .data import load_dataset, quality_report, merge, filter_claims
+from .report import enterprise_report, EnterpriseReport, FileReport, register_renderer, RENDERERS
 from .knowledge_base import KnowledgeBase
 from .stamp import stamp, stamp_file
 from .git_ops import stamp_commit, read_commit, trust_log
@@ -351,6 +352,12 @@ __all__ = [
     "load_dataset",
     "merge",
     "quality_report",
+    # Report
+    "enterprise_report",
+    "EnterpriseReport",
+    "FileReport",
+    "register_renderer",
+    "RENDERERS",
     # Stamp & Git
     "stamp",
     "stamp_file",

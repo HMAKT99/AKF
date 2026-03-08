@@ -20,6 +20,7 @@ import ValidatePage from './components/ValidatePage';
 import CompareC2paPage from './components/CompareC2paPage';
 import ComparePurviewPage from './components/ComparePurviewPage';
 import CompareWatermarkingPage from './components/CompareWatermarkingPage';
+import EnterpriseReportPage from './components/EnterpriseReportPage';
 import Footer from './components/Footer';
 
 function HomePage() {
@@ -45,7 +46,7 @@ function HomePage() {
 
       {/* ── ENTERPRISE ── */}
       <div className="bg-surface-raised/50">
-        <SectionDivider label="Enterprise" id="enterprise" />
+        <SectionDivider label="Security" id="enterprise" />
         <SecurityIntegration />
       </div>
     </>
@@ -86,6 +87,7 @@ export default function App() {
             <Route path="/convert-to-akf" element={<ConvertPage />} />
             <Route path="/validate" element={<ValidatePage />} />
             <Route path="/audit" element={<ValidatePage />} />
+            <Route path="/enterprise-report" element={<EnterpriseReportPage />} />
             <Route path="/compare/c2pa" element={<CompareC2paPage />} />
             <Route path="/compare/purview" element={<ComparePurviewPage />} />
             <Route path="/compare/watermarking" element={<CompareWatermarkingPage />} />

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import SectionHeading from '../ui/SectionHeading';
 
 const detectionClasses = [
@@ -98,8 +99,8 @@ export default function SecurityIntegration() {
     <section className="py-20 px-6">
       <div className="max-w-4xl mx-auto">
         <SectionHeading
-          title="Enterprise-ready security"
-          subtitle="10 AI-specific detection classes. Best-in-class security that works with top enterprise security providers."
+          title="Production-ready security"
+          subtitle="10 AI-specific detection classes that work with any security stack — SIEM, DLP, or standalone."
         />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -123,9 +124,21 @@ export default function SecurityIntegration() {
         </div>
 
         <p className="mt-8 text-sm text-text-secondary text-center max-w-2xl mx-auto">
-          AKF metadata powers detection policies across leading enterprise security platforms.
-          Pre-built rules for all 10 classes ship with the enterprise SDK.
+          AKF metadata powers detection policies across security platforms.
+          Pre-built rules for all 10 detection classes ship with the SDK.
         </p>
+
+        <div className="mt-8 text-center">
+          <Link
+            to="/enterprise-report"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent hover:bg-accent-hover text-white text-sm font-medium transition-colors"
+          >
+            See Governance Report
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            </svg>
+          </Link>
+        </div>
       </div>
     </section>
   );
