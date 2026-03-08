@@ -80,6 +80,7 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/personas" element={<PersonasPage />} />
+            <Route path="/why-akf" element={<ComparePage />} />
             <Route path="/compare" element={<ComparePage />} />
             <Route path="/get-started" element={<GetStartedPage />} />
             <Route path="/convert-to-akf" element={<ConvertPage />} />

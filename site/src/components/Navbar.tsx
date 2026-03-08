@@ -1,11 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
-const anchorLinks = [
-  { href: '#why-akf', label: 'Why AKF' },
-  { href: '#enterprise', label: 'Enterprise' },
-];
-
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
@@ -25,15 +20,18 @@ export default function Navbar() {
           >
             Home
           </Link>
-          {anchorLinks.map((link) => (
-            <a
-              key={link.href}
-              href={isHome ? link.href : `/${link.href}`}
-              className="text-sm text-text-secondary hover:text-text-primary transition-colors hidden sm:inline"
-            >
-              {link.label}
-            </a>
-          ))}
+          <Link
+            to="/why-akf"
+            className="text-sm text-text-secondary hover:text-text-primary transition-colors hidden sm:inline"
+          >
+            Why AKF
+          </Link>
+          <a
+            href={isHome ? '#enterprise' : '/#enterprise'}
+            className="text-sm text-text-secondary hover:text-text-primary transition-colors hidden sm:inline"
+          >
+            Enterprise
+          </a>
           <Link
             to="/personas"
             className="text-sm text-text-secondary hover:text-text-primary transition-colors hidden sm:inline"
@@ -57,12 +55,6 @@ export default function Navbar() {
             className="text-sm text-text-secondary hover:text-text-primary transition-colors hidden sm:inline"
           >
             Convert to AKF
-          </Link>
-          <Link
-            to="/compare"
-            className="text-sm text-text-secondary hover:text-text-primary transition-colors hidden sm:inline"
-          >
-            Compare
           </Link>
           <Link
             to="/about"
@@ -107,16 +99,20 @@ export default function Navbar() {
           >
             Home
           </Link>
-          {anchorLinks.map((link) => (
-            <a
-              key={link.href}
-              href={isHome ? link.href : `/${link.href}`}
-              onClick={() => setMenuOpen(false)}
-              className="text-sm text-text-secondary hover:text-text-primary transition-colors py-2"
-            >
-              {link.label}
-            </a>
-          ))}
+          <Link
+            to="/why-akf"
+            onClick={() => setMenuOpen(false)}
+            className="text-sm text-text-secondary hover:text-text-primary transition-colors py-2"
+          >
+            Why AKF
+          </Link>
+          <a
+            href={isHome ? '#enterprise' : '/#enterprise'}
+            onClick={() => setMenuOpen(false)}
+            className="text-sm text-text-secondary hover:text-text-primary transition-colors py-2"
+          >
+            Enterprise
+          </a>
           <Link
             to="/personas"
             onClick={() => setMenuOpen(false)}
@@ -144,13 +140,6 @@ export default function Navbar() {
             className="text-sm text-text-secondary hover:text-text-primary transition-colors py-2"
           >
             Convert to AKF
-          </Link>
-          <Link
-            to="/compare"
-            onClick={() => setMenuOpen(false)}
-            className="text-sm text-text-secondary hover:text-text-primary transition-colors py-2"
-          >
-            Compare
           </Link>
           <Link
             to="/about"

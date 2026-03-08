@@ -116,6 +116,36 @@ akf:
             </div>
           </div>
 
+          {/* Competitive comparisons */}
+          <div className="mt-20">
+            <h2 className="text-xl font-bold text-text-primary">How AKF compares</h2>
+            <p className="mt-1 text-sm text-text-secondary mb-6">AKF complements existing standards — each solves a different problem.</p>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Link to="/compare/c2pa" className="group rounded-xl border border-border-subtle bg-surface-raised p-5 hover:border-accent/40 transition-colors">
+                <h3 className="text-sm font-semibold text-text-primary group-hover:text-accent transition-colors">C2PA vs AKF</h3>
+                <p className="mt-2 text-xs text-text-secondary leading-relaxed">
+                  C2PA proves file authenticity. AKF proves claim trustworthiness. Better together.
+                </p>
+                <span className="mt-3 inline-block text-xs text-accent">Read more →</span>
+              </Link>
+              <Link to="/compare/purview" className="group rounded-xl border border-border-subtle bg-surface-raised p-5 hover:border-accent/40 transition-colors">
+                <h3 className="text-sm font-semibold text-text-primary group-hover:text-accent transition-colors">Purview vs AKF</h3>
+                <p className="mt-2 text-xs text-text-secondary leading-relaxed">
+                  Enterprise data governance without M365 E5 licensing or vendor lock-in.
+                </p>
+                <span className="mt-3 inline-block text-xs text-accent">Read more →</span>
+              </Link>
+              <Link to="/compare/watermarking" className="group rounded-xl border border-border-subtle bg-surface-raised p-5 hover:border-accent/40 transition-colors">
+                <h3 className="text-sm font-semibold text-text-primary group-hover:text-accent transition-colors">Watermarking vs AKF</h3>
+                <p className="mt-2 text-xs text-text-secondary leading-relaxed">
+                  Watermarks prove origin. AKF proves trust. Different questions, complementary answers.
+                </p>
+                <span className="mt-3 inline-block text-xs text-accent">Read more →</span>
+              </Link>
+            </div>
+          </div>
+
           {/* Closer */}
           <div className="mt-16 border-l-2 border-accent pl-5 py-1">
             <p className="text-base text-text-primary font-medium">
