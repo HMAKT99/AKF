@@ -289,6 +289,10 @@ See [LLM-PROMPT.md](spec/LLM-PROMPT.md) for a full system prompt.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, testing, and PR process.
 
+## Free and Open — Forever
+
+AKF is free and open source under the MIT license. The format specification will always be free. No feature will ever be gated behind a paid tier. AKF is a standard, and standards must be free to be universal.
+
 ## License
 
 MIT — use it everywhere, embed it in everything.
