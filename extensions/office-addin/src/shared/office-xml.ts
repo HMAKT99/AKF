@@ -51,7 +51,8 @@ export async function extractAKF(): Promise<AKFMetadata | null> {
           }
 
           try {
-            resolve(JSON.parse(jsonStr) as AKFMetadata);
+            const raw = JSON.parse(jsonStr);
+            resolve(normalizeCompact(raw) as unknown as AKFMetadata);
           } catch {
             resolve(null);
           }
@@ -77,6 +78,44 @@ export async function embedAKF(metadata: AKFMetadata): Promise<void> {
       }
     });
   });
+}
+
+/**
+ * Normalize compact wire format keys to descriptive field names.
+ * Mirrors the Python SDK's normalize logic: c→content, t→confidence, etc.
+ */
+function normalizeCompact(raw: Record<string, unknown>): Record<string, unknown> {
+  const CLAIM_MAP: Record<string, string> = {
+    c: "content", t: "confidence", src: "source",
+    tier: "authority_tier", ai: "ai_generated", v: "verified",
+  };
+  const TOP_MAP: Record<string, string> = {
+    ver: "version", cls: "classification", prov: "provenance",
+    hash: "integrity_hash",
+  };
+
+  // Normalize top-level keys
+  for (const [compact, full] of Object.entries(TOP_MAP)) {
+    if (raw[compact] !== undefined && raw[full] === undefined) {
+      raw[full] = raw[compact];
+      delete raw[compact];
+    }
+  }
+
+  // Normalize claims
+  const claims = raw.claims as Record<string, unknown>[] | undefined;
+  if (Array.isArray(claims)) {
+    for (const claim of claims) {
+      for (const [compact, full] of Object.entries(CLAIM_MAP)) {
+        if (claim[compact] !== undefined && claim[full] === undefined) {
+          claim[full] = claim[compact];
+          delete claim[compact];
+        }
+      }
+    }
+  }
+
+  return raw;
 }
 
 async function removeExistingAKF(): Promise<void> {

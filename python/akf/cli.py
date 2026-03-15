@@ -1198,3 +1198,321 @@ def report_cmd(paths, fmt, output_file, top) -> None:
         click.secho(f"Report saved to {output_file} ({report.total_files} files, {report.total_claims} claims)", fg="green")
     else:
         click.echo(rendered)
+
+
+@main.command("doctor")
+def doctor_cmd():
+    """Check your AKF installation and PATH setup."""
+    import platform
+    import shutil
+
+    click.secho("AKF Doctor", bold=True)
+    click.echo()
+
+    # Version
+    click.echo(f"  AKF version:    1.1.0")
+    click.echo(f"  Python version: {sys.version.split()[0]}")
+    click.echo(f"  Platform:       {platform.system()} {platform.machine()}")
+    click.echo()
+
+    # Check if `akf` is on PATH
+    akf_bin = shutil.which("akf")
+    if akf_bin:
+        click.secho(f"  \u2705 akf is on PATH: {akf_bin}", fg="green")
+    else:
+        click.secho("  \u274c akf is NOT on PATH", fg="red")
+        click.echo()
+        click.echo("  Workaround: python3 -m akf (always works)")
+        click.echo()
+        click.secho("  To fix permanently:", bold=True)
+        system = platform.system()
+        if system == "Darwin":
+            click.echo('    Add to ~/.zshrc:')
+            click.echo('      export PATH="$HOME/Library/Python/3.9/bin:$PATH"')
+            click.echo()
+            click.echo('    Or install with pipx (recommended):')
+            click.echo('      pipx install akf')
+        elif system == "Linux":
+            click.echo('    Add to ~/.bashrc:')
+            click.echo('      export PATH="$HOME/.local/bin:$PATH"')
+            click.echo()
+            click.echo('    Or install with pipx (recommended):')
+            click.echo('      pipx install akf')
+        else:
+            click.echo('    Install with pipx (recommended):')
+            click.echo('      pipx install akf')
+
+    # Python version check
+    click.echo()
+    v = sys.version_info
+    if v >= (3, 9):
+        click.secho(f"  \u2705 Python {v.major}.{v.minor} is supported", fg="green")
+    else:
+        click.secho(f"  \u26a0\ufe0f  Python {v.major}.{v.minor} — AKF requires 3.9+", fg="yellow")
+
+    click.echo()
+    if akf_bin and v >= (3, 9):
+        click.secho("  All good!", fg="green", bold=True)
+    else:
+        click.echo("  Fix the issues above and run 'akf doctor' again.")
+
+
+@main.command("quickstart")
+def quickstart_cmd():
+    """See AKF in action in 30 seconds."""
+    from .security import security_score
+
+    # Step 1: Create
+    click.secho("=== Step 1: Create ===", bold=True)
+    unit = create_multi([
+        {"content": "Revenue was $4.2B, up 12% YoY", "confidence": 0.98,
+         "source": "SEC 10-Q Filing", "authority_tier": 1, "verified": True},
+        {"content": "Cloud segment grew 15%", "confidence": 0.85,
+         "source": "Gartner Report", "authority_tier": 2},
+        {"content": "H2 outlook is positive", "confidence": 0.55,
+         "source": "AI inference", "authority_tier": 5, "ai_generated": True,
+         "risk": "Ungrounded AI projection"},
+    ], author="demo@akf.dev", classification="internal")
+    demo_path = Path("demo.akf")
+    unit.save(str(demo_path))
+    click.secho(f"Created {demo_path} with {len(unit.claims)} claims", fg="green")
+    click.echo()
+
+    # Step 2: Inspect
+    click.secho("=== Step 2: Inspect ===", bold=True)
+    for claim in unit.claims:
+        if claim.confidence >= 0.8:
+            icon = "\U0001f7e2"
+        elif claim.confidence >= 0.5:
+            icon = "\U0001f7e1"
+        else:
+            icon = "\U0001f534"
+
+        parts = [f'{icon} {claim.confidence:.2f}  "{claim.content}"']
+        if claim.source:
+            parts.append(claim.source)
+        if claim.authority_tier:
+            parts.append(f"Tier {claim.authority_tier}")
+        if claim.verified:
+            parts.append(click.style("verified", fg="green"))
+        if claim.ai_generated:
+            parts.append(click.style("\u26a0 AI", fg="yellow"))
+        click.echo("  " + "  ".join(parts))
+    click.echo()
+
+    # Step 3: Trust
+    click.secho("=== Step 3: Trust ===", bold=True)
+    results = compute_all(unit)
+    for claim, result in zip(unit.claims, results):
+        if result.decision == "ACCEPT":
+            color = "green"
+        elif result.decision == "LOW":
+            color = "yellow"
+        else:
+            color = "red"
+        click.secho(
+            f"  {result.decision:6s}  {result.score:.4f}  \"{claim.content}\"",
+            fg=color,
+        )
+    click.echo()
+
+    # Step 4: Security
+    click.secho("=== Step 4: Security ===", bold=True)
+    sec = security_score(unit)
+    color = "green" if sec.score >= 8 else "yellow" if sec.score >= 5 else "red"
+    click.secho(f"  Security Score: {sec.score:.1f}/10 (Grade: {sec.grade})", fg=color, bold=True)
+    for check in sec.checks:
+        icon = "\u2705" if check["passed"] else "\u274c"
+        click.echo(f"  {icon} {check['check']}")
+    click.echo()
+
+    # What's next
+    click.secho("=== What's Next? ===", bold=True)
+    click.echo("  akf embed report.docx          # Embed into Word/Excel")
+    click.echo("  akf audit demo.akf             # Compliance check")
+    click.echo("  akf report .                   # Governance report")
+    click.echo()
+    click.echo("  Learn more: https://akf.dev")
+
+
+# ---------------------------------------------------------------------------
+# Auto-tracking: install / uninstall / watch
+# ---------------------------------------------------------------------------
+
+@main.command("install")
+@click.option("--system", is_flag=True, help="Install system-wide (requires privileges)")
+@click.option("--no-daemon", is_flag=True, help="Skip background watcher daemon")
+@click.option("--dirs", multiple=True, type=click.Path(), help="Directories to watch (default: ~/Downloads, ~/Desktop, ~/Documents)")
+def install_cmd(system, no_daemon, dirs):
+    """Activate auto-tracking and background file watcher.
+
+    Drops a .pth file into site-packages so every Python process
+    automatically patches LLM SDKs (OpenAI, Anthropic, Mistral, Google)
+    to record model/provider metadata via AKF.
+
+    Also installs a background daemon that watches common directories
+    and auto-stamps new/modified files with AKF metadata.
+
+    No code changes needed — just `akf install` once.
+    """
+    from ._auto import install as _install
+
+    try:
+        pth_path = _install(user=not system)
+    except Exception as e:
+        click.secho(f"Failed to install: {e}", fg="red")
+        sys.exit(1)
+
+    click.secho("AKF auto-tracking installed!", fg="green", bold=True)
+    click.echo(f"  .pth file: {pth_path}")
+    click.echo()
+
+    if not no_daemon:
+        from ._auto import install_service
+
+        try:
+            custom_dirs = list(dirs) if dirs else None
+            result = install_service(dirs=custom_dirs)
+            click.secho("Background watcher installed!", fg="green", bold=True)
+            click.echo(f"  {result}")
+        except Exception as e:
+            click.secho(f"Warning: daemon install failed: {e}", fg="yellow")
+            click.echo("  Auto-tracking is active, but background watcher could not start.")
+            click.echo("  Use 'akf watch .' for foreground watching.")
+        click.echo()
+
+    click.echo("Every Python process will now auto-track LLM calls.")
+    click.echo("Supported SDKs: OpenAI, Anthropic, Mistral, Google GenerativeAI.")
+    if not no_daemon:
+        click.echo()
+        click.echo("Background watcher is monitoring your files.")
+        click.echo("  Status:    akf watch --status")
+        click.echo("  Stop:      akf watch --stop")
+    click.echo()
+    click.echo("To remove: akf uninstall")
+
+
+@main.command("uninstall")
+def uninstall_cmd():
+    """Remove auto-tracking and background watcher (reverses `akf install`)."""
+    from ._auto import uninstall as _uninstall, uninstall_service
+
+    # Remove service first
+    try:
+        svc_result = uninstall_service()
+        if svc_result:
+            click.secho("Background watcher removed.", fg="green")
+            click.echo(f"  {svc_result}")
+    except Exception as e:
+        click.secho(f"Warning: could not remove daemon: {e}", fg="yellow")
+
+    # Remove .pth
+    removed = _uninstall()
+    if removed:
+        click.secho("AKF auto-tracking removed.", fg="green")
+        click.echo(f"  Removed: {removed}")
+    else:
+        click.secho("No auto-tracking installation found.", fg="yellow")
+
+    # Clean up config/pid/log files
+    akf_dir = Path.home() / ".akf"
+    for name in ["watch.pid", "watch.log", "watch.log.1",
+                 "watch-stdout.log", "watch-stderr.log"]:
+        p = akf_dir / name
+        if p.exists():
+            p.unlink(missing_ok=True)
+
+
+@main.command("watch")
+@click.argument("directories", nargs=-1, type=click.Path(exists=True))
+@click.option("--agent", help="Agent ID for stamped metadata")
+@click.option("--classification", default="internal", help="Classification label")
+@click.option("--interval", default=5.0, type=float, help="Poll interval in seconds")
+@click.option("--status", "show_status", is_flag=True, help="Show daemon status")
+@click.option("--stop", "do_stop", is_flag=True, help="Stop the background daemon")
+@click.option("--start", "do_start", is_flag=True, help="Start the background daemon")
+def watch_cmd(directories, agent, classification, interval,
+              show_status, do_stop, do_start):
+    """Watch directories and auto-stamp new/modified files.
+
+    Monitors directories for new or modified files and automatically
+    stamps them with AKF trust metadata. Files that already have
+    AKF metadata are skipped.
+
+    Examples:
+
+        akf watch .                          # foreground mode
+
+        akf watch /tmp/output /tmp/reports   # watch multiple dirs
+
+        akf watch --status                   # is daemon running?
+
+        akf watch --stop                     # stop background daemon
+
+        akf watch --start                    # start background daemon
+    """
+    if show_status:
+        from ._auto import service_status
+        status = service_status()
+        if status["running"]:
+            click.secho(f"Daemon running (PID {status['pid']})", fg="green", bold=True)
+        else:
+            click.secho("Daemon not running", fg="yellow", bold=True)
+        if status["installed"]:
+            click.echo(f"  Service: {status['service_file']}")
+        else:
+            click.echo("  Service not installed. Run 'akf install' to set up.")
+        return
+
+    if do_stop:
+        from .daemon import stop_daemon
+        if stop_daemon():
+            click.secho("Daemon stopped.", fg="green")
+        else:
+            click.secho("No running daemon found.", fg="yellow")
+        return
+
+    if do_start:
+        from .daemon import is_running, run_daemon
+        if is_running():
+            click.secho(f"Daemon already running (PID {is_running()})", fg="yellow")
+            return
+        # Start in background via double-fork
+        click.echo("Starting daemon...")
+        import subprocess
+        subprocess.Popen(
+            [sys.executable, "-m", "akf.daemon"],
+            start_new_session=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        import time
+        time.sleep(0.5)
+        pid = is_running()
+        if pid:
+            click.secho(f"Daemon started (PID {pid})", fg="green")
+        else:
+            click.secho("Daemon may have failed to start. Check ~/.akf/watch.log", fg="yellow")
+        return
+
+    # Foreground mode
+    from .watch import watch as _watch
+
+    if not directories:
+        directories = (".",)
+
+    dirs_display = ", ".join(str(Path(d).resolve()) for d in directories)
+    click.secho(f"Watching: {dirs_display}", fg="cyan", bold=True)
+    click.echo(f"  Classification: {classification}")
+    click.echo(f"  Interval: {interval}s")
+    if agent:
+        click.echo(f"  Agent: {agent}")
+    click.echo()
+    click.echo("Press Ctrl+C to stop.")
+    click.echo()
+
+    try:
+        _watch(list(directories), agent=agent, classification=classification, interval=interval)
+    except KeyboardInterrupt:
+        click.echo()
+        click.secho("Watcher stopped.", fg="yellow")

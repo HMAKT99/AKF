@@ -2,6 +2,13 @@
   <img src="https://img.shields.io/badge/format-.akf-blue?style=for-the-badge" alt="AKF Format" />
 </p>
 
+<p align="center">
+  <a href="https://pypi.org/project/akf/"><img src="https://img.shields.io/pypi/v/akf?style=flat-square&label=PyPI" /></a>
+  <a href="https://www.npmjs.com/package/akf-format"><img src="https://img.shields.io/npm/v/akf-format?style=flat-square&label=npm" /></a>
+  <a href="https://github.com/HMAKT99/AKF/actions"><img src="https://img.shields.io/github/actions/workflow/status/HMAKT99/AKF/ci.yml?style=flat-square&label=CI" /></a>
+  <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" />
+</p>
+
 <h1 align="center">AKF — Agent Knowledge Format</h1>
 
 <p align="center">
@@ -41,6 +48,11 @@ AI generates content → AKF stamps trust metadata → Anyone can verify it
 pip install akf    # Python
 npm install akf-format    # TypeScript / Node.js
 ```
+
+> **`akf` command not found?** Use `python3 -m akf` (always works), or:
+> - Install with pipx: `pipx install akf` (recommended — auto-handles PATH)
+> - macOS: add `export PATH="$HOME/Library/Python/3.9/bin:$PATH"` to `~/.zshrc`
+> - Linux: add `export PATH="$HOME/.local/bin:$PATH"` to `~/.bashrc`
 
 ```python
 import akf

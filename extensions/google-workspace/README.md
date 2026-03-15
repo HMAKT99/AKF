@@ -5,9 +5,11 @@ Trust metadata viewer, embedder, and auditor for Google Docs, Sheets, and Slides
 ## Features
 
 - **AKF menu** in Docs, Sheets, and Slides (View Trust, Run Audit, Embed Metadata)
-- **Sidebar** with tabbed UI — Overview, Claims, Provenance, Audit
+- **Sidebar** with tabbed UI — Overview, Claims, Provenance, Audit, Detection
 - **Card Service homepage** for the add-on panel
 - **7 compliance checks** with score and recommendations
+- **10 AI-specific detection classes** (hallucination risk, knowledge laundering, trust degradation, etc.)
+- **Claim creation** — add claims with confidence, source attribution, and AI risk tagging
 - Metadata stored via `DocumentProperties` (persists within Google Workspace)
 
 ## Deploy
@@ -51,9 +53,9 @@ In the Apps Script editor, click **Deploy** → **Test deployments** → select 
 ## Architecture
 
 - `Code.gs` — entry point: menu setup, sidebar launcher, Card homepage trigger
-- `AKF.gs` — metadata storage (`DocumentProperties`), embed logic, 7-check audit
-- `Cards.gs` — Card Service UI for homepage, claims list, audit results
-- `Sidebar.html` — rich sidebar with tabs, trust scoring, and dark theme
+- `AKF.gs` — metadata storage (`DocumentProperties`), embed logic, 7-check audit, 10 detection classes, trust computation
+- `Cards.gs` — Card Service UI for homepage, claims list, audit results, detection card
+- `Sidebar.html` — rich sidebar with tabs (Overview, Claims, Provenance, Audit, Detection), claim creation form, dark theme
 
 ## Note
 

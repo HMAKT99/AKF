@@ -1,5 +1,8 @@
 # AKF — Agent Knowledge Format (Python SDK)
 
+[![PyPI](https://img.shields.io/pypi/v/akf)](https://pypi.org/project/akf/)
+[![Python](https://img.shields.io/pypi/pyversions/akf)](https://pypi.org/project/akf/)
+
 Lightweight file format for AI-generated knowledge with built-in trust, provenance, and security.
 
 ## Install
@@ -7,6 +10,11 @@ Lightweight file format for AI-generated knowledge with built-in trust, provenan
 ```bash
 pip install akf
 ```
+
+> **`akf` command not found?** Use `python3 -m akf` (always works), or:
+> - Install with pipx: `pipx install akf` (recommended — auto-handles PATH)
+> - macOS: add `export PATH="$HOME/Library/Python/3.9/bin:$PATH"` to `~/.zshrc`
+> - Linux: add `export PATH="$HOME/.local/bin:$PATH"` to `~/.bashrc`
 
 ## Usage
 

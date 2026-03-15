@@ -93,6 +93,13 @@ function buildHomepageCard() {
         .setOnClickAction(
           CardService.newAction().setFunctionName('onAuditClick')
         )
+    )
+    .addWidget(
+      CardService.newTextButton()
+        .setText('Run Detections')
+        .setOnClickAction(
+          CardService.newAction().setFunctionName('onDetectionClick')
+        )
     );
   card.addSection(actionsSection);
 
@@ -142,4 +149,64 @@ function onAuditClick() {
 
   var nav = CardService.newNavigation().pushCard(card.build());
   return CardService.newActionResponseBuilder().setNavigation(nav).build();
+}
+
+function onDetectionClick() {
+  var meta = getAKFMetadata();
+  if (!meta) return buildHomepageCard();
+
+  var report = runAllDetectionsGs(meta);
+  var card = buildDetectionCard(report);
+  var nav = CardService.newNavigation().pushCard(card);
+  return CardService.newActionResponseBuilder().setNavigation(nav).build();
+}
+
+function buildDetectionCard(report) {
+  var subtitle = report.triggered_count + ' / 10 triggered';
+  if (report.critical_count > 0) subtitle += ', ' + report.critical_count + ' critical';
+  if (report.high_count > 0) subtitle += ', ' + report.high_count + ' high';
+
+  var card = CardService.newCardBuilder()
+    .setHeader(
+      CardService.newCardHeader()
+        .setTitle('Detection Results')
+        .setSubtitle(subtitle)
+    );
+
+  var resultsSection = CardService.newCardSection().setHeader('Detections');
+
+  for (var i = 0; i < report.results.length; i++) {
+    var r = report.results[i];
+    var name = r.detection_class.replace(/_/g, ' ');
+    var icon = r.triggered ? '\u26a0' : '\u2713';
+    var text = icon + ' ' + name + ' [' + r.severity + ']';
+
+    if (r.triggered && r.findings.length > 0) {
+      text += '\n' + r.findings.join('\n');
+    }
+
+    resultsSection.addWidget(
+      CardService.newTextParagraph().setText(text)
+    );
+  }
+
+  card.addSection(resultsSection);
+
+  if (report.triggered_count > 0) {
+    var recSection = CardService.newCardSection().setHeader('Actions');
+    var recs = [];
+    for (var j = 0; j < report.results.length; j++) {
+      if (report.results[j].triggered && report.results[j].recommendation) {
+        recs.push('\u2022 ' + report.results[j].recommendation);
+      }
+    }
+    if (recs.length > 0) {
+      recSection.addWidget(
+        CardService.newTextParagraph().setText(recs.join('\n'))
+      );
+    }
+    card.addSection(recSection);
+  }
+
+  return card.build();
 }

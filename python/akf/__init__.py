@@ -177,6 +177,32 @@ def verify_signature(unit, **kwargs):
     from .signing import verify as _verify
     return _verify(unit, **kwargs)
 
+def install(user=True):
+    """Activate AKF auto-tracking for all LLM calls in this Python environment.
+
+    Writes a .pth file so every Python process auto-patches LLM SDKs.
+    Use ``akf uninstall`` or ``uninstall()`` to reverse.
+
+    Args:
+        user: Install for current user (True) or system-wide (False).
+
+    Returns:
+        Path to the created .pth file.
+    """
+    from ._auto import install as _install
+    return _install(user=user)
+
+
+def uninstall():
+    """Remove AKF auto-tracking (reverses ``install()``).
+
+    Returns:
+        Path of the removed .pth file, or None if not found.
+    """
+    from ._auto import uninstall as _uninstall
+    return _uninstall()
+
+
 def track(client, **kwargs):
     """Wrap an LLM client to auto-track model/provider on every API call.
 
@@ -368,6 +394,9 @@ __all__ = [
     "keygen",
     "sign_unit",
     "verify_signature",
+    # Auto-tracking
+    "install",
+    "uninstall",
     # Tracking
     "track",
     "get_last_model",

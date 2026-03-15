@@ -84,6 +84,18 @@
       margin-top: 12px;
     }
     .btn:hover { background: #74c7ec; }
+    .btn-sm {
+      background: none;
+      border: 1px solid #313244;
+      color: #a6adc8;
+      padding: 6px 14px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 12px;
+    }
+    .btn-sm:hover { border-color: #89b4fa; color: #cdd6f4; }
     .tabs {
       display: flex;
       gap: 4px;
@@ -104,6 +116,40 @@
     .tab.active { background: #313244; color: #cdd6f4; }
     .tab:hover { color: #bac2de; }
     .hidden { display: none; }
+    .severity-badge {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .sev-critical { background: rgba(243,139,168,0.15); color: #f38ba8; }
+    .sev-high { background: rgba(250,179,135,0.15); color: #fab387; }
+    .sev-medium { background: rgba(249,226,175,0.15); color: #f9e2af; }
+    .sev-info { background: rgba(108,112,134,0.15); color: #6c7086; }
+    .detection-item { padding: 8px 0; border-bottom: 1px solid #313244; }
+    .detection-item.clean { opacity: 0.6; }
+    .detection-name { font-size: 13px; font-weight: 500; }
+    .detection-findings { margin-top: 4px; padding-left: 12px; }
+    .detection-findings div { font-size: 12px; color: #bac2de; padding: 1px 0; }
+    .detection-rec { font-size: 11px; color: #89b4fa; margin-top: 4px; }
+    details summary { cursor: pointer; list-style: none; }
+    details summary::-webkit-details-marker { display: none; }
+    .form-group { margin-bottom: 8px; }
+    .form-label { font-size: 11px; color: #a6adc8; display: block; margin-bottom: 4px; }
+    .form-input {
+      width: 100%;
+      background: #313244;
+      border: 1px solid #45475a;
+      color: #cdd6f4;
+      padding: 6px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: inherit;
+    }
+    .form-input:focus { outline: none; border-color: #89b4fa; }
+    textarea.form-input { resize: vertical; }
   </style>
 </head>
 <body>
@@ -118,6 +164,16 @@
   </div>
 
   <script>
+    function esc(text) {
+      if (text == null) return '';
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
     function trustColor(conf) {
       if (conf >= 0.8) return '#a6e3a1';
       if (conf >= 0.5) return '#f9e2af';
@@ -149,6 +205,7 @@
 
       var meta = data.metadata;
       var audit = data.audit;
+      var detections = data.detections;
       var claims = meta.claims || [];
       var prov = meta.provenance || [];
 
@@ -168,6 +225,7 @@
       html += '<button class="tab" onclick="switchTab(this,\'claims\')">Claims</button>';
       html += '<button class="tab" onclick="switchTab(this,\'provenance\')">Provenance</button>';
       html += '<button class="tab" onclick="switchTab(this,\'audit\')">Audit</button>';
+      html += '<button class="tab" onclick="switchTab(this,\'detection\')">Detection</button>';
       html += '</div>';
 
       // Overview
@@ -175,7 +233,7 @@
       html += '<div class="header">';
       html += '<h2>AKF Trust Metadata</h2>';
       if (meta.classification) {
-        html += '<span class="badge">' + meta.classification + '</span>';
+        html += '<span class="badge">' + esc(meta.classification) + '</span>';
       }
       html += '</div>';
       html += '<div class="trust-score">';
@@ -183,7 +241,7 @@
       html += '<span>Trust: ' + trust.toFixed(2) + ' (' + trustLabel(trust) + ')</span>';
       html += '</div>';
       html += '<div style="color:#6c7086">' + claims.length + ' claim(s)</div>';
-      if (meta.author) html += '<div style="color:#6c7086;margin-top:4px">Author: ' + meta.author + '</div>';
+      if (meta.author) html += '<div style="color:#6c7086;margin-top:4px">Author: ' + esc(meta.author) + '</div>';
       html += '</div>';
 
       // Claims
@@ -196,17 +254,45 @@
           var c = claims[j];
           var color = trustColor(c.confidence);
           html += '<div class="claim">';
-          html += '<div class="claim-content">' + c.content + '</div>';
+          html += '<div class="claim-content">' + esc(c.content) + '</div>';
           html += '<div class="claim-meta">';
           html += '<span class="confidence" style="color:' + color + '">' + c.confidence.toFixed(2) + '</span>';
-          if (c.source) html += '<span style="color:#a6adc8">' + c.source + '</span>';
+          if (c.source) html += '<span style="color:#a6adc8">' + esc(c.source) + '</span>';
           if (c.verified) html += '<span class="verified">verified</span>';
           if (c.ai_generated) html += '<span class="ai-tag">AI</span>';
           html += '</div>';
-          if (c.risk) html += '<div class="risk">Risk: ' + c.risk + '</div>';
+          if (c.risk) html += '<div class="risk">Risk: ' + esc(c.risk) + '</div>';
           html += '</div>';
         }
       }
+
+      // Add claim form
+      html += '<div style="margin-top:16px;border-top:1px solid #313244;padding-top:12px">';
+      html += '<button class="btn-sm" id="add-claim-toggle" onclick="toggleClaimForm()">+ Add Claim</button>';
+      html += '<div id="add-claim-form" class="hidden" style="margin-top:12px">';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Content</label>';
+      html += '<textarea id="claim-content" rows="3" class="form-input" placeholder="Enter claim content..."></textarea>';
+      html += '</div>';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Confidence: <span id="conf-display">0.80</span></label>';
+      html += '<input id="claim-confidence" type="range" min="0" max="1" step="0.01" value="0.8" style="width:100%" oninput="document.getElementById(\'conf-display\').textContent=parseFloat(this.value).toFixed(2)" />';
+      html += '</div>';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Source</label>';
+      html += '<input id="claim-source" type="text" class="form-input" placeholder="Source attribution" />';
+      html += '</div>';
+      html += '<div class="form-group" style="display:flex;align-items:center;gap:8px">';
+      html += '<input id="claim-ai" type="checkbox" onchange="document.getElementById(\'claim-risk-row\').style.display=this.checked?\'block\':\'none\'" />';
+      html += '<label for="claim-ai" style="font-size:12px;color:#a6adc8">AI-generated</label>';
+      html += '</div>';
+      html += '<div id="claim-risk-row" class="form-group hidden">';
+      html += '<label class="form-label">Risk description</label>';
+      html += '<input id="claim-risk" type="text" class="form-input" placeholder="Describe risk..." />';
+      html += '</div>';
+      html += '<button class="btn" style="width:100%;margin-top:8px" onclick="submitClaim()">Add Claim</button>';
+      html += '</div>';
+      html += '</div>';
       html += '</div>';
 
       // Provenance
@@ -218,8 +304,8 @@
         for (var k = 0; k < prov.length; k++) {
           var hop = prov[k];
           html += '<div class="prov-hop">';
-          html += '<div class="prov-actor">' + hop.actor + ' &mdash; ' + hop.action + '</div>';
-          html += '<div class="prov-time">' + (hop.timestamp || hop.at || '') + '</div>';
+          html += '<div class="prov-actor">' + esc(hop.actor) + ' &mdash; ' + esc(hop.action) + '</div>';
+          html += '<div class="prov-time">' + esc(hop.timestamp || hop.at || '') + '</div>';
           html += '</div>';
         }
       }
@@ -240,7 +326,52 @@
       if (audit.recommendations.length > 0) {
         html += '<div style="margin-top:12px" class="section-title">Recommendations</div>';
         for (var n = 0; n < audit.recommendations.length; n++) {
-          html += '<div class="rec">\u2022 ' + audit.recommendations[n] + '</div>';
+          html += '<div class="rec">\u2022 ' + esc(audit.recommendations[n]) + '</div>';
+        }
+      }
+      html += '</div>';
+
+      // Detection
+      html += '<div id="view-detection" class="hidden">';
+      var summaryColor = detections.critical_count > 0 ? '#f38ba8'
+        : detections.high_count > 0 ? '#fab387'
+        : detections.triggered_count > 0 ? '#f9e2af'
+        : '#a6e3a1';
+      html += '<div style="font-weight:600;font-size:14px;color:' + summaryColor + ';margin-bottom:12px">';
+      html += detections.triggered_count + ' / 10 triggered';
+      if (detections.critical_count > 0) html += ' <span style="color:#6c7086;font-size:12px">(' + detections.critical_count + ' critical)</span>';
+      if (detections.high_count > 0) html += ' <span style="color:#6c7086;font-size:12px">(' + detections.high_count + ' high)</span>';
+      html += '</div>';
+
+      for (var p = 0; p < detections.results.length; p++) {
+        var r = detections.results[p];
+        var dName = r.detection_class.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+        var sevClass = 'sev-' + r.severity;
+
+        if (!r.triggered) {
+          html += '<div class="detection-item clean">';
+          html += '<span style="color:#a6e3a1;font-size:11px">\u2713</span> ';
+          html += '<span class="detection-name" style="color:#a6adc8">' + dName + '</span> ';
+          html += '<span class="severity-badge ' + sevClass + '">' + r.severity + '</span>';
+          html += '</div>';
+        } else {
+          html += '<div class="detection-item">';
+          html += '<details>';
+          html += '<summary>';
+          html += '<span style="color:' + summaryColor + ';font-size:11px">\u26a0</span> ';
+          html += '<span class="detection-name">' + dName + '</span> ';
+          html += '<span class="severity-badge ' + sevClass + '">' + r.severity + '</span>';
+          html += '</summary>';
+          html += '<div class="detection-findings">';
+          for (var q = 0; q < r.findings.length; q++) {
+            html += '<div>\u2022 ' + esc(r.findings[q]) + '</div>';
+          }
+          if (r.recommendation) {
+            html += '<div class="detection-rec">' + esc(r.recommendation) + '</div>';
+          }
+          html += '</div>';
+          html += '</details>';
+          html += '</div>';
         }
       }
       html += '</div>';
@@ -254,7 +385,7 @@
       for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
       btn.classList.add('active');
 
-      var views = ['overview', 'claims', 'provenance', 'audit'];
+      var views = ['overview', 'claims', 'provenance', 'audit', 'detection'];
       for (var j = 0; j < views.length; j++) {
         var el = document.getElementById('view-' + views[j]);
         if (el) {
@@ -262,6 +393,40 @@
           else el.classList.add('hidden');
         }
       }
+    }
+
+    function toggleClaimForm() {
+      var form = document.getElementById('add-claim-form');
+      var toggle = document.getElementById('add-claim-toggle');
+      if (form.classList.contains('hidden')) {
+        form.classList.remove('hidden');
+        toggle.textContent = 'Cancel';
+      } else {
+        form.classList.add('hidden');
+        toggle.textContent = '+ Add Claim';
+      }
+    }
+
+    function submitClaim() {
+      var content = document.getElementById('claim-content').value.trim();
+      if (!content) return;
+
+      var claimData = {
+        content: content,
+        confidence: parseFloat(document.getElementById('claim-confidence').value) || 0.8,
+        source: document.getElementById('claim-source').value.trim() || '',
+        ai_generated: document.getElementById('claim-ai').checked,
+        risk: document.getElementById('claim-ai').checked
+          ? (document.getElementById('claim-risk').value.trim() || '')
+          : ''
+      };
+
+      google.script.run
+        .withSuccessHandler(function() { loadData(); })
+        .withFailureHandler(function(err) {
+          alert('Error adding claim: ' + err.message);
+        })
+        .addClaim(claimData);
     }
 
     function doEmbed() {

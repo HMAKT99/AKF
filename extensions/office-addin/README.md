@@ -8,6 +8,8 @@ Trust metadata viewer, embedder, and auditor for Microsoft Word, Excel, and Powe
 - **View Trust** — opens taskpane showing claims, trust scores, provenance, and audit results
 - **Embed** — stamps default AKF metadata into the document via OOXML Custom XML
 - **Audit** — runs 7 compliance checks and shows recommendations
+- **Detection** — 10 AI-specific detection classes (hallucination risk, knowledge laundering, trust degradation, etc.)
+- **Claims** — add claims with confidence, source attribution, and AI risk tagging
 
 ## Development
 
@@ -39,8 +41,9 @@ Deploy the `dist/` folder to `https://addin.akf.dev/` (or update `manifest.xml` 
 
 ## Architecture
 
-- `src/shared/akf-core.ts` — trust scoring, audit logic, types
-- `src/shared/office-xml.ts` — read/write AKF via OOXML Custom XML parts
-- `src/shared/ui.ts` — DOM rendering (claims, provenance, audit views)
-- `src/taskpane/taskpane.ts` — main taskpane with tabbed UI
+- `src/shared/akf-core.ts` — trust scoring, audit logic, 10 detection classes, types
+- `src/shared/office-xml.ts` — read/write AKF via OOXML Custom XML parts, compact format normalization
+- `src/shared/ui.ts` — DOM rendering (claims, provenance, audit, detection views, claim creation form)
+- `src/taskpane/taskpane.ts` — main taskpane with tabbed UI (Overview, Claims, Provenance, Audit, Detection)
 - `src/commands/commands.ts` — ribbon button command handlers
+- `src/commands/commands.html` — minimal HTML for ribbon ExecuteFunction runtime

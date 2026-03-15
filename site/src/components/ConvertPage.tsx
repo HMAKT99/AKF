@@ -321,7 +321,7 @@ data-pipeline.py      `}<span className="text-emerald-500">SHA-256 ✓  embedded
                         <span className="text-blue-500 font-bold text-xs">M</span>
                       </div>
                       <span className="text-sm font-semibold text-text-primary">Microsoft Office Add-in</span>
-                      <span className="text-[10px] text-amber-400 font-medium">Coming Soon</span>
+                      <span className="text-[10px] text-emerald-400 font-medium">Available</span>
                     </div>
                     <ul className="space-y-1.5 text-sm text-text-secondary ml-9">
                       <li className="flex items-center gap-2">
@@ -332,7 +332,14 @@ data-pipeline.py      `}<span className="text-emerald-500">SHA-256 ✓  embedded
                         <span className="text-accent text-xs">&#10003;</span>
                         Enrich and audit from SharePoint
                       </li>
+                      <li className="flex items-center gap-2">
+                        <span className="text-accent text-xs">&#10003;</span>
+                        10 AI-specific detection classes
+                      </li>
                     </ul>
+                    <div className="ml-9 mt-3 p-3 rounded bg-surface-secondary text-xs text-text-secondary">
+                      <span className="font-medium text-text-primary">Install:</span> Insert &rarr; Get Add-ins &rarr; search &ldquo;AKF Trust Metadata&rdquo;, or sideload <code className="text-accent">manifest.xml</code>
+                    </div>
                   </div>
 
                   {/* Divider */}
@@ -345,7 +352,7 @@ data-pipeline.py      `}<span className="text-emerald-500">SHA-256 ✓  embedded
                         <span className="text-emerald-500 font-bold text-xs">G</span>
                       </div>
                       <span className="text-sm font-semibold text-text-primary">Google Workspace Add-on</span>
-                      <span className="text-[10px] text-amber-400 font-medium">Coming Soon</span>
+                      <span className="text-[10px] text-emerald-400 font-medium">Available</span>
                     </div>
                     <ul className="space-y-1.5 text-sm text-text-secondary ml-9">
                       <li className="flex items-center gap-2">
@@ -356,7 +363,14 @@ data-pipeline.py      `}<span className="text-emerald-500">SHA-256 ✓  embedded
                         <span className="text-accent text-xs">&#10003;</span>
                         Enrich and audit from Drive
                       </li>
+                      <li className="flex items-center gap-2">
+                        <span className="text-accent text-xs">&#10003;</span>
+                        10 AI-specific detection classes
+                      </li>
                     </ul>
+                    <div className="ml-9 mt-3 p-3 rounded bg-surface-secondary text-xs text-text-secondary">
+                      <span className="font-medium text-text-primary">Install:</span> Extensions &rarr; Add-ons &rarr; Get add-ons &rarr; search &ldquo;AKF Trust Metadata&rdquo;
+                    </div>
                   </div>
                 </div>
               </div>
