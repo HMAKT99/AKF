@@ -81,6 +81,8 @@ def watch(directories=None, *, agent=None, classification="internal",
             if logger:
                 logger.warning("Error scanning directory: %s", d)
 
+    cycles_since_prune = 0
+
     while True:
         if stop_event is not None:
             stop_event.wait(timeout=interval)
@@ -88,6 +90,8 @@ def watch(directories=None, *, agent=None, classification="internal",
                 break
         else:
             time.sleep(interval)
+
+        seen: set[str] = set()
 
         for d in directories:
             try:
@@ -99,12 +103,24 @@ def watch(directories=None, *, agent=None, classification="internal",
                         mtime = f.stat().st_mtime
                     except OSError:
                         continue
+                    seen.add(path_str)
                     if path_str not in known or known[path_str] < mtime:
                         known[path_str] = mtime
                         _stamp_file(f, agent, classification, logger)
             except OSError:
                 if logger:
                     logger.warning("Error scanning directory: %s", d)
+
+        # Prune deleted files every 60 cycles (~5 min at default interval)
+        # to bound memory growth without per-cycle overhead.
+        cycles_since_prune += 1
+        if cycles_since_prune >= 60:
+            stale = known.keys() - seen
+            for k in stale:
+                del known[k]
+            if stale and logger:
+                logger.debug("Pruned %d stale entries from watch cache", len(stale))
+            cycles_since_prune = 0
 
 
 def _should_watch(f: Path) -> bool:
