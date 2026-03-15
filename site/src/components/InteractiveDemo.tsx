@@ -340,18 +340,8 @@ function OutputRenderer({ lines, visible }: { lines: OutputLine[]; visible: bool
 // ── File format icons ───────────────────────────────────────────────────────
 
 const FILE_FORMATS = [
-  { ext: 'DOCX', color: 'bg-blue-500/15 text-blue-400' },
-  { ext: 'PDF', color: 'bg-red-500/15 text-red-400' },
-  { ext: 'XLSX', color: 'bg-emerald-500/15 text-emerald-400' },
-  { ext: 'PPTX', color: 'bg-orange-500/15 text-orange-400' },
-  { ext: 'PNG', color: 'bg-violet-500/15 text-violet-400' },
-  { ext: 'HTML', color: 'bg-amber-500/15 text-amber-400' },
-  { ext: 'JSON', color: 'bg-yellow-500/15 text-yellow-400' },
-  { ext: 'PY', color: 'bg-sky-500/15 text-sky-400' },
-  { ext: 'TS', color: 'bg-blue-500/15 text-blue-400' },
-  { ext: 'MD', color: 'bg-gray-500/15 text-gray-400' },
-  { ext: 'EML', color: 'bg-pink-500/15 text-pink-400' },
-  { ext: 'CSV', color: 'bg-teal-500/15 text-teal-400' },
+  'docx', 'pdf', 'xlsx', 'pptx', 'png', 'html',
+  'json', 'py', 'ts', 'md', 'eml', 'csv',
 ];
 
 // ── Main Component ──────────────────────────────────────────────────────────
@@ -462,10 +452,10 @@ export default function InteractiveDemo() {
           <div className="flex flex-wrap justify-center gap-2">
             {FILE_FORMATS.map((f) => (
               <span
-                key={f.ext}
-                className={`px-2.5 py-1 rounded-md text-xs font-mono font-medium ${f.color}`}
+                key={f}
+                className="px-2.5 py-1 rounded-md text-xs font-mono font-medium bg-surface-overlay text-text-secondary border border-border-subtle"
               >
-                .{f.ext.toLowerCase()}
+                .{f}
               </span>
             ))}
           </div>
