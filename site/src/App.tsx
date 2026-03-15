@@ -10,6 +10,7 @@ import SecurityIntegration from './components/SecurityIntegration';
 import AgentIntegration from './components/AgentIntegration';
 import WorksWith from './components/WorksWith';
 import DownloadSection from './components/DownloadSection';
+import InteractiveDemo from './components/InteractiveDemo';
 import SectionDivider from './ui/SectionDivider';
 import AboutCreator from './components/AboutCreator';
 import PersonasPage from './components/PersonasPage';
@@ -28,6 +29,7 @@ function HomePage() {
     <>
       {/* ── INTRO ── */}
       <Hero />
+      <InteractiveDemo />
       <ValueProps />
       <WorksWith />
 
