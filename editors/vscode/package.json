@@ -1,0 +1,69 @@
+{
+  "name": "akf-vscode",
+  "displayName": "AKF — Agent Knowledge Format",
+  "description": "Auto-stamp AI-generated files with trust metadata. Detects Copilot, Cursor, and other AI completions.",
+  "version": "0.1.0",
+  "publisher": "akf",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "akf.stampFile",
+        "title": "AKF: Stamp Current File"
+      },
+      {
+        "command": "akf.inspectFile",
+        "title": "AKF: Inspect Current File"
+      },
+      {
+        "command": "akf.toggleAutoStamp",
+        "title": "AKF: Toggle Auto-Stamp"
+      }
+    ],
+    "configuration": {
+      "title": "AKF",
+      "properties": {
+        "akf.autoStamp": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically stamp files on save when AI-generated content is detected."
+        },
+        "akf.aiInsertionThreshold": {
+          "type": "number",
+          "default": 80,
+          "description": "Minimum characters in a single edit to consider it an AI insertion."
+        },
+        "akf.classification": {
+          "type": "string",
+          "default": "internal",
+          "description": "Default classification label for stamped files."
+        },
+        "akf.cliPath": {
+          "type": "string",
+          "default": "akf",
+          "description": "Path to the akf CLI executable."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "npx @vscode/vsce package"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0"
+  }
+}

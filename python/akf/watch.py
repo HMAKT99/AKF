@@ -1,4 +1,10 @@
-"""AKF file watcher -- auto-stamp files in watched directories."""
+"""AKF file watcher -- auto-stamp files in watched directories.
+
+Supports two modes:
+- **Polling** (default): scans directories every N seconds.
+- **Event-driven** (``use_events=True``): uses kqueue on macOS for
+  near-instant detection, with polling fallback on other platforms.
+"""
 
 from __future__ import annotations
 
@@ -28,7 +34,8 @@ def load_watch_config() -> dict:
 
 
 def watch(directories=None, *, agent=None, classification="internal",
-          interval=5.0, stop_event=None, logger=None):
+          interval=5.0, stop_event=None, logger=None, config=None,
+          use_events=False):
     """Watch directories and auto-stamp new/modified files.
 
     Polls for file changes and stamps any new or modified files that
@@ -42,9 +49,13 @@ def watch(directories=None, *, agent=None, classification="internal",
         interval: Poll interval in seconds.
         stop_event: threading.Event for clean shutdown (daemon mode).
         logger: Logger instance for daemon mode.
+        config: Full watch config dict (for smart context settings).
+        use_events: Use event-driven watcher (kqueue on macOS) instead
+            of polling. Falls back to polling if unavailable.
     """
-    if directories is None:
+    if config is None:
         config = load_watch_config()
+    if directories is None:
         directories = config.get("directories", DEFAULT_DIRS)
 
     # Expand ~ and filter to existing directories
@@ -65,6 +76,28 @@ def watch(directories=None, *, agent=None, classification="internal",
     if logger:
         logger.info("Watching %d directories: %s",
                      len(directories), [str(d) for d in directories])
+
+    # Event-driven mode: delegate to fs_events watcher
+    if use_events or config.get("events", False):
+        try:
+            from .fs_events import create_watcher
+
+            def _on_file(filepath):
+                _stamp_file(filepath, agent, classification, logger,
+                            config=config)
+
+            watcher = create_watcher(
+                directories, _on_file,
+                interval=interval, stop_event=stop_event, logger=logger,
+            )
+            watcher.run()
+            return
+        except Exception:
+            if logger:
+                logger.warning(
+                    "Event-driven watcher failed, falling back to polling",
+                    exc_info=True,
+                )
 
     known: dict[str, float] = {}
 
@@ -106,7 +139,8 @@ def watch(directories=None, *, agent=None, classification="internal",
                     seen.add(path_str)
                     if path_str not in known or known[path_str] < mtime:
                         known[path_str] = mtime
-                        _stamp_file(f, agent, classification, logger)
+                        _stamp_file(f, agent, classification, logger,
+                                    config=config)
             except OSError:
                 if logger:
                     logger.warning("Error scanning directory: %s", d)
@@ -134,11 +168,14 @@ def _should_watch(f: Path) -> bool:
     return f.suffix.lower() in SUPPORTED_EXTENSIONS
 
 
-def _stamp_file(filepath: Path, agent, classification, logger=None):
+def _stamp_file(filepath: Path, agent, classification, logger=None,
+                *, config=None):
     """Stamp a single file, skipping if it already has AKF metadata.
 
     If auto-tracking is active (via ``akf install``), the last tracked
-    model/provider is automatically included in the stamp.
+    model/provider is automatically included in the stamp.  When smart
+    context detection is enabled (default), richer metadata is inferred
+    from the file's environment.
     """
     try:
         from .universal import extract
@@ -154,6 +191,33 @@ def _stamp_file(filepath: Path, agent, classification, logger=None):
         last = get_last_model()
         if last:
             kwargs["model"] = last.get("model")
+
+        # Smart context detection
+        if config is None:
+            config = {}
+        smart = config.get("smart", True)
+
+        if smart:
+            from .context import infer_context
+
+            ctx = infer_context(
+                filepath,
+                base_classification=classification,
+                base_confidence=0.7,
+                tracking_last=last,
+                project_rules=config.get("rules"),
+            )
+            # Override defaults with inferred values
+            classification = ctx.classification or classification
+            kwargs["trust_score"] = ctx.confidence
+            if ctx.source:
+                kwargs["source"] = ctx.source
+            if ctx.ai_generated is not None:
+                kwargs["ai_generated"] = ctx.ai_generated
+            if ctx.model:
+                kwargs["model"] = ctx.model
+            if ctx.authority_tier is not None:
+                kwargs["authority_tier"] = ctx.authority_tier
 
         stamp_file(
             str(filepath),

@@ -75,7 +75,7 @@ class TestWatch:
         stamp_calls = []
         stop = threading.Event()
 
-        def fake_stamp(filepath, agent, classification, logger=None):
+        def fake_stamp(filepath, agent, classification, logger=None, **kwargs):
             stamp_calls.append(str(filepath))
             stop.set()  # Stop after first stamp
 
@@ -138,7 +138,7 @@ class TestWatch:
         stamp_calls = []
         stop = threading.Event()
 
-        def fake_stamp(filepath, agent, classification, logger=None):
+        def fake_stamp(filepath, agent, classification, logger=None, **kwargs):
             stamp_calls.append(str(filepath))
             if len(stamp_calls) >= 2:
                 stop.set()

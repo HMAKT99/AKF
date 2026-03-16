@@ -27,6 +27,7 @@ DEFAULT_CONFIG = {
     "interval": 5.0,
     "classification": "internal",
     "agent": None,
+    "smart": True,
 }
 
 
@@ -177,6 +178,8 @@ def run_daemon(foreground: bool = False):
             interval=config.get("interval", 5.0),
             stop_event=stop_event,
             logger=logger,
+            config=config,
+            use_events=config.get("events", False),
         )
     except Exception:
         logger.exception("Daemon crashed")
