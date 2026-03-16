@@ -1423,6 +1423,28 @@ def uninstall_cmd():
             p.unlink(missing_ok=True)
 
 
+@main.command("shell-hook")
+@click.option("--shell", type=click.Choice(["auto", "zsh", "bash"]),
+              default="auto", help="Shell type (auto-detected by default)")
+def shell_hook_cmd(shell):
+    """Output shell hook code for auto-stamping AI CLI output.
+
+    Add to your shell profile to automatically stamp files created
+    or modified by AI CLI tools (claude, chatgpt, aider, etc.).
+
+    Examples:
+
+        # Add to ~/.zshrc:
+        eval "$(akf shell-hook)"
+
+        # Or for bash, add to ~/.bashrc:
+        eval "$(akf shell-hook --shell bash)"
+    """
+    from .shell_hook import generate_shell_hook
+
+    click.echo(generate_shell_hook(shell))
+
+
 @main.command("watch")
 @click.argument("directories", nargs=-1, type=click.Path(exists=True))
 @click.option("--agent", help="Agent ID for stamped metadata")
