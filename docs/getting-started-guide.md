@@ -30,9 +30,17 @@ akf read quarterly-report.docx
 
 ---
 
-### 2. AI Agents & Pipelines — Ship Trusted Output
+### 2. AI Agents & Pipelines — Ambient Trust
 
 **The problem:** "Our agent pipeline ships content with zero provenance."
+
+```bash
+# Drop CLAUDE.md or .cursorrules into your project
+# Agents stamp their own work automatically
+
+# Or use the MCP server (9 tools)
+# stamp_file, audit_file, embed_file, extract_file, detect_threats...
+```
 
 ```python
 from akf import stamp_file
@@ -43,7 +51,7 @@ stamp_file("output.pdf",
     source="internal-kb")
 ```
 
-**The outcome:** Every file your agent produces carries embedded trust metadata automatically.
+**The outcome:** Every file your agent produces carries embedded trust metadata automatically. Claude Code, Cursor, Copilot, and any MCP agent stamp their work without manual intervention.
 
 ---
 

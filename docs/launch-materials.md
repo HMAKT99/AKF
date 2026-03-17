@@ -32,6 +32,8 @@ provenance, or verification with that content. AKF is that format.
 - **Smart context detection** — infers git author, download source, AI-generated flag, project classification rules
 - **Shell integration** — `eval "$(akf shell-hook)"` intercepts Claude, ChatGPT, Aider, Ollama and stamps outputs
 - **OS-native file monitoring** — kqueue on macOS, polling cross-platform
+- **Ambient Trust** — CLAUDE.md + .cursorrules make agents stamp their own work; 9 MCP tools for full agent autonomy
+- **Trust Pipeline** — agent → git commit → CI validation → team review, all with trust metadata
 
 ---
 

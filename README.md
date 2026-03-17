@@ -117,7 +117,36 @@ pip install ./packages/mcp-server-akf
 }
 ```
 
-**MCP tools:** `create_claim` · `validate_file` · `scan_file` · `trust_score`
+**9 MCP tools:** `create_claim` · `validate_file` · `scan_file` · `trust_score` · `stamp_file` · `audit_file` · `embed_file` · `extract_file` · `detect_threats`
+
+## Ambient Trust
+
+AKF works where AI agents work. Drop a config file, and every AI-generated file carries trust metadata automatically.
+
+| Agent | How it works |
+|-------|-------------|
+| **Claude Code** | Reads `CLAUDE.md` — stamps every file it creates with confidence and evidence |
+| **Cursor / Windsurf** | Reads `.cursorrules` — stamps AI edits before you review |
+| **GitHub Copilot** | Shell hook intercepts `gh copilot` — stamps generated files |
+| **Any MCP agent** | 9 MCP tools — stamp, audit, embed, extract, detect, validate, scan, trust, create |
+| **Any CLI tool** | `eval "$(akf shell-hook)"` — intercepts `claude`, `chatgpt`, `aider`, `ollama` |
+
+**The trust pipeline:**
+```
+Agent writes code → Git commit stamped → CI validates trust → Team reviews with context
+```
+
+Set up in 60 seconds:
+```bash
+# 1. Agent stamps its own work (already in this repo)
+cat CLAUDE.md        # or .cursorrules
+
+# 2. Git hooks stamp every commit
+akf init --git-hooks
+
+# 3. Shell hook intercepts AI CLI tools
+eval "$(akf shell-hook)"
+```
 
 ## Skills
 

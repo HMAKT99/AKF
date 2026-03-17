@@ -12,6 +12,7 @@ import WorksWith from './components/WorksWith';
 import DownloadSection from './components/DownloadSection';
 import InteractiveDemo from './components/InteractiveDemo';
 import AutoStamping from './components/AutoStamping';
+import AmbientTrust from './components/AmbientTrust';
 import SectionDivider from './ui/SectionDivider';
 import AboutCreator from './components/AboutCreator';
 import PersonasPage from './components/PersonasPage';
@@ -47,6 +48,7 @@ function HomePage() {
       <FormatSupport />
       <FormatComparison />
       <AgentIntegration />
+      <AmbientTrust />
 
       {/* ── ENTERPRISE ── */}
       <div className="bg-surface-raised/50">
