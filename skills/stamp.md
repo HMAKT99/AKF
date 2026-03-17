@@ -24,7 +24,7 @@ akf.stamp("Fixed authentication bypass vulnerability",
 # Stamp a file directly
 akf.stamp_file("report.pdf",
                model="gpt-4o",
-               claims=[{"content": "Revenue $4.2B", "confidence": 0.98, "source": "SEC 10-Q"}],
+               claims=["Revenue $4.2B"],
                trust_score=0.95)
 
 # Stamp a git commit
@@ -37,7 +37,7 @@ akf.stamp_commit(content="Refactored auth module",
 ## CLI
 
 ```bash
-akf stamp --agent claude-code --evidence "tests pass" --kind code_change
+akf stamp <file> --agent claude-code --evidence "tests pass"
 akf create report.akf --claim "Revenue $4.2B" --trust 0.98 --src "SEC 10-Q"
 ```
 
@@ -46,7 +46,7 @@ akf create report.akf --claim "Revenue $4.2B" --trust 0.98 --src "SEC 10-Q"
 Plain strings are auto-classified:
 - `"42/42 tests passed"` → `type="test_pass"`
 - `"mypy: 0 errors"` → `type="type_check"`
-- `"lint: clean"` → `type="lint_pass"`
+- `"lint: clean"` → `type="lint_clean"`
 - `"reviewed by @user"` → `type="human_review"`
 
 ## Parameters

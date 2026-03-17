@@ -13,8 +13,8 @@ Convert trust metadata between AKF formats, or extract from any file to standalo
 ```python
 import akf
 
-# Convert any file to standalone .akf
-akf.convert("report.docx", output="report.akf")
+# Extract metadata from any file
+meta = akf.extract("report.docx")
 
 # Convert directory (batch)
 akf.convert_directory("./docs/", mode="extract")  # Extract .akf from all files
@@ -22,8 +22,6 @@ akf.convert_directory("./docs/", mode="enrich")    # Embed .akf back into files
 akf.convert_directory("./docs/", mode="both")      # Both directions
 
 # Format conversions
-from akf import to_markdown, to_html
-
 md = akf.to_markdown("report.akf")
 html = akf.to_html("report.akf")
 summary = akf.executive_summary("report.akf")

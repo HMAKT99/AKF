@@ -82,14 +82,13 @@ def stamp_file(path: str, agent: str = "mcp-agent", classification: str = "inter
                confidence: float = 0.85, evidence: str | None = None) -> dict:
     """Stamp trust metadata onto any file."""
     from akf.stamp import stamp_file as _stamp
-    from pathlib import Path
 
     evidence_list = [e.strip() for e in evidence.split(",")] if evidence else []
     result = _stamp(
-        Path(path),
+        path,
         agent=agent,
         classification=classification,
-        confidence=confidence,
+        trust_score=confidence,
         evidence=evidence_list,
     )
     return {"stamped": True, "path": str(path), "agent": agent, "classification": classification}
@@ -111,10 +110,11 @@ def embed_file(path: str, content: str, confidence: float = 0.85,
                source: str | None = None, classification: str = "internal") -> dict:
     """Embed AKF metadata into any supported file format."""
     from akf import universal
-    from akf.models import Claim
 
-    claim = Claim(content=content, confidence=confidence, source=source)
-    universal.embed(path, claims=[claim], classification=classification)
+    claim_dict = {"c": content, "t": confidence}
+    if source:
+        claim_dict["src"] = source
+    universal.embed(path, claims=[claim_dict], classification=classification)
     return {"embedded": True, "path": str(path), "format": path.rsplit(".", 1)[-1]}
 
 
@@ -131,14 +131,24 @@ def extract_file(path: str) -> dict:
 def detect_threats(path: str) -> dict:
     """Run security detections on an AKF file."""
     unit = akf.load(path)
-    from akf.security import run_all_detections
+    from akf.detection import run_all_detections
     report = run_all_detections(unit)
     return {
         "path": str(path),
-        "findings_count": len(report.findings),
-        "findings": [
-            {"severity": f.severity, "detection": f.detection, "message": f.message}
-            for f in report.findings
+        "triggered_count": report.triggered_count,
+        "critical_count": report.critical_count,
+        "high_count": report.high_count,
+        "clean": report.clean,
+        "results": [
+            {
+                "detection": r.detection_class,
+                "triggered": r.triggered,
+                "severity": r.severity,
+                "findings": r.findings,
+                "recommendation": r.recommendation,
+            }
+            for r in report.results
+            if r.triggered
         ],
     }
 

@@ -35,9 +35,6 @@ akf.embed("report.docx",
 
 # Extract from any file
 meta = akf.extract("report.docx")
-
-# Convert to standalone .akf
-akf.convert("report.docx", output="report.akf")
 ```
 
 ## CLI

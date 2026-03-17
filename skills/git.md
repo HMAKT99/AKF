@@ -32,7 +32,7 @@ print(log)
 
 ```bash
 # Stamp current commit
-akf stamp --agent claude-code --evidence "tests pass" --kind code_change
+akf stamp <file> --agent claude-code --evidence "tests pass"
 
 # View trust-annotated log
 akf log --trust

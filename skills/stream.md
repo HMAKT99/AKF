@@ -1,6 +1,6 @@
 # Skill: Stream Trust Metadata
 
-Stream trust metadata alongside AI output in real-time using AKF's `.akfl` format.
+Stream trust metadata alongside AI output in real-time using AKF.
 
 ## When to use
 
@@ -24,18 +24,22 @@ from akf import AKFStream
 with AKFStream("analysis.md", model="claude-sonnet-4-20250514") as stream:
     stream.write("## Market Analysis\n")
     stream.write("Revenue grew 12% YoY...")
-# .akfl file created alongside with trust metadata
+# Trust metadata embedded on close
+
+# Low-level streaming API
+from akf.streaming import stream_start, stream_claim, stream_end
+
+session = stream_start(agent_id="my-agent", output_path="output.akfl")
+stream_claim(session, "Revenue grew 12%", confidence=0.85)
+stream_claim(session, "Cloud segment up 15%", confidence=0.92)
+unit = stream_end(session)
 ```
 
-## Format
+## CLI
 
-AKF streaming uses JSON Lines (`.akfl`):
-
-```jsonl
-{"type":"start","model":"gpt-4o","ts":"2025-07-15T09:30:00Z"}
-{"type":"chunk","content":"Revenue grew...","idx":0}
-{"type":"chunk","content":"12% YoY","idx":1}
-{"type":"end","claims":[{"c":"Revenue grew 12%","t":0.85}],"ts":"2025-07-15T09:30:05Z"}
+```bash
+# Collect streaming .akfl lines into .akf
+akf stream collect output.akfl --output report.akf
 ```
 
 ## Key features
@@ -43,4 +47,4 @@ AKF streaming uses JSON Lines (`.akfl`):
 - Zero-overhead streaming — metadata attaches at stream close
 - Automatic `.akfl` sidecar creation
 - Compatible with any LLM streaming API
-- 0.1s latency for trust metadata attachment
+- Context manager (`akf.stream()`) for simplest usage

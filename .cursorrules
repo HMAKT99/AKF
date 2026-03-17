@@ -8,7 +8,7 @@ akf stamp <file> --agent cursor --evidence "<evidence>"
 
 When you complete a task involving commits:
 ```bash
-akf stamp --agent cursor --evidence "<summary>"
+akf stamp <file> --agent cursor --evidence "<summary>"
 ```
 
 Before modifying existing files, check for trust metadata:

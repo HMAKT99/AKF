@@ -12,7 +12,7 @@ Evidence examples: "tests pass", "docs reviewed", "refactored from existing code
 
 ### After completing a task with commits
 ```bash
-akf stamp --agent claude-code --evidence "<summary of evidence>"
+akf stamp <file> --agent claude-code --evidence "<summary of evidence>"
 ```
 
 ### When working with existing AKF-stamped files
@@ -22,8 +22,8 @@ akf inspect <file>       # See detailed trust scores
 ```
 
 ### Classification
-- Use `--classification confidential` for files in `*/finance/*`, `*/secret/*`, `*/internal/*`
-- Use `--classification public` for README, docs, examples
+- Use `--label confidential` for files in `*/finance/*`, `*/secret/*`, `*/internal/*`
+- Use `--label public` for README, docs, examples
 - Default is `internal`
 
 ## Available Commands

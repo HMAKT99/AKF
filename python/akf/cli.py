@@ -840,43 +840,53 @@ def kb_prune_cmd(directory, max_age, min_trust) -> None:
 
 @main.command("stamp")
 @click.argument("file", type=click.Path(exists=True))
+@click.option("--agent", default=None, help="Agent identifier (e.g. claude-code)")
+@click.option("--evidence", multiple=True, help="Evidence strings (repeatable)")
+@click.option("--confidence", type=float, default=None, help="Confidence score 0.0-1.0")
+@click.option("--claim", "claims", multiple=True, help="Claim text (repeatable)")
+@click.option("--model", default=None, help="Model identifier (e.g. gpt-4o)")
 @click.option("--label", default=None, help="Classification label")
 @click.option("--format", "fmt", default="auto", help="Output format: auto, embed, sidecar")
-def stamp_cmd(file, label, fmt):
+def stamp_cmd(file, agent, evidence, confidence, claims, model, label, fmt):
     """Add AKF trust metadata to any file.
 
     Stamps the file with trust scores, provenance, and classification.
     The file remains openable in its native application.
+
+    Examples:
+
+      akf stamp report.md --agent claude-code --evidence "tests pass"
+
+      akf stamp output.pdf --claim "Revenue $4.2B" --confidence 0.95 --model gpt-4o
     """
-    from . import universal as akf_u
+    from .stamp import stamp_file as _stamp_file
 
-    meta = akf_u.extract(file)
-    claims_count = 0
-    avg_trust = 0.0
     classification = label or "internal"
-
-    if meta:
-        claims = meta.get("claims", [])
-        claims_count = len(claims)
-        if claims_count > 0:
-            avg_trust = sum(
-                c.get("confidence", c.get("t", 0)) for c in claims
-            ) / claims_count
-        classification = label or meta.get("classification") or meta.get("label") or "internal"
-
-    metadata = {}
-    if label:
-        metadata["classification"] = label
+    trust_score = confidence if confidence is not None else 0.7
+    evidence_list = list(evidence) if evidence else None
+    claim_list = list(claims) if claims else None
 
     if fmt == "sidecar":
         from . import sidecar
-        sidecar.create(file, metadata)
-    else:
-        akf_u.embed(file, metadata=metadata if metadata else None,
-                    classification=label)
+        sidecar.create(file, {"classification": classification})
+        click.echo(f"\u2713 Stamped {file} (sidecar, label: {classification})")
+        return
+
+    unit = _stamp_file(
+        file,
+        agent=agent,
+        model=model,
+        claims=claim_list,
+        trust_score=trust_score,
+        classification=classification,
+        evidence=evidence_list,
+    )
+
+    claims_count = len(unit.claims)
+    avg_trust = sum(c.confidence for c in unit.claims) / claims_count if claims_count else 0.0
 
     click.echo(
-        f"\u2713 Stamped {file} ({claims_count} claims, avg trust: {avg_trust:.2f}, label: {classification})"
+        f"\u2713 Stamped {file} ({claims_count} claim(s), avg trust: {avg_trust:.2f}, label: {classification})"
     )
 
 

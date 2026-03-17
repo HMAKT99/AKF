@@ -290,7 +290,7 @@ akf watch ~/Downloads ~/Documents             # Watch directories
 akf shell-hook                                # Print shell hook code
 
 # ── Git integration ──
-akf stamp --agent claude-code --evidence "tests pass"
+akf stamp <file> --agent claude-code --evidence "tests pass"
 akf log --trust                               # Trust-annotated git log
 
 # ── Knowledge Base ──

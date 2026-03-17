@@ -46,9 +46,9 @@ akf read quarterly-report.docx
 from akf import stamp_file
 
 stamp_file("output.pdf",
-    confidence=0.95,
+    trust_score=0.95,
     model="gpt-4o",
-    source="internal-kb")
+    agent="my-agent")
 ```
 
 **The outcome:** Every file your agent produces carries embedded trust metadata automatically. Claude Code, Cursor, Copilot, and any MCP agent stamp their work without manual intervention.
@@ -76,7 +76,7 @@ akf scan --recursive ./shared-drive/
 
 ```bash
 # Generate compliance report for EU AI Act
-akf audit --framework eu-ai-act ./reports/
+akf audit --regulation eu_ai_act ./reports/
 
 # 47 files audited, 100% compliant
 ```
@@ -93,8 +93,8 @@ akf audit --framework eu-ai-act ./reports/
 import { normalize } from 'akf-format';
 
 const stamp = normalize({
-    c: 0.9,
-    t: 'analysis',
+    c: 'Revenue analysis complete',
+    t: 0.9,
     src: 'internal-kb',
     model: 'claude-4'
 });
@@ -229,7 +229,7 @@ Create `.akf/config.json` in your project root to auto-classify files:
 | `akf stamp <file>`                   | Add trust metadata to a file       |
 | `akf read <file>`                    | Read trust metadata from a file    |
 | `akf audit <path>`                   | Generate compliance audit report   |
-| `akf audit --framework <name> <path>`| Audit against a specific framework |
+| `akf audit --regulation <name> <path>`| Audit against a specific regulation |
 | `akf scan <path>`                    | Scan for AI content risks          |
 | `akf scan --recursive <path>`        | Recursive security scan            |
 | `akf detect <file>`                  | Detect AI-specific threats         |

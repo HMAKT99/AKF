@@ -31,7 +31,7 @@ print(result.level)   # 2 (Practical)
 unit = akf.load("report.akf")
 for claim in unit.claims:
     result = akf.effective_trust(claim)
-    print(f"{result.decision}: {result.score:.2f} — {claim.c}")
+    print(f"{result.decision}: {result.score:.2f} — {claim.content}")
 ```
 
 ## 4. Build Multi-Claim Units
