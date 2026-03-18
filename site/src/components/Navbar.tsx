@@ -57,6 +57,12 @@ export default function Navbar() {
             Certify
           </Link>
           <Link
+            to="/validate"
+            className="text-sm text-text-secondary hover:text-text-primary transition-colors hidden sm:inline"
+          >
+            Validate
+          </Link>
+          <Link
             to="/convert-to-akf"
             className="text-sm text-text-secondary hover:text-text-primary transition-colors hidden sm:inline"
           >
