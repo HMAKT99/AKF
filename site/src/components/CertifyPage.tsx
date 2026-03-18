@@ -51,6 +51,15 @@ jobs:
           fail_on_untrusted: 'true'
           comment_on_pr: 'true'`;
 
+const failureExample = `  FAIL  src/predictions.py  (trust=0.32)
+         detection: [CRITICAL] ungrounded_ai_claims
+         compliance: AI claims labeled
+
+  Total: 3  Certified: 2  Failed: 1  Skipped: 0
+  Average trust: 0.6533
+
+  Certification incomplete.`;
+
 const junitExample = `<!-- test-results.xml -->
 <testsuites tests="3" failures="0">
   <testsuite name="unit">
@@ -121,6 +130,15 @@ export default function CertifyPage() {
             <CodeBlock code={junitExample} filename="test-results.xml" />
             <CodeBlock code={jsonEvidenceExample} language="json" filename="evidence.json" />
           </div>
+        </section>
+
+        {/* What Failure Looks Like */}
+        <section className="mb-12">
+          <h2 className="text-xl font-bold text-text-primary mb-1">What Failure Looks Like</h2>
+          <p className="text-sm text-text-secondary mb-4">
+            When certification fails, the output tells you exactly why — which detections triggered and which compliance checks failed. Fix the issues and re-run.
+          </p>
+          <CodeBlock code={failureExample} language="bash" filename="terminal" />
         </section>
 
         {/* CTA */}
