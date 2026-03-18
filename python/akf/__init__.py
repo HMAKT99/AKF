@@ -51,6 +51,10 @@ from .data import load_dataset, quality_report, merge, filter_claims
 from .report import enterprise_report, EnterpriseReport, FileReport, register_renderer, RENDERERS
 from .knowledge_base import KnowledgeBase
 from .stamp import stamp, stamp_file
+from .certify import (
+    certify_file, certify_directory, CertifyResult, CertifyReport,
+    parse_junit_xml, parse_evidence_json,
+)
 from .git_ops import stamp_commit, read_commit, trust_log
 from .streaming import StreamSession, AKFStream, stream_start, stream_claim, stream_end, collect_stream, iter_stream
 from .detection import (
@@ -384,6 +388,13 @@ __all__ = [
     "FileReport",
     "register_renderer",
     "RENDERERS",
+    # Certify
+    "certify_file",
+    "certify_directory",
+    "CertifyResult",
+    "CertifyReport",
+    "parse_junit_xml",
+    "parse_evidence_json",
     # Stamp & Git
     "stamp",
     "stamp_file",

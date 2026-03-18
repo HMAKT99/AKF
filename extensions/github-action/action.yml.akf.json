@@ -1,0 +1,33 @@
+{
+  "akf": "1.0",
+  "mode": "sidecar",
+  "target_file": "action.yml",
+  "generated_at": "2026-03-18T03:47:35.287124+00:00",
+  "v": "1.0",
+  "claims": [
+    {
+      "c": "Trust metadata for extensions/github-action/action.yml",
+      "t": 0.7,
+      "id": "08d5306b",
+      "src": "unspecified",
+      "tier": 5,
+      "ver": false,
+      "ai": true,
+      "evidence": [
+        {
+          "type": "other",
+          "detail": "rewritten as composite action",
+          "at": "2026-03-18T03:47:35.286860+00:00"
+        }
+      ]
+    }
+  ],
+  "id": "akf-06cce40bdc3c",
+  "agent": "claude-code",
+  "at": "2026-03-18T03:47:35.287062+00:00",
+  "label": "internal",
+  "inherit": true,
+  "ext": false,
+  "sv": "1.1",
+  "integrity_hash": "sha256:86075b01f9228097be158b18f51519825a240f1cc16d69f4e3e4263d5db97348"
+}

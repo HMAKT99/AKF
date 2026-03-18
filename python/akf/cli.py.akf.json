@@ -1,0 +1,33 @@
+{
+  "akf": "1.0",
+  "mode": "sidecar",
+  "target_file": "cli.py",
+  "generated_at": "2026-03-18T03:47:35.011068+00:00",
+  "v": "1.0",
+  "claims": [
+    {
+      "c": "Trust metadata for python/akf/cli.py",
+      "t": 0.7,
+      "id": "3acb483e",
+      "src": "unspecified",
+      "tier": 5,
+      "ver": false,
+      "ai": true,
+      "evidence": [
+        {
+          "type": "test_pass",
+          "detail": "certify command added, tests pass",
+          "at": "2026-03-18T03:47:35.010805+00:00"
+        }
+      ]
+    }
+  ],
+  "id": "akf-84a656f79d8e",
+  "agent": "claude-code",
+  "at": "2026-03-18T03:47:35.011004+00:00",
+  "label": "internal",
+  "inherit": true,
+  "ext": false,
+  "sv": "1.1",
+  "integrity_hash": "sha256:fb4da10174a90bceb7c315aa54c73a31ba1acc881afca47bd5de957e33a9b0ea"
+}

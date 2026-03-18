@@ -1,0 +1,33 @@
+{
+  "akf": "1.0",
+  "mode": "sidecar",
+  "target_file": "certify.py",
+  "generated_at": "2026-03-18T03:47:34.730190+00:00",
+  "v": "1.0",
+  "claims": [
+    {
+      "c": "Trust metadata for python/akf/certify.py",
+      "t": 0.7,
+      "id": "0313dcd2",
+      "src": "unspecified",
+      "tier": 5,
+      "ver": false,
+      "ai": true,
+      "evidence": [
+        {
+          "type": "test_pass",
+          "detail": "tests pass, 21/21",
+          "at": "2026-03-18T03:47:34.729779+00:00"
+        }
+      ]
+    }
+  ],
+  "id": "akf-2ee1ad78f7c3",
+  "agent": "claude-code",
+  "at": "2026-03-18T03:47:34.730124+00:00",
+  "label": "internal",
+  "inherit": true,
+  "ext": false,
+  "sv": "1.1",
+  "integrity_hash": "sha256:d78a187761d41b051267a1657d7df0fd2f00eca5420ac541995bef83dc8315cd"
+}

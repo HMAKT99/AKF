@@ -1,3 +1,6 @@
+// DEPRECATED: This action now uses composite steps. See action.yml.
+// This file is kept for reference only.
+
 const fs = require('fs');
 const path = require('path');
 

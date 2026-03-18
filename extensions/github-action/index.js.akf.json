@@ -1,0 +1,33 @@
+{
+  "akf": "1.0",
+  "mode": "sidecar",
+  "target_file": "index.js",
+  "generated_at": "2026-03-18T03:47:35.426474+00:00",
+  "v": "1.0",
+  "claims": [
+    {
+      "c": "Trust metadata for extensions/github-action/index.js",
+      "t": 0.7,
+      "id": "91b9d49e",
+      "src": "unspecified",
+      "tier": 5,
+      "ver": false,
+      "ai": true,
+      "evidence": [
+        {
+          "type": "other",
+          "detail": "deprecation header added",
+          "at": "2026-03-18T03:47:35.426207+00:00"
+        }
+      ]
+    }
+  ],
+  "id": "akf-a46e4a106459",
+  "agent": "claude-code",
+  "at": "2026-03-18T03:47:35.426410+00:00",
+  "label": "internal",
+  "inherit": true,
+  "ext": false,
+  "sv": "1.1",
+  "integrity_hash": "sha256:e3a30e872dd97d576a13cd99d86838fca8b982f528b3b8b192e46cf5bbe44244"
+}

@@ -1548,3 +1548,112 @@ def watch_cmd(directories, agent, classification, interval,
     except KeyboardInterrupt:
         click.echo()
         click.secho("Watcher stopped.", fg="yellow")
+
+
+# ---------------------------------------------------------------------------
+# certify
+# ---------------------------------------------------------------------------
+
+
+def _print_certify_summary(report) -> None:
+    """Print a coloured summary of a CertifyReport."""
+    click.echo()
+    for r in report.results:
+        icon = click.style("PASS", fg="green", bold=True) if r.certified else click.style("FAIL", fg="red", bold=True)
+        score = f"{r.trust_score:.2f}"
+        click.echo(f"  {icon}  {r.filepath}  (trust={score})")
+        if r.error:
+            click.secho(f"         error: {r.error}", fg="yellow")
+        for d in r.detections:
+            click.secho(f"         detection: [{d.severity}] {d.detection_class}", fg="red")
+        for c in r.compliance_issues:
+            click.secho(f"         compliance: {c}", fg="yellow")
+
+    click.echo()
+    click.echo(f"  Total: {report.total_files}  Certified: {report.certified_count}  "
+               f"Failed: {report.failed_count}  Skipped: {report.skipped_count}")
+    if report.avg_trust:
+        click.echo(f"  Average trust: {report.avg_trust:.4f}")
+    click.echo()
+    if report.all_certified:
+        click.secho("  All files certified.", fg="green", bold=True)
+    else:
+        click.secho("  Certification incomplete.", fg="red", bold=True)
+
+
+def _print_certify_markdown(report) -> None:
+    """Print a Markdown table of certification results."""
+    click.echo("| File | Status | Trust | Issues |")
+    click.echo("|------|--------|-------|--------|")
+    for r in report.results:
+        status = "PASS" if r.certified else "FAIL"
+        issues = []
+        if r.error:
+            issues.append(r.error)
+        issues.extend(d.detection_class for d in r.detections)
+        issues.extend(r.compliance_issues)
+        issues_str = ", ".join(issues) if issues else "-"
+        click.echo(f"| {r.filepath} | {status} | {r.trust_score:.2f} | {issues_str} |")
+    click.echo()
+    click.echo(f"**Total:** {report.total_files} | "
+               f"**Certified:** {report.certified_count} | "
+               f"**Failed:** {report.failed_count} | "
+               f"**Skipped:** {report.skipped_count}")
+
+
+@main.command("certify")
+@click.argument("path", type=click.Path(exists=True))
+@click.option("--min-trust", type=float, default=0.7, help="Minimum trust score to certify (default: 0.7)")
+@click.option("--evidence-file", type=click.Path(exists=True), help="Path to JUnit XML or JSON evidence file")
+@click.option("--format", "fmt", type=click.Choice(["summary", "json", "markdown"]), default="summary",
+              help="Output format")
+@click.option("--fail-on-untrusted", is_flag=True, help="Exit with code 1 if any file fails certification")
+@click.option("--agent", default=None, help="Agent identifier for provenance")
+def certify_cmd(path, min_trust, evidence_file, fmt, fail_on_untrusted, agent) -> None:
+    """Certify files meet trust standards.
+
+    Aggregates trust scoring, detection, and compliance into a pass/fail verdict.
+    Accepts a single file or a directory.
+    """
+    from .certify import (
+        CertifyReport,
+        certify_directory,
+        certify_file,
+        parse_evidence_json,
+        parse_junit_xml,
+    )
+
+    # Load external evidence if provided
+    evidence = None
+    if evidence_file:
+        if evidence_file.endswith(".xml"):
+            evidence = parse_junit_xml(evidence_file)
+        else:
+            evidence = parse_evidence_json(evidence_file)
+
+    p = Path(path)
+    if p.is_dir():
+        report = certify_directory(str(p), min_trust=min_trust, evidence=evidence)
+    else:
+        result = certify_file(str(p), min_trust=min_trust, evidence=evidence)
+        report = CertifyReport(
+            total_files=1,
+            certified_count=1 if result.certified else 0,
+            failed_count=0 if result.certified else 1,
+            skipped_count=0,
+            avg_trust=result.trust_score,
+            results=[result],
+        )
+
+    # Output
+    import json as _json
+
+    if fmt == "json":
+        click.echo(_json.dumps(report.to_dict(), indent=2))
+    elif fmt == "markdown":
+        _print_certify_markdown(report)
+    else:
+        _print_certify_summary(report)
+
+    if fail_on_untrusted and not report.all_certified:
+        sys.exit(1)
