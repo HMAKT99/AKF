@@ -2,12 +2,18 @@ const agents = [
   { name: 'Claude Code', category: 'Agent' },
   { name: 'GitHub Copilot', category: 'Agent' },
   { name: 'Cursor', category: 'Agent' },
+  { name: 'Windsurf', category: 'Agent' },
+  { name: 'OpenAI Codex', category: 'Agent' },
   { name: 'Devin', category: 'Agent' },
+  { name: 'Manus', category: 'Agent' },
   { name: 'GPT-4o', category: 'Model' },
   { name: 'Gemini', category: 'Model' },
+  { name: 'M365 Copilot', category: 'Enterprise' },
   { name: 'LangChain', category: 'Framework' },
   { name: 'LlamaIndex', category: 'Framework' },
   { name: 'CrewAI', category: 'Framework' },
+  { name: 'Claude Agent SDK', category: 'Framework' },
+  { name: 'OpenAI Agents SDK', category: 'Framework' },
   { name: 'MCP', category: 'Protocol' },
 ];
 
@@ -19,6 +25,7 @@ const formats = [
 const categoryColor: Record<string, string> = {
   Agent: 'bg-blue-500',
   Model: 'bg-violet-500',
+  Enterprise: 'bg-rose-500',
   Framework: 'bg-emerald-500',
   Protocol: 'bg-amber-500',
 };

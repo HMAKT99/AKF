@@ -126,10 +126,13 @@ AKF works where AI agents work. Drop a config file, and every AI-generated file 
 | Agent | How it works |
 |-------|-------------|
 | **Claude Code** | Reads `CLAUDE.md` — stamps every file it creates with confidence and evidence |
-| **Cursor / Windsurf** | Reads `.cursorrules` — stamps AI edits before you review |
-| **GitHub Copilot** | Shell hook intercepts `gh copilot` — stamps generated files |
+| **Cursor** | Reads `.cursorrules` — stamps AI edits before you review |
+| **Windsurf** | Reads `.windsurfrules` — stamps AI edits with trust metadata |
+| **GitHub Copilot** | Reads `.github/copilot-instructions.md` (native) + shell hook for CLI |
+| **OpenAI Codex** | Reads `AGENTS.md` — stamps files in cloud sandbox and local |
+| **Manus / Other Agents** | MCP server + shell hook — works with any agent that supports MCP or CLI |
 | **Any MCP agent** | 9 MCP tools — stamp, audit, embed, extract, detect, validate, scan, trust, create |
-| **Any CLI tool** | `eval "$(akf shell-hook)"` — intercepts `claude`, `chatgpt`, `aider`, `ollama` |
+| **Any CLI tool** | `eval "$(akf shell-hook)"` — intercepts `claude`, `chatgpt`, `aider`, `ollama`, `manus` |
 
 **The trust pipeline:**
 ```
@@ -139,7 +142,7 @@ Agent writes code → Git commit stamped → CI validates trust → Team reviews
 Set up in 60 seconds:
 ```bash
 # 1. Agent stamps its own work (already in this repo)
-cat CLAUDE.md        # or .cursorrules
+cat CLAUDE.md        # or .cursorrules / .windsurfrules / AGENTS.md / .github/copilot-instructions.md
 
 # 2. Git hooks stamp every commit
 akf init --git-hooks

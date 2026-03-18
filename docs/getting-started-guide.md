@@ -35,8 +35,8 @@ akf read quarterly-report.docx
 **The problem:** "Our agent pipeline ships content with zero provenance."
 
 ```bash
-# Drop CLAUDE.md or .cursorrules into your project
-# Agents stamp their own work automatically
+# Drop a config file into your project — agents stamp their own work automatically
+# CLAUDE.md / .cursorrules / .windsurfrules / AGENTS.md / .github/copilot-instructions.md
 
 # Or use the MCP server (9 tools)
 # stamp_file, audit_file, embed_file, extract_file, detect_threats...

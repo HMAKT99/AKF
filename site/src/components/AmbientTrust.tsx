@@ -11,17 +11,31 @@ const integrations = [
   },
   {
     label: 'Cursor / Windsurf',
-    file: '.cursorrules',
-    description: 'Drop a .cursorrules file into your project. Every AI edit carries a trust score. Cursor stamps its work before you even review it.',
+    file: '.cursorrules / .windsurfrules',
+    description: 'Drop a .cursorrules or .windsurfrules file into your project. Every AI edit carries a trust score. Agents stamp their work before you even review it.',
     color: 'text-violet-400',
     bgColor: 'bg-violet-500/10',
   },
   {
     label: 'GitHub Copilot',
-    file: 'Shell Hook',
-    description: 'The shell hook intercepts gh copilot and Copilot CLI. When Copilot generates files, AKF stamps them with model provenance and confidence.',
+    file: 'copilot-instructions.md',
+    description: 'Copilot Coding Agent reads .github/copilot-instructions.md natively. Every file it creates or modifies gets stamped with trust metadata and evidence.',
     color: 'text-blue-400',
     bgColor: 'bg-blue-500/10',
+  },
+  {
+    label: 'OpenAI Codex',
+    file: 'AGENTS.md',
+    description: 'Codex reads AGENTS.md for project instructions. Stamps files with trust metadata in cloud sandbox and local environments.',
+    color: 'text-cyan-400',
+    bgColor: 'bg-cyan-500/10',
+  },
+  {
+    label: 'Enterprise Copilots',
+    file: 'Office / Workspace Add-in',
+    description: 'M365 Copilot via Office Add-in and Google Workspace add-on. Trust metadata flows through enterprise document workflows.',
+    color: 'text-rose-400',
+    bgColor: 'bg-rose-500/10',
   },
   {
     label: 'Any MCP Agent',
@@ -33,7 +47,7 @@ const integrations = [
 ];
 
 const trustPipeline = [
-  { step: 'Agent writes code', icon: 'edit', detail: 'CLAUDE.md / .cursorrules instructs the agent to stamp' },
+  { step: 'Agent writes code', icon: 'edit', detail: 'CLAUDE.md / .cursorrules / AGENTS.md / copilot-instructions.md' },
   { step: 'Git commit stamped', icon: 'git', detail: 'Post-commit hook writes trust metadata to git notes' },
   { step: 'CI validates trust', icon: 'check', detail: 'GitHub Action checks trust scores on every PR' },
   { step: 'Team reviews with context', icon: 'eye', detail: 'Reviewers see confidence, evidence, and provenance' },

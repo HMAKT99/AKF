@@ -35,6 +35,7 @@ AI_CLI_TOOLS = [
     "fabric",
     "mods",
     "tgpt",
+    "manus",
 ]
 
 # File extensions to stamp (mirrors watch.py SUPPORTED_EXTENSIONS)
