@@ -1,0 +1,33 @@
+{
+  "akf": "1.0",
+  "mode": "sidecar",
+  "target_file": "App.tsx",
+  "generated_at": "2026-03-18T04:16:19.610766+00:00",
+  "v": "1.0",
+  "claims": [
+    {
+      "c": "Trust metadata for site/src/App.tsx",
+      "t": 0.7,
+      "id": "47329f52",
+      "src": "unspecified",
+      "tier": 5,
+      "ver": false,
+      "ai": true,
+      "evidence": [
+        {
+          "type": "other",
+          "detail": "added certify route",
+          "at": "2026-03-18T04:16:19.610490+00:00"
+        }
+      ]
+    }
+  ],
+  "id": "akf-2249078aa8e2",
+  "agent": "claude-code",
+  "at": "2026-03-18T04:16:19.610698+00:00",
+  "label": "internal",
+  "inherit": true,
+  "ext": false,
+  "sv": "1.1",
+  "integrity_hash": "sha256:f8168b231781fa15e8d4ae159b6636460b83ad7216d964a32bff7360ed1c4a04"
+}

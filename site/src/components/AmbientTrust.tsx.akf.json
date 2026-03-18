@@ -1,0 +1,33 @@
+{
+  "akf": "1.0",
+  "mode": "sidecar",
+  "target_file": "AmbientTrust.tsx",
+  "generated_at": "2026-03-18T04:16:20.011417+00:00",
+  "v": "1.0",
+  "claims": [
+    {
+      "c": "Trust metadata for site/src/components/AmbientTrust.tsx",
+      "t": 0.7,
+      "id": "76c0583c",
+      "src": "unspecified",
+      "tier": 5,
+      "ver": false,
+      "ai": true,
+      "evidence": [
+        {
+          "type": "other",
+          "detail": "fixed stale github action path",
+          "at": "2026-03-18T04:16:20.011102+00:00"
+        }
+      ]
+    }
+  ],
+  "id": "akf-fdf9676f79da",
+  "agent": "claude-code",
+  "at": "2026-03-18T04:16:20.011327+00:00",
+  "label": "internal",
+  "inherit": true,
+  "ext": false,
+  "sv": "1.1",
+  "integrity_hash": "sha256:562a778eb7f7a223eb2cb4e6829ab61a5a06e5f6c652b28f3180b597a34c41fc"
+}

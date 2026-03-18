@@ -51,6 +51,12 @@ export default function Navbar() {
             Governance Report
           </Link>
           <Link
+            to="/certify"
+            className="text-sm text-text-secondary hover:text-text-primary transition-colors hidden sm:inline"
+          >
+            Certify
+          </Link>
+          <Link
             to="/convert-to-akf"
             className="text-sm text-text-secondary hover:text-text-primary transition-colors hidden sm:inline"
           >
@@ -126,6 +132,13 @@ export default function Navbar() {
             className="text-sm text-text-secondary hover:text-text-primary transition-colors py-2"
           >
             AKF vs MD
+          </Link>
+          <Link
+            to="/certify"
+            onClick={() => setMenuOpen(false)}
+            className="text-sm text-text-secondary hover:text-text-primary transition-colors py-2"
+          >
+            Certify
           </Link>
           <Link
             to="/convert-to-akf"

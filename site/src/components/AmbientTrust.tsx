@@ -49,7 +49,7 @@ const integrations = [
 const trustPipeline = [
   { step: 'Agent writes code', icon: 'edit', detail: 'CLAUDE.md / .cursorrules / AGENTS.md / copilot-instructions.md' },
   { step: 'Git commit stamped', icon: 'git', detail: 'Post-commit hook writes trust metadata to git notes' },
-  { step: 'CI validates trust', icon: 'check', detail: 'GitHub Action checks trust scores on every PR' },
+  { step: 'CI validates trust', icon: 'check', detail: 'akf certify checks trust scores on every PR' },
   { step: 'Team reviews with context', icon: 'eye', detail: 'Reviewers see confidence, evidence, and provenance' },
 ];
 
@@ -149,7 +149,7 @@ export default function AmbientTrust() {
               <div className="rounded-lg bg-surface border border-border-subtle px-4 py-3">
                 <span className="text-text-tertiary"># CI validates trust on every PR</span>
                 <br />
-                <span className="text-text-primary">- uses: HMAKT99/akf-action@v1</span>
+                <span className="text-text-primary">- uses: HMAKT99/AKF/extensions/github-action@main</span>
               </div>
             </div>
           </div>

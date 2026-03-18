@@ -6,6 +6,7 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto flex flex-col gap-6">
         <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
           <Link to="/validate" className="text-sm text-text-tertiary hover:text-text-primary transition-colors">Validate & Audit</Link>
+          <Link to="/certify" className="text-sm text-text-tertiary hover:text-text-primary transition-colors">Certify</Link>
           <Link to="/akf-vs-md" className="text-sm text-text-tertiary hover:text-text-primary transition-colors">AKF vs MD</Link>
           <Link to="/about" className="text-sm text-text-tertiary hover:text-text-primary transition-colors">About</Link>
         </div>

@@ -20,6 +20,7 @@ import ComparePage from './components/ComparePage';
 import GetStartedPage from './components/GetStartedPage';
 import ConvertPage from './components/ConvertPage';
 import ValidatePage from './components/ValidatePage';
+import CertifyPage from './components/CertifyPage';
 import CompareC2paPage from './components/CompareC2paPage';
 import ComparePurviewPage from './components/ComparePurviewPage';
 import CompareWatermarkingPage from './components/CompareWatermarkingPage';
@@ -92,6 +93,7 @@ export default function App() {
             <Route path="/get-started" element={<GetStartedPage />} />
             <Route path="/convert-to-akf" element={<ConvertPage />} />
             <Route path="/validate" element={<ValidatePage />} />
+            <Route path="/certify" element={<CertifyPage />} />
             <Route path="/audit" element={<ValidatePage />} />
             <Route path="/enterprise-report" element={<EnterpriseReportPage />} />
             <Route path="/compare/c2pa" element={<CompareC2paPage />} />

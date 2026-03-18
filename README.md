@@ -1,3 +1,6 @@
+---
+_akf: '{"v":"1.0","claims":[{"c":"Trust metadata for README.md","t":0.7,"id":"1979cbeb","src":"unspecified","tier":5,"ver":false,"ai":true,"evidence":[{"type":"other","detail":"updated certify and github action references","at":"2026-03-18T04:21:48.869226+00:00"}]}],"id":"akf-c33254656fc5","agent":"claude-code","at":"2026-03-18T04:21:48.870623+00:00","label":"public","inherit":true,"ext":false,"sv":"1.1"}'
+---
 <p align="center">
   <img src="https://img.shields.io/badge/format-.akf-blue?style=for-the-badge" alt="AKF Format" />
 </p>
@@ -136,7 +139,7 @@ AKF works where AI agents work. Drop a config file, and every AI-generated file 
 
 **The trust pipeline:**
 ```
-Agent writes code → Git commit stamped → CI validates trust → Team reviews with context
+Agent writes code → Git commit stamped → CI runs akf certify → Team reviews with context
 ```
 
 Set up in 60 seconds:
@@ -147,7 +150,10 @@ cat CLAUDE.md        # or .cursorrules / .windsurfrules / AGENTS.md / .github/co
 # 2. Git hooks stamp every commit
 akf init --git-hooks
 
-# 3. Shell hook intercepts AI CLI tools
+# 3. CI certifies trust on every PR
+#    uses: HMAKT99/AKF/extensions/github-action@main
+
+# 4. Shell hook intercepts AI CLI tools
 eval "$(akf shell-hook)"
 ```
 
@@ -275,6 +281,12 @@ akf validate report.akf
 akf inspect report.akf
 akf trust report.akf
 
+# ── Certify (aggregate pass/fail gate) ──
+akf certify report.akf                        # Trust + detection + compliance
+akf certify src/ --min-trust 0.8              # Custom threshold
+akf certify . --evidence-file results.xml     # Attach test evidence
+akf certify . --format json --fail-on-untrusted  # CI-friendly output
+
 # ── Compliance ──
 akf audit report.akf                          # General audit
 akf audit report.akf --regulation eu_ai_act   # EU AI Act
@@ -345,7 +357,7 @@ effective_trust = confidence × authority_weight × temporal_decay × (1 + penal
 |-----------|-------------|
 | [VS Code](extensions/vscode/) | Syntax highlighting, hover info, validation for `.akf` files |
 | [VS Code AI Monitor](editors/vscode/) | Auto-stamp files edited by Copilot, Cursor, and other AI tools |
-| [GitHub Action](extensions/github-action/) | CI validation — fail builds on untrusted claims |
+| [GitHub Action](extensions/github-action/) | CI trust gate — runs `akf certify` on PRs with optional PR comments |
 | [Google Workspace](extensions/google-workspace/) | Add-on for Docs, Sheets, Slides |
 | [Office Add-in](extensions/office-addin/) | Add-in for Word, Excel, PowerPoint |
 
