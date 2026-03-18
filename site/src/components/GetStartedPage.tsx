@@ -214,14 +214,23 @@ export default function GetStartedPage() {
           <p className="mt-6 text-lg text-text-secondary max-w-2xl mx-auto">
             One install. Trust scores, evidence, and provenance embed natively into every file your AI produces.
           </p>
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+          {/* Doctor banner */}
+          <div className="mt-8 max-w-xl mx-auto rounded-lg bg-amber-500/10 border border-amber-500/20 px-4 py-3 flex items-start gap-3 text-left">
+            <svg className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+            </svg>
+            <p className="text-sm text-amber-600">
+              <strong>First time?</strong> Run <code className="font-mono bg-amber-500/10 px-1 rounded">akf doctor</code> after installing — it checks your PATH and guides setup.
+              On <strong>Windows</strong>, use <code className="font-mono bg-amber-500/10 px-1 rounded">python3 -m akf</code> or install via <code className="font-mono bg-amber-500/10 px-1 rounded">pipx</code>.
+            </p>
+          </div>
+
+          <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
             <CopyCommand command="pip install akf" />
             <CopyCommand command="npm install akf-format" />
           </div>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm text-text-secondary">
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-sm text-text-secondary">
             <span>Then try: <code className="text-accent font-mono">akf quickstart</code></span>
-            <span className="text-border-subtle">|</span>
-            <span>Having issues? <code className="text-accent font-mono">akf doctor</code></span>
           </div>
         </section>
 

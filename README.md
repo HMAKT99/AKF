@@ -16,8 +16,8 @@ _akf: '{"v":"1.0","claims":[{"c":"Trust metadata for README.md","t":0.7,"id":"19
 
 <p align="center">
   <strong>The file format for the AI era.</strong><br/>
-  Trust scores · Source provenance · Security classification · Compliance audit<br/>
-  Embeds natively into DOCX, PDF, XLSX, images, code, and 20+ formats.
+  Trust scores · Source provenance · Security classification · Compliance readiness<br/>
+  Embeds natively into DOCX, PDF, XLSX, images, code, and all major formats.
 </p>
 
 <p align="center">
@@ -54,12 +54,13 @@ AI generates content → AKF stamps trust metadata → Anyone can verify it
 ```bash
 pip install akf    # Python
 npm install akf-format    # TypeScript / Node.js
+
+akf doctor         # Check your install — detects PATH issues and guides setup
 ```
 
-> **`akf` command not found?** Use `python3 -m akf` (always works), or:
+> **`akf` command not found?** Run `akf doctor` — it auto-detects your Python version and prints the exact PATH fix for your platform. Or use `python3 -m akf` (always works).
 > - Install with pipx: `pipx install akf` (recommended — auto-handles PATH)
-> - macOS: add `export PATH="$HOME/Library/Python/3.9/bin:$PATH"` to `~/.zshrc`
-> - Linux: add `export PATH="$HOME/.local/bin:$PATH"` to `~/.bashrc`
+> - **Windows:** use `python3 -m akf` or install via `pipx`
 
 ```python
 import akf
@@ -306,7 +307,6 @@ akf shell-hook                                # Print shell hook code
 
 # ── Git integration ──
 akf stamp <file> --agent claude-code --evidence "tests pass"
-akf log --trust                               # Trust-annotated git log
 
 # ── Knowledge Base ──
 akf kb stats ./kb
@@ -347,9 +347,9 @@ effective_trust = confidence × authority_weight × temporal_decay × (1 + penal
 | Package | Description |
 |---------|-------------|
 | [`mcp-server-akf`](packages/mcp-server-akf/) | MCP server — create, validate, scan, trust |
-| [`langchain-akf`](packages/langchain-akf/) | LangChain callback handler + document loader |
-| [`llama-index-akf`](packages/llama-index-akf/) | LlamaIndex node parser + trust filter |
-| [`crewai-akf`](packages/crewai-akf/) | CrewAI tool for trust-aware agents |
+| [`langchain-akf`](packages/langchain-akf/) | LangChain callback handler + document loader (experimental) |
+| [`llama-index-akf`](packages/llama-index-akf/) | LlamaIndex node parser + trust filter (experimental) |
+| [`crewai-akf`](packages/crewai-akf/) | CrewAI tool for trust-aware agents (experimental) |
 
 **Editor & CI extensions** (source in repo):
 
@@ -358,8 +358,8 @@ effective_trust = confidence × authority_weight × temporal_decay × (1 + penal
 | [VS Code](extensions/vscode/) | Syntax highlighting, hover info, validation for `.akf` files |
 | [VS Code AI Monitor](editors/vscode/) | Auto-stamp files edited by Copilot, Cursor, and other AI tools |
 | [GitHub Action](extensions/github-action/) | CI trust gate — runs `akf certify` on PRs with optional PR comments |
-| [Google Workspace](extensions/google-workspace/) | Add-on for Docs, Sheets, Slides |
-| [Office Add-in](extensions/office-addin/) | Add-in for Word, Excel, PowerPoint |
+| [Google Workspace](extensions/google-workspace/) | Add-on for Docs, Sheets, Slides (preview) |
+| [Office Add-in](extensions/office-addin/) | Add-in for Word, Excel, PowerPoint (preview) |
 
 ## For LLMs
 
