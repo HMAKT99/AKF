@@ -54,12 +54,13 @@ AI generates content → AKF stamps trust metadata → Anyone can verify it
 ```bash
 pip install akf    # Python
 npm install akf-format    # TypeScript / Node.js
+
+akf doctor         # Check your install — detects PATH issues and guides setup
 ```
 
-> **`akf` command not found?** Use `python3 -m akf` (always works), or:
+> **`akf` command not found?** Run `akf doctor` to auto-detect your setup, or use `python3 -m akf` (always works).
 > - Install with pipx: `pipx install akf` (recommended — auto-handles PATH)
-> - macOS: add `export PATH="$HOME/Library/Python/3.9/bin:$PATH"` to `~/.zshrc`
-> - Linux: add `export PATH="$HOME/.local/bin:$PATH"` to `~/.bashrc`
+> - **Windows:** use `python3 -m akf` or install via `pipx`
 
 ```python
 import akf
