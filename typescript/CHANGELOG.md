@@ -4,6 +4,18 @@ All notable changes to `akf-format` will be documented in this file.
 
 This project follows [semantic versioning](https://semver.org/).
 
+## [1.2.1] — 2026-03-19
+
+### Fixed
+- Fixed `akf doctor` showing hardcoded version instead of actual version
+- Aligned Markdown and PDF report titles to "AKF Trust Report"
+- Fixed npm README API examples to match actual SDK exports
+
+### Added
+- README.md with full API documentation, upgrade guidance, and release notifications
+- CHANGELOG.md tracking all releases
+- Package metadata: repository, homepage, bugs URLs
+
 ## [1.2.0] — 2026-03-19
 
 ### Added
