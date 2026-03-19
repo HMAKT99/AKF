@@ -60,6 +60,19 @@ const junitExample = `<!-- test-results.xml -->
   </testsuite>
 </testsuites>`;
 
+const failureExample = `$ akf certify quarterly-report.akf --min-trust 0.7
+
+CERTIFICATION FAILED
+
+  Trust Score:  0.32 (threshold: 0.70)
+  Detections:   1 critical, 2 warnings
+    CRITICAL  Ungrounded AI claim — no evidence for "revenue projection"
+    WARNING   Stale claim — "market share" last verified 180+ days ago
+    WARNING   Trust below threshold — 3 claims under 0.4
+
+  Files:    1 checked, 0 certified, 1 failed
+  Exit:     1`;
+
 const jsonEvidenceExample = `{
   "tests": { "passed": 42, "failed": 0 },
   "coverage": 87.5,
@@ -121,6 +134,18 @@ export default function CertifyPage() {
             <CodeBlock code={junitExample} filename="test-results.xml" />
             <CodeBlock code={jsonEvidenceExample} language="json" filename="evidence.json" />
           </div>
+        </section>
+
+        {/* What Failure Looks Like */}
+        <section className="mb-12">
+          <h2 className="text-xl font-bold text-text-primary mb-1">What Failure Looks Like</h2>
+          <p className="text-sm text-text-secondary mb-4">
+            When certification fails, AKF gives you an actionable breakdown — which claims are ungrounded, which evidence is stale, and exactly why the trust score fell short.
+          </p>
+          <CodeBlock code={failureExample} language="bash" filename="terminal" />
+          <p className="text-sm text-text-secondary mt-4">
+            A non-zero exit code lets CI pipelines catch untrusted content before it ships. Fix the flagged claims, re-run <code className="text-accent font-mono text-xs">akf certify</code>, and the gate turns green.
+          </p>
         </section>
 
         {/* CTA */}
