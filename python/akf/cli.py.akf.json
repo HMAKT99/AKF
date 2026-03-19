@@ -2,32 +2,32 @@
   "akf": "1.0",
   "mode": "sidecar",
   "target_file": "cli.py",
-  "generated_at": "2026-03-18T03:47:35.011068+00:00",
+  "generated_at": "2026-03-19T13:38:04.061563+00:00",
   "v": "1.0",
   "claims": [
     {
       "c": "Trust metadata for python/akf/cli.py",
       "t": 0.7,
-      "id": "3acb483e",
+      "id": "067d4722",
       "src": "unspecified",
       "tier": 5,
       "ver": false,
       "ai": true,
       "evidence": [
         {
-          "type": "test_pass",
-          "detail": "certify command added, tests pass",
-          "at": "2026-03-18T03:47:35.010805+00:00"
+          "type": "other",
+          "detail": "added --output/--open flags and structured terminal output for scan/audit",
+          "at": "2026-03-19T13:38:04.061310+00:00"
         }
       ]
     }
   ],
-  "id": "akf-84a656f79d8e",
+  "id": "akf-613da87637cb",
   "agent": "claude-code",
-  "at": "2026-03-18T03:47:35.011004+00:00",
+  "at": "2026-03-19T13:38:04.061500+00:00",
   "label": "internal",
   "inherit": true,
   "ext": false,
   "sv": "1.1",
-  "integrity_hash": "sha256:fb4da10174a90bceb7c315aa54c73a31ba1acc881afca47bd5de957e33a9b0ea"
+  "integrity_hash": "sha256:91d8f99acd678c9251590427bce8045ca9b2e421b9205c9e9ea0ba715bc00725"
 }

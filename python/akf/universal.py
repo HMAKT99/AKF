@@ -358,32 +358,50 @@ def create_sidecar(filepath: str, metadata: Dict[str, Any]) -> str:
     return _sidecar.create(filepath, metadata)
 
 
+_SKIP_DIRS = {
+    "node_modules", "__pycache__", ".git", ".svn", ".hg", "venv", ".venv",
+    "env", ".env", ".tox", "dist", "build", ".cache", ".npm", ".yarn",
+    "Library", "Applications", ".Trash", "Pictures", "Music", "Movies",
+}
+
+
 def scan_directory(
     dirpath: str,
     recursive: bool = True,
+    max_files: int = 10000,
+    on_progress=None,
 ) -> List[ScanReport]:
     """Scan a directory for AKF-enriched files.
 
     Args:
         dirpath: Directory to scan.
         recursive: Whether to scan subdirectories.
+        max_files: Maximum number of files to scan (default 10000).
+        on_progress: Optional callback(scanned: int, enriched: int) for progress.
 
     Returns:
         List of ScanReports for all files found.
     """
     reports: List[ScanReport] = []
+    scanned = 0
 
     if not os.path.isdir(dirpath):
         return reports
 
     if recursive:
         for root, dirs, files in os.walk(dirpath):
-            # Skip hidden directories
-            dirs[:] = [d for d in dirs if not d.startswith(".")]
+            # Skip hidden directories and known-heavy directories
+            dirs[:] = [d for d in dirs if not d.startswith(".") and d not in _SKIP_DIRS]
             for filename in sorted(files):
-                if filename.endswith(".akf.json"):
+                if filename.startswith(".") or filename.endswith(".akf.json"):
                     continue
+                if scanned >= max_files:
+                    return reports
                 filepath = os.path.join(root, filename)
+                scanned += 1
+                if on_progress and scanned % 100 == 0:
+                    enriched = sum(1 for r in reports if r.enriched)
+                    on_progress(scanned, enriched)
                 try:
                     report = scan(filepath)
                     report.format = report.format or _get_extension(filepath)
@@ -397,6 +415,9 @@ def scan_directory(
             filepath = os.path.join(dirpath, entry)
             if not os.path.isfile(filepath):
                 continue
+            if scanned >= max_files:
+                return reports
+            scanned += 1
             try:
                 report = scan(filepath)
                 report.format = report.format or _get_extension(filepath)

@@ -298,9 +298,9 @@ class TestHTMLRenderer:
         assert "print-color-adjust: exact" in output
 
     def test_html_title(self, sample_report):
-        """HTML title is AI Governance Report."""
+        """HTML title is AKF Trust Report."""
         output = sample_report.render("html")
-        assert "<title>AI Governance Report</title>" in output
+        assert "<title>AKF Trust Report</title>" in output
 
     def test_html_escapes_filenames(self):
         """File names with special chars are HTML-escaped."""
@@ -370,7 +370,7 @@ class TestHTMLRenderer:
     def test_html_grade_colors(self, sample_report):
         """HTML includes grade color styling."""
         output = sample_report.render("html")
-        assert "grade" in output
+        assert "Security" in output
 
     def test_html_all_sections(self, sample_report):
         """HTML has all major sections."""

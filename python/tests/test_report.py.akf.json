@@ -1,0 +1,33 @@
+{
+  "akf": "1.0",
+  "mode": "sidecar",
+  "target_file": "test_report.py",
+  "generated_at": "2026-03-19T13:38:04.208753+00:00",
+  "v": "1.0",
+  "claims": [
+    {
+      "c": "Trust metadata for python/tests/test_report.py",
+      "t": 0.7,
+      "id": "38065bcf",
+      "src": "unspecified",
+      "tier": 5,
+      "ver": false,
+      "ai": true,
+      "evidence": [
+        {
+          "type": "other",
+          "detail": "updated tests for new HTML title and grade check",
+          "at": "2026-03-19T13:38:04.207432+00:00"
+        }
+      ]
+    }
+  ],
+  "id": "akf-e622bd8a317f",
+  "agent": "claude-code",
+  "at": "2026-03-19T13:38:04.208687+00:00",
+  "label": "internal",
+  "inherit": true,
+  "ext": false,
+  "sv": "1.1",
+  "integrity_hash": "sha256:06eed59cdbc5604e4dc4d9d351bb9a3bd8e0ca0190645ef924bacb46b7ab98a3"
+}

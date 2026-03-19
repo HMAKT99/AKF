@@ -569,28 +569,51 @@ def _render_markdown(report: EnterpriseReport) -> str:
 
 @register_renderer("html")
 def _render_html(report: EnterpriseReport) -> str:
-    """Render as styled HTML report."""
-    # Grade color
+    """Render as professional, executive-ready HTML report."""
     gc = {"A": "#22c55e", "B": "#3b82f6", "C": "#eab308", "D": "#f97316", "F": "#ef4444"}
     grade_color = gc.get(report.security_grade, "#6b7280")
 
-    # Trust distribution for chart
     td = report.trust_distribution
     total_td = sum(td.values()) or 1
+    high_pct = round(td.get("high", 0) / total_td * 100)
+    mod_pct = round(td.get("moderate", 0) / total_td * 100)
+    low_pct = round(td.get("low", 0) / total_td * 100)
 
     _e = _html.escape
+
+    # KPI card color helpers
+    def _trust_color(v):
+        if v >= 0.7:
+            return "#22c55e"
+        if v >= 0.4:
+            return "#eab308"
+        return "#ef4444"
+
+    def _compliance_color(v):
+        if v >= 0.8:
+            return "#22c55e"
+        if v >= 0.5:
+            return "#eab308"
+        return "#ef4444"
 
     # File rows
     file_rows = ""
     for fr in report.file_reports:
         name = _e(Path(fr.path).name)
+        tc = _trust_color(fr.avg_trust)
         sc = gc.get(fr.security_grade[0], "#6b7280") if fr.security_grade else "#6b7280"
-        comp_badge = '<span style="color:#22c55e">Yes</span>' if fr.compliant else '<span style="color:#ef4444">No</span>'
-        file_rows += f"""<tr>
-            <td>{name}</td><td>{fr.claims}</td><td>{fr.avg_trust:.2f}</td>
-            <td><span style="color:{sc};font-weight:bold">{_e(fr.security_grade)}</span></td>
-            <td>{comp_badge}</td><td>{fr.detections}</td>
-        </tr>"""
+        comp_badge = ('<span style="background:#dcfce7;color:#166534;padding:2px 8px;'
+                      'border-radius:9999px;font-size:0.8em">Compliant</span>' if fr.compliant
+                      else '<span style="background:#fef2f2;color:#991b1b;padding:2px 8px;'
+                      'border-radius:9999px;font-size:0.8em">Non-compliant</span>')
+        file_rows += (
+            f'<tr><td style="font-weight:500">{name}</td><td>{fr.claims}</td>'
+            f'<td style="color:{tc};font-weight:600">{fr.avg_trust:.2f}</td>'
+            f'<td><span style="color:{sc};font-weight:700">{_e(fr.security_grade)}</span>'
+            f' <span style="color:#6b7280;font-size:0.85em">({fr.security_score:.0f})</span></td>'
+            f'<td>{comp_badge}</td><td>{fr.detections}</td>'
+            f'<td>{fr.quality_score:.2f}</td></tr>'
+        )
 
     # Model rows
     model_rows = ""
@@ -600,90 +623,190 @@ def _render_html(report: EnterpriseReport) -> str:
     # Risk rows
     risk_rows = ""
     for r in report.top_risks:
-        risk_rows += f"<tr><td><code>{_e(r['class'])}</code></td><td>{r['count']}</td></tr>"
+        risk_rows += (
+            f'<tr><td><code style="background:#f1f5f9;padding:2px 6px;border-radius:4px">'
+            f'{_e(r["class"])}</code></td><td>{r["count"]}</td></tr>'
+        )
 
     # Recommendation items
-    rec_items = "".join(f"<li>{_e(r)}</li>" for r in report.recommendations)
+    rec_items = "".join(
+        f'<li style="margin:6px 0;padding:8px 12px;background:#f0f9ff;border-left:3px solid #3b82f6;'
+        f'border-radius:0 4px 4px 0">{_e(r)}</li>' for r in report.recommendations
+    )
+
+    # Security grade badges
+    grade_badges = ""
+    for g in ["A", "B", "C", "D", "F"]:
+        cnt = report.security_distribution.get(g, 0)
+        if cnt:
+            bg = gc.get(g, "#6b7280")
+            grade_badges += (
+                f'<span style="display:inline-block;background:{bg};color:#fff;'
+                f'padding:4px 12px;border-radius:9999px;margin:0 4px;font-weight:600">'
+                f'{g}: {cnt}</span>'
+            )
+
+    # AI vs Human bar
+    ai_total = report.ai_claims + report.human_claims
+    ai_pct = round(report.ai_claims / ai_total * 100) if ai_total else 0
+    human_pct = 100 - ai_pct
+
+    # Compliance bar
+    comp_total = report.compliant_files + report.non_compliant_files
+    comp_pct = round(report.compliant_files / comp_total * 100) if comp_total else 0
 
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Governance Report</title>
+    <title>AKF Trust Report</title>
     <style>
-        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 960px; margin: 0 auto; padding: 20px; color: #1f2937; }}
-        h1 {{ border-bottom: 2px solid #e5e7eb; padding-bottom: 12px; }}
-        h2 {{ color: #374151; margin-top: 32px; }}
-        .grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin: 20px 0; }}
-        .card {{ background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; text-align: center; }}
-        .card .value {{ font-size: 2em; font-weight: bold; }}
-        .card .label {{ color: #6b7280; font-size: 0.85em; margin-top: 4px; }}
-        table {{ width: 100%; border-collapse: collapse; margin: 12px 0; }}
-        th, td {{ padding: 8px 12px; border: 1px solid #e5e7eb; text-align: left; }}
-        th {{ background: #f3f4f6; font-weight: 600; }}
-        .bar {{ height: 20px; border-radius: 4px; display: inline-block; }}
-        .bar-high {{ background: #22c55e; }}
-        .bar-mod {{ background: #eab308; }}
-        .bar-low {{ background: #ef4444; }}
-        .grade {{ font-size: 2.5em; font-weight: bold; color: {grade_color}; }}
-        .meta {{ color: #6b7280; font-size: 0.85em; }}
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+               background: #f8fafc; color: #1e293b; line-height: 1.6; }}
+        .header {{ background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+                   color: #fff; padding: 32px 40px; }}
+        .header h1 {{ font-size: 1.75em; font-weight: 700; letter-spacing: -0.02em; }}
+        .header .subtitle {{ color: #94a3b8; font-size: 0.9em; margin-top: 4px; }}
+        .container {{ max-width: 1000px; margin: 0 auto; padding: 24px 40px 48px; }}
+        .kpi-grid {{ display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px;
+                     margin: -40px 0 32px; position: relative; z-index: 1; }}
+        .kpi {{ background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
+                padding: 20px 16px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }}
+        .kpi .val {{ font-size: 1.8em; font-weight: 700; line-height: 1.2; }}
+        .kpi .lbl {{ color: #64748b; font-size: 0.8em; margin-top: 4px; text-transform: uppercase;
+                     letter-spacing: 0.05em; }}
+        details {{ background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
+                   margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }}
+        summary {{ padding: 16px 20px; font-weight: 600; font-size: 1.05em; cursor: pointer;
+                   list-style: none; display: flex; align-items: center; gap: 8px; }}
+        summary::-webkit-details-marker {{ display: none; }}
+        summary::before {{ content: "\\25B6"; font-size: 0.7em; color: #94a3b8;
+                          transition: transform 0.2s; }}
+        details[open] summary::before {{ transform: rotate(90deg); }}
+        .section-body {{ padding: 0 20px 20px; }}
+        .stacked-bar {{ display: flex; height: 28px; border-radius: 6px; overflow: hidden;
+                        margin: 8px 0; }}
+        .stacked-bar span {{ display: flex; align-items: center; justify-content: center;
+                            font-size: 0.75em; font-weight: 600; color: #fff;
+                            min-width: 0; }}
+        table {{ width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.9em; }}
+        th {{ background: #f8fafc; padding: 10px 12px; text-align: left; font-weight: 600;
+              color: #475569; border-bottom: 2px solid #e2e8f0; font-size: 0.85em;
+              text-transform: uppercase; letter-spacing: 0.04em; }}
+        td {{ padding: 10px 12px; border-bottom: 1px solid #f1f5f9; }}
+        tr:hover td {{ background: #f8fafc; }}
+        .bar-label {{ display: flex; justify-content: space-between; font-size: 0.85em;
+                      color: #64748b; margin-top: 4px; }}
+        .rec-list {{ list-style: none; padding: 0; }}
+        .footer {{ text-align: center; color: #94a3b8; font-size: 0.8em; margin-top: 40px;
+                   padding-top: 20px; border-top: 1px solid #e2e8f0; }}
+        .footer a {{ color: #3b82f6; text-decoration: none; }}
         @media print {{
-            body {{ color: #000; max-width: 100%; padding: 0; }}
-            .card {{ break-inside: avoid; border: 1px solid #ccc; }}
-            .grid {{ break-inside: avoid; }}
-            table {{ break-inside: auto; }}
+            body {{ background: #fff; }}
+            .header {{ print-color-adjust: exact; -webkit-print-color-adjust: exact; }}
+            .kpi-grid {{ margin-top: 16px; }}
+            .kpi, details {{ box-shadow: none; border: 1px solid #d1d5db; }}
+            details {{ break-inside: avoid; }}
+            details[open] {{ break-inside: auto; }}
+            summary {{ break-after: avoid; }}
+            table {{ break-inside: auto; font-size: 0.8em; }}
             tr {{ break-inside: avoid; }}
-            h2 {{ break-after: avoid; }}
-            .bar {{ print-color-adjust: exact; -webkit-print-color-adjust: exact; }}
-            .grade {{ print-color-adjust: exact; -webkit-print-color-adjust: exact; }}
+            .stacked-bar span {{ print-color-adjust: exact; -webkit-print-color-adjust: exact; }}
+            .footer {{ break-before: avoid; }}
+        }}
+        @media (max-width: 768px) {{
+            .kpi-grid {{ grid-template-columns: repeat(3, 1fr); }}
+            .container {{ padding: 16px 20px 32px; }}
+            .header {{ padding: 24px 20px; }}
         }}
     </style>
 </head>
 <body>
-    <h1>AI Governance Report</h1>
-    <p class="meta">Generated: {report.generated_at}</p>
-
-    <div class="grid">
-        <div class="card"><div class="value">{report.total_files}</div><div class="label">Files</div></div>
-        <div class="card"><div class="value">{report.total_claims}</div><div class="label">Claims</div></div>
-        <div class="card"><div class="value">{report.avg_trust:.2f}</div><div class="label">Avg Trust</div></div>
-        <div class="card"><div class="grade">{report.security_grade}</div><div class="label">Security ({report.avg_security_score:.1f}/10)</div></div>
-        <div class="card"><div class="value">{report.compliance_rate:.0%}</div><div class="label">Compliance</div></div>
-        <div class="card"><div class="value">{report.avg_quality_score:.2f}</div><div class="label">Quality</div></div>
+    <div class="header">
+        <h1>AKF Trust Report</h1>
+        <div class="subtitle">Generated {report.generated_at} &middot; {report.total_files} files &middot; {report.total_claims} claims</div>
     </div>
 
-    <h2>Trust Distribution</h2>
-    <div style="margin:12px 0">
-        <div style="margin:4px 0">High <span class="bar bar-high" style="width:{td.get('high',0)/total_td*300}px"></span> {td.get('high',0)}</div>
-        <div style="margin:4px 0">Moderate <span class="bar bar-mod" style="width:{td.get('moderate',0)/total_td*300}px"></span> {td.get('moderate',0)}</div>
-        <div style="margin:4px 0">Low <span class="bar bar-low" style="width:{td.get('low',0)/total_td*300}px"></span> {td.get('low',0)}</div>
+    <div class="container">
+        <div class="kpi-grid">
+            <div class="kpi"><div class="val">{report.total_files}</div><div class="lbl">Files</div></div>
+            <div class="kpi"><div class="val">{report.total_claims}</div><div class="lbl">Claims</div></div>
+            <div class="kpi"><div class="val" style="color:{_trust_color(report.avg_trust)}">{report.avg_trust:.2f}</div><div class="lbl">Avg Trust</div></div>
+            <div class="kpi"><div class="val" style="color:{grade_color};font-size:2.2em">{report.security_grade}</div><div class="lbl">Security ({report.avg_security_score:.1f}/10)</div></div>
+            <div class="kpi"><div class="val" style="color:{_compliance_color(report.compliance_rate)}">{report.compliance_rate:.0%}</div><div class="lbl">Compliance</div></div>
+            <div class="kpi"><div class="val">{report.avg_quality_score:.2f}</div><div class="lbl">Quality</div></div>
+        </div>
+
+        <details open>
+            <summary>Trust Distribution</summary>
+            <div class="section-body">
+                <div class="stacked-bar">
+                    <span style="width:{high_pct}%;background:#22c55e">{high_pct}%</span>
+                    <span style="width:{mod_pct}%;background:#eab308">{mod_pct}%</span>
+                    <span style="width:{low_pct}%;background:#ef4444">{low_pct}%</span>
+                </div>
+                <div class="bar-label">
+                    <span>High: {td.get('high', 0)}</span>
+                    <span>Moderate: {td.get('moderate', 0)}</span>
+                    <span>Low: {td.get('low', 0)}</span>
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>AI vs Human Breakdown</summary>
+            <div class="section-body">
+                <div class="stacked-bar">
+                    <span style="width:{ai_pct}%;background:#3b82f6">{ai_pct}% AI</span>
+                    <span style="width:{human_pct}%;background:#8b5cf6">{human_pct}% Human</span>
+                </div>
+                <div class="bar-label">
+                    <span>AI: {report.ai_claims}</span>
+                    <span>Human: {report.human_claims}</span>
+                    {f'<span>Untracked: {report.untracked_claims}</span>' if report.untracked_claims else ''}
+                </div>
+                {('<p style="margin-top:12px;font-size:0.9em"><strong>Models:</strong> ' + ', '.join(f'{_e(m)} ({c})' for m, c in sorted(report.models_used.items(), key=lambda x: -x[1])) + '</p>') if report.models_used else ''}
+            </div>
+        </details>
+
+        <details>
+            <summary>Security Posture</summary>
+            <div class="section-body">
+                <p style="margin-bottom:12px">{grade_badges}</p>
+            </div>
+        </details>
+
+        <details>
+            <summary>Compliance</summary>
+            <div class="section-body">
+                <div class="stacked-bar" style="height:22px">
+                    <span style="width:{comp_pct}%;background:#22c55e">{report.compliant_files} compliant</span>
+                    <span style="width:{100 - comp_pct}%;background:#ef4444">{report.non_compliant_files} non-compliant</span>
+                </div>
+            </div>
+        </details>
+
+        {'<details><summary>Risk Summary</summary><div class="section-body">' +
+         f'<p style="margin-bottom:8px">Total: <strong>{report.total_detections}</strong> &middot; Critical: <strong>{report.critical_risks}</strong> &middot; High: <strong>{report.high_risks}</strong></p>' +
+         ('<table><tr><th>Risk Class</th><th>Count</th></tr>' + risk_rows + '</table>' if report.top_risks else '') +
+         '</div></details>' if report.total_detections else ''}
+
+        {'<details><summary>Recommendations</summary><div class="section-body"><ul class="rec-list">' + rec_items + '</ul></div></details>' if report.recommendations else ''}
+
+        <details>
+            <summary>Per-File Breakdown ({report.total_files} files)</summary>
+            <div class="section-body">
+                <table>
+                    <tr><th>File</th><th>Claims</th><th>Trust</th><th>Security</th><th>Status</th><th>Detections</th><th>Quality</th></tr>
+                    {file_rows}
+                </table>
+            </div>
+        </details>
+
+        <div class="footer">Generated by AKF v1.1 &mdash; <a href="https://akf.dev">akf.dev</a></div>
     </div>
-
-    <h2>AI vs Human</h2>
-    <p>AI-generated: <strong>{report.ai_claims}</strong> ({report.ai_ratio:.0%}) | Human: <strong>{report.human_claims}</strong>{f' | Untracked: <strong>{report.untracked_claims}</strong>' if report.untracked_claims else ''}</p>
-
-    {'<h2>Model Usage</h2><table><tr><th>Model</th><th>Claims</th></tr>' + model_rows + '</table>' if report.models_used else ''}
-
-    <h2>Security Posture</h2>
-    <table><tr><th>Grade</th><th>Files</th></tr>
-    {''.join(f"<tr><td>{g}</td><td>{report.security_distribution.get(g, 0)}</td></tr>" for g in ["A","B","C","D","F"] if report.security_distribution.get(g))}
-    </table>
-
-    <h2>Compliance</h2>
-    <p>Compliant: <strong>{report.compliant_files}</strong> / {report.total_files} | Non-compliant: <strong>{report.non_compliant_files}</strong></p>
-
-    <h2>Risk Summary</h2>
-    <p>Total: <strong>{report.total_detections}</strong> | Critical: <strong>{report.critical_risks}</strong> | High: <strong>{report.high_risks}</strong></p>
-    {'<table><tr><th>Risk Class</th><th>Count</th></tr>' + risk_rows + '</table>' if report.top_risks else ''}
-
-    {'<h2>Recommendations</h2><ul>' + rec_items + '</ul>' if report.recommendations else ''}
-
-    <h2>Per-File Breakdown</h2>
-    <table>
-        <tr><th>File</th><th>Claims</th><th>Trust</th><th>Security</th><th>Compliant</th><th>Detections</th></tr>
-        {file_rows}
-    </table>
 </body>
 </html>"""
 

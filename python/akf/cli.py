@@ -461,26 +461,118 @@ def extract_cmd(file, fmt) -> None:
         click.echo(akf_u.info(file))
 
 
+_EXT_TO_FORMAT = {".html": "html", ".json": "json", ".md": "markdown", ".csv": "csv", ".pdf": "pdf"}
+
+
+def _export_report(file_or_dir, output, open_report, command_name):
+    """Shared helper: generate enterprise report and write to file."""
+    from .report import enterprise_report
+    import os
+
+    ext = Path(output).suffix.lower()
+    fmt = _EXT_TO_FORMAT.get(ext)
+    if not fmt:
+        click.secho("Unknown output format '{}'. Use: .html .json .md .csv .pdf".format(ext), fg="red")
+        sys.exit(1)
+
+    report = enterprise_report(file_or_dir)
+    rendered = report.render(format=fmt)
+
+    mode = "wb" if isinstance(rendered, (bytes, bytearray)) else "w"
+    with open(output, mode) as f:
+        f.write(rendered)
+
+    click.secho("Report saved to {} ({} files, {} claims)".format(
+        output, report.total_files, report.total_claims), fg="green")
+
+    if open_report:
+        import webbrowser
+        webbrowser.open("file://" + os.path.abspath(output))
+
+
+def _trust_bar(count, total, width=20):
+    """Render an ASCII trust bar."""
+    if total <= 0:
+        return "\u2591" * width
+    filled = min(int(round(count / total * width)), width)
+    return "\u2588" * filled + "\u2591" * (width - filled)
+
+
 @main.command("scan")
 @click.argument("file_or_dir", type=click.Path(exists=True))
-@click.option("--recursive", "-r", is_flag=True, help="Scan directories recursively")
-def scan_cmd(file_or_dir, recursive) -> None:
+@click.option("--recursive", "-r", is_flag=True, default=True, help="Scan directories recursively (default: on)")
+@click.option("--no-recursive", is_flag=True, help="Scan only top-level files in directory")
+@click.option("--max-files", "-n", default=10000, type=int, help="Maximum files to scan (default: 10000)")
+@click.option("--output", "-o", type=click.Path(), help="Export report (.html, .json, .csv, .md, .pdf)")
+@click.option("--open", "open_report", is_flag=True, help="Open report in browser after export")
+def scan_cmd(file_or_dir, recursive, no_recursive, max_files, output, open_report) -> None:
     """Security scan any file or directory for AKF metadata."""
     from . import universal as akf_u
     from pathlib import Path
+    from collections import Counter
+
+    if output:
+        _export_report(file_or_dir, output, open_report, "scan")
+        return
+
+    if no_recursive:
+        recursive = False
 
     target = Path(file_or_dir)
     if target.is_dir():
-        reports = akf_u.scan_directory(str(target), recursive=recursive)
+        def progress(scanned, enriched):
+            click.echo("\r  Scanning... {} files checked, {} enriched".format(scanned, enriched), nl=False)
+
+        reports = akf_u.scan_directory(str(target), recursive=recursive, max_files=max_files, on_progress=progress)
         enriched = [r for r in reports if r.enriched]
-        click.secho("Scanned {} files, {} AKF-enriched".format(len(reports), len(enriched)), bold=True)
-        for r in reports:
-            if r.enriched:
-                ai_str = " [AI: {:.0f}%]".format(r.ai_contribution * 100) if r.ai_contribution else ""
-                trust_str = " trust: {:.2f}".format(r.overall_trust) if r.overall_trust else ""
-                label_str = " ({})".format(r.classification) if r.classification else ""
-                click.secho("  {} — {} claims{}{}{}".format(
-                    r.format, r.claim_count, trust_str, ai_str, label_str), fg="green")
+
+        # Clear progress line
+        if len(reports) >= 100:
+            click.echo("\r" + " " * 60 + "\r", nl=False)
+
+        # Structured summary header
+        title = " AKF Scan "
+        path_str = str(target)
+        summary = "{}   {} scanned \u00b7 {} enriched".format(path_str, len(reports), len(enriched))
+        box_w = max(len(title) + 2, len(summary) + 4, 54)
+        click.secho("\u250c\u2500{}\u2500\u2510".format(title.center(box_w - 2, "\u2500")), bold=True)
+        click.secho("\u2502  {}{}  \u2502".format(summary, " " * (box_w - len(summary) - 4)), bold=True)
+        click.secho("\u2514{}\u2518".format("\u2500" * (box_w)), bold=True)
+        click.echo()
+
+        if len(reports) >= max_files:
+            click.secho("  (stopped at --max-files limit of {})".format(max_files), fg="yellow")
+
+        # Trust distribution
+        if enriched:
+            high = sum(1 for r in enriched if r.overall_trust is not None and r.overall_trust >= 0.7)
+            mod = sum(1 for r in enriched if r.overall_trust is not None and 0.4 <= r.overall_trust < 0.7)
+            low = sum(1 for r in enriched if r.overall_trust is not None and r.overall_trust < 0.4)
+            total_e = len(enriched)
+
+            click.echo("Trust    ", nl=False)
+            click.secho("High ", fg="green", nl=False)
+            click.echo("{} {:>3}    ".format(_trust_bar(high, total_e), high), nl=False)
+            click.secho("Mod ", fg="yellow", nl=False)
+            click.echo("{} {:>3}    ".format(_trust_bar(mod, total_e), mod), nl=False)
+            click.secho("Low ", fg="red", nl=False)
+            click.echo("{} {:>3}".format(_trust_bar(low, total_e), low))
+            click.echo()
+
+            # Format breakdown
+            fmt_counts = Counter()
+            for r in enriched:
+                fmt_name = r.format.upper() if r.format else "Unknown"
+                fmt_counts[fmt_name] += 1
+            # Also count sidecars
+            sidecar_count = sum(1 for r in reports if not r.enriched and (
+                str(getattr(r, 'format', '')).lower() in ('sidecar',)))
+            fmt_parts = ["{} {}".format(fmt, cnt) for fmt, cnt in fmt_counts.most_common()]
+            if fmt_parts:
+                click.echo("Format   " + " \u00b7 ".join(fmt_parts))
+                click.echo()
+
+        click.echo("Tip: akf scan {} --output report.html --open".format(file_or_dir))
     else:
         report = akf_u.scan(str(target))
         if not report.enriched:
@@ -647,17 +739,96 @@ def diff(file1, file2) -> None:
 
 
 @main.command("audit")
-@click.argument("file", type=click.Path(exists=True))
+@click.argument("file_or_dir", type=click.Path(exists=True))
 @click.option("--regulation", "-r", help="Check specific regulation (eu_ai_act, sox, hipaa, gdpr, nist_ai, iso_42001)")
 @click.option("--trail", is_flag=True, help="Show audit trail")
 @click.option("--export", "export_fmt", type=click.Choice(["json", "markdown", "csv"]), help="Export audit result")
-def audit_cmd(file, regulation, trail, export_fmt) -> None:
-    """Run compliance audit on an .akf file."""
+@click.option("--output", "-o", type=click.Path(), help="Export report (.html, .json, .csv, .md, .pdf)")
+@click.option("--open", "open_report", is_flag=True, help="Open report in browser after export")
+def audit_cmd(file_or_dir, regulation, trail, export_fmt, output, open_report) -> None:
+    """Run compliance audit on a file or directory."""
     from .compliance import audit, check_regulation, audit_trail, export_audit
+    from pathlib import Path
 
+    if output:
+        _export_report(file_or_dir, output, open_report, "audit")
+        return
+
+    target = Path(file_or_dir)
+
+    # If it's a directory, find all AKF-enriched files and audit each
+    if target.is_dir():
+        from . import universal as akf_u
+        akf_files = []
+        for p in sorted(target.rglob("*")):
+            if p.is_file() and not p.name.startswith("."):
+                if p.suffix == ".akf" or p.name.endswith(".akf.json"):
+                    continue
+                # Check if file has AKF metadata (sidecar or embedded)
+                sidecar = p.parent / (p.name + ".akf")
+                sidecar_json = p.parent / (p.name + ".akf.json")
+                if sidecar.exists() or sidecar_json.exists():
+                    akf_files.append(str(p))
+                else:
+                    try:
+                        meta = akf_u.extract(str(p))
+                        if meta:
+                            akf_files.append(str(p))
+                    except Exception:
+                        pass
+
+        if not akf_files:
+            click.secho(f"No AKF-enriched files found in {file_or_dir}", fg="yellow")
+            click.echo(f"  Tip: Run 'akf stamp <file>' to add metadata first")
+            sys.exit(1)
+
+        # Audit all files first
+        compliant_count = 0
+        total = len(akf_files)
+        audit_results = []
+        for filepath in akf_files:
+            try:
+                if regulation:
+                    result = check_regulation(filepath, regulation)
+                else:
+                    result = audit(filepath)
+                audit_results.append((filepath, result))
+                if result.compliant:
+                    compliant_count += 1
+            except Exception:
+                audit_results.append((filepath, None))
+
+        # Structured summary header
+        title = " AKF Audit "
+        pct = round(compliant_count / total * 100) if total else 0
+        summary = "{}   {} files \u00b7 {}/{} compliant ({}%)".format(
+            str(target), total, compliant_count, total, pct)
+        box_w = max(len(title) + 2, len(summary) + 4, 54)
+        click.secho("\u250c\u2500{}\u2500\u2510".format(title.center(box_w - 2, "\u2500")), bold=True)
+        click.secho("\u2502  {}{}  \u2502".format(summary, " " * (box_w - len(summary) - 4)), bold=True)
+        click.secho("\u2514{}\u2518".format("\u2500" * (box_w)), bold=True)
+        click.echo()
+
+        # Per-file results
+        for filepath, result in audit_results:
+            rel = Path(filepath).relative_to(target)
+            if result is None:
+                click.echo(f"  \u26a0\ufe0f  {rel} — could not audit")
+            else:
+                status_icon = "\u2705" if result.compliant else "\u274c"
+                click.echo("  {} {:<40s} {:.2f}".format(status_icon, str(rel)[:40], result.score))
+
+        click.echo()
+        color = "green" if compliant_count == total else ("yellow" if compliant_count > 0 else "red")
+        click.secho("Result: {}/{} files compliant".format(compliant_count, total), fg=color, bold=True)
+        click.echo()
+        click.echo("Tip: akf audit {} --output report.html --open".format(file_or_dir))
+        return
+
+    # Single file audit
     if trail:
         try:
-            click.echo(audit_trail(file, format="text"))
+            click.echo(audit_trail(file_or_dir, format="text"))
         except (ValueError, json.JSONDecodeError) as e:
             click.secho(f"Error: {e}", fg="red")
             sys.exit(1)
@@ -665,12 +836,12 @@ def audit_cmd(file, regulation, trail, export_fmt) -> None:
 
     try:
         if regulation:
-            result = check_regulation(file, regulation)
+            result = check_regulation(file_or_dir, regulation)
         else:
-            result = audit(file)
+            result = audit(file_or_dir)
     except (ValueError, json.JSONDecodeError) as e:
-        click.secho(f"Error: Could not audit {file}: {e}", fg="red")
-        click.echo(f"  Tip: Run 'akf embed {file}' or 'akf stamp {file}' to add metadata first")
+        click.secho(f"Error: Could not audit {file_or_dir}: {e}", fg="red")
+        click.echo(f"  Tip: Run 'akf embed {file_or_dir}' or 'akf stamp {file_or_dir}' to add metadata first")
         sys.exit(1)
 
     if export_fmt:
