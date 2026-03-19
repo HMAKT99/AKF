@@ -113,6 +113,10 @@ class TestDownloadSourceDetection:
             result = _detect_download_source(f)
         assert result is None
 
+    @pytest.mark.skipif(
+        __import__("platform").system() != "Darwin",
+        reason="xattr-based download source detection requires macOS",
+    )
     def test_darwin_with_xattr(self, tmp_path):
         """macOS with download xattr → returns URL."""
         import plistlib

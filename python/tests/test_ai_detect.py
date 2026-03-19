@@ -120,6 +120,10 @@ class TestCreatorApp:
             mock_platform.system.return_value = "Linux"
             assert _detect_creator_app(f) is None
 
+    @pytest.mark.skipif(
+        __import__("platform").system() != "Darwin",
+        reason="xattr-based creator detection requires macOS",
+    )
     def test_darwin_with_ai_creator(self, tmp_path):
         f = tmp_path / "file.txt"
         f.write_text("data")
@@ -233,6 +237,10 @@ class TestDetectAiContent:
         result = detect_ai_content(f)
         assert result.likely_ai is False
 
+    @pytest.mark.skipif(
+        __import__("platform").system() != "Darwin",
+        reason="xattr-based creator detection requires macOS",
+    )
     def test_creator_app_sets_high_score(self, tmp_path):
         f = tmp_path / "output.txt"
         f.write_text("Some plain text")
