@@ -40,6 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: release
     permissions:
+      contents: read   # checkout private repo
       id-token: write  # for PyPI trusted publishing (OIDC)
     steps:
       - uses: actions/checkout@v4
@@ -69,6 +70,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: release
     permissions:
+      contents: read   # checkout private repo
       id-token: write  # for npm trusted publishing (OIDC provenance)
     steps:
       - uses: actions/checkout@v4
