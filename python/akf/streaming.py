@@ -98,6 +98,8 @@ def stream_claim(
         "id": claim.id,
     }
     # Include optional fields
+    if session.agent:
+        line["agent"] = session.agent
     if claim.source:
         line["src"] = claim.source
     if claim.ai_generated:
@@ -206,6 +208,7 @@ def collect_stream(akfl_path: str) -> AKF:
                     claim_data["ai_generated"] = obj["ai"]
                 if "tier" in obj:
                     claim_data["authority_tier"] = obj["tier"]
+                # agent field is informational — stored but not part of Claim model
                 claims.append(Claim(**claim_data))
             elif line_type == "end":
                 end_found = True

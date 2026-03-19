@@ -1601,6 +1601,29 @@ def _print_certify_markdown(report) -> None:
                f"**Skipped:** {report.skipped_count}")
 
 
+def _print_team_certify_summary(team_report) -> None:
+    """Print a coloured summary of a TeamCertifyReport."""
+    click.echo()
+    click.secho(f"  Team: {team_report.team_id}", bold=True)
+    click.echo()
+
+    for agent_id, ar in sorted(team_report.agent_reports.items()):
+        icon = click.style("PASS", fg="green") if ar.failed_count == 0 else click.style("FAIL", fg="red")
+        click.echo(f"    {icon}  {agent_id}  "
+                   f"({ar.certified_count}/{ar.file_count} certified, trust={ar.avg_trust:.4f})")
+
+    click.echo()
+    click.echo(f"  Total: {team_report.total_files}  Certified: {team_report.certified_count}  "
+               f"Failed: {team_report.failed_count}")
+    if team_report.avg_trust:
+        click.echo(f"  Average trust: {team_report.avg_trust:.4f}")
+    click.echo()
+    if team_report.all_agents_certified:
+        click.secho("  All agents certified.", fg="green", bold=True)
+    else:
+        click.secho("  Team certification incomplete.", fg="red", bold=True)
+
+
 @main.command("certify")
 @click.argument("path", type=click.Path(exists=True))
 @click.option("--min-trust", type=float, default=0.7, help="Minimum trust score to certify (default: 0.7)")
@@ -1609,7 +1632,8 @@ def _print_certify_markdown(report) -> None:
               help="Output format")
 @click.option("--fail-on-untrusted", is_flag=True, help="Exit with code 1 if any file fails certification")
 @click.option("--agent", default=None, help="Agent identifier for provenance")
-def certify_cmd(path, min_trust, evidence_file, fmt, fail_on_untrusted, agent) -> None:
+@click.option("--team", is_flag=True, help="Show per-agent breakdown (team mode)")
+def certify_cmd(path, min_trust, evidence_file, fmt, fail_on_untrusted, agent, team) -> None:
     """Certify files meet trust standards.
 
     Aggregates trust scoring, detection, and compliance into a pass/fail verdict.
@@ -1619,6 +1643,7 @@ def certify_cmd(path, min_trust, evidence_file, fmt, fail_on_untrusted, agent) -
         CertifyReport,
         certify_directory,
         certify_file,
+        certify_team,
         parse_evidence_json,
         parse_junit_xml,
     )
@@ -1632,6 +1657,22 @@ def certify_cmd(path, min_trust, evidence_file, fmt, fail_on_untrusted, agent) -
             evidence = parse_evidence_json(evidence_file)
 
     p = Path(path)
+
+    # Team mode
+    if team and p.is_dir():
+        team_report = certify_team(str(p), min_trust=min_trust, evidence=evidence)
+
+        import json as _json
+
+        if fmt == "json":
+            click.echo(_json.dumps(team_report.to_dict(), indent=2))
+        else:
+            _print_team_certify_summary(team_report)
+
+        if fail_on_untrusted and not team_report.all_agents_certified:
+            sys.exit(1)
+        return
+
     if p.is_dir():
         report = certify_directory(str(p), min_trust=min_trust, evidence=evidence)
     else:
@@ -1818,3 +1859,39 @@ def agent_verify_cmd(agent_id) -> None:
     else:
         click.secho(f"FAIL  Agent card {card.name} ({agent_id}) has been tampered with!", fg="red")
         sys.exit(1)
+
+
+@agent_group.command("export-a2a")
+@click.argument("agent_id")
+@click.option("--output", default=None, help="Output file path (default: .akf/agent-cards/<id>.json)")
+def agent_export_a2a_cmd(agent_id, output) -> None:
+    """Export an agent card as A2A-compatible JSON."""
+    from .a2a_bridge import save_a2a_card
+    from .agent_card import AgentRegistry
+
+    registry = AgentRegistry()
+    card = registry.get(agent_id)
+    if card is None:
+        click.secho(f"Agent not found: {agent_id}", fg="red")
+        sys.exit(1)
+
+    path = save_a2a_card(card, path=output)
+    click.secho(f"Exported A2A card to {path}", fg="green")
+
+
+@agent_group.command("import-a2a")
+@click.argument("card_path", type=click.Path(exists=True))
+def agent_import_a2a_cmd(card_path) -> None:
+    """Import an A2A agent card and register it."""
+    import json as _json
+
+    from .a2a_bridge import from_a2a_card
+    from .agent_card import AgentRegistry
+
+    with open(card_path) as f:
+        data = _json.load(f)
+
+    card = from_a2a_card(data)
+    registry = AgentRegistry()
+    registry.register(card)
+    click.secho(f"Imported agent: {card.name} ({card.id})", fg="green")

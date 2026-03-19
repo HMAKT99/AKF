@@ -53,14 +53,22 @@ from .report import enterprise_report, EnterpriseReport, FileReport, register_re
 from .knowledge_base import KnowledgeBase
 from .stamp import stamp, stamp_file
 from .certify import (
-    certify_file, certify_directory, CertifyResult, CertifyReport,
+    certify_file, certify_directory, certify_team,
+    CertifyResult, CertifyReport, AgentCertifyReport, TeamCertifyReport,
     parse_junit_xml, parse_evidence_json,
 )
 from .agent_card import (
     AgentCard, AgentRegistry, create_agent_card, verify_agent_card, to_agent_profile,
 )
+from .a2a_bridge import (
+    to_a2a_card, from_a2a_card, save_a2a_card, discover_a2a_cards,
+)
 from .git_ops import stamp_commit, read_commit, trust_log
 from .streaming import StreamSession, AKFStream, stream_start, stream_claim, stream_end, collect_stream, iter_stream
+from .team_stream import (
+    TeamStreamSession, TeamTrustResult, TeamStream,
+    team_stream_start, team_stream_claim, team_stream_end, team_trust_aggregate,
+)
 from .detection import (
     detect_ai_without_review, detect_trust_below_threshold,
     detect_hallucination_risk, detect_knowledge_laundering,
@@ -437,4 +445,21 @@ __all__ = [
     "create_agent_card",
     "verify_agent_card",
     "to_agent_profile",
+    # A2A Bridge
+    "to_a2a_card",
+    "from_a2a_card",
+    "save_a2a_card",
+    "discover_a2a_cards",
+    # Team Streaming
+    "TeamStreamSession",
+    "TeamTrustResult",
+    "TeamStream",
+    "team_stream_start",
+    "team_stream_claim",
+    "team_stream_end",
+    "team_trust_aggregate",
+    # Team Certify
+    "certify_team",
+    "AgentCertifyReport",
+    "TeamCertifyReport",
 ]
