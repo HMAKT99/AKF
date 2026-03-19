@@ -263,6 +263,52 @@ print(akf.format_tree(unit))`,
       { text: 'Each hop hash includes the previous \u2014 tamper-evident chain', color: g },
     ],
   },
+
+  // ── 6. Multi-Agent Teams ──────────────────────────────────────────────
+  {
+    id: 'teams',
+    label: 'Agent Teams',
+    icon: '\ud83e\udd1d',
+    description: 'Delegate trust across agent teams with ceiling caps and per-agent attribution',
+    code: `import akf
+
+# Define delegation policy
+policy = akf.DelegationPolicy(
+    delegator="lead-agent",
+    delegate="research-bot",
+    trust_ceiling=0.7,
+    allowed_actions=["search", "summarize"]
+)
+
+# Team streaming: multiple agents, one session
+with akf.TeamStream(["lead", "research"]) as ts:
+    ts.write("lead", "Task: analyze Q4 report")
+    ts.write("research", "Found 3 sources")
+    result = ts.aggregate()
+    print(f"Team trust: {result.team_avg_trust}")`,
+    output: [
+      { text: '$ python team_delegate.py', color: g },
+      { text: '' , blank: true },
+      { text: 'Delegation Policy', color: s },
+      { text: '  lead-agent \u2192 research-bot', color: w },
+      { text: '  Trust ceiling: 0.70 (caps delegate output)', color: a },
+      { text: '  Actions: search, summarize', color: e },
+      { text: '' , blank: true },
+      { text: 'Team Stream Session (2 agents)', color: s },
+      { text: '============================================================', color: g },
+      { text: '  lead       \u2502 "Task: analyze Q4 report"  (t=0.70)', color: e },
+      { text: '  research   \u2502 "Found 3 sources"          (t=0.70)', color: e },
+      { text: '' , blank: true },
+      { text: 'Team Trust Aggregation:', color: w },
+      { text: '  lead:       avg=0.7000  claims=1', color: e },
+      { text: '  research:   avg=0.7000  claims=1', color: e },
+      { text: '  \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500', color: g },
+      { text: '  Team avg:   0.7000  total=2', color: a },
+      { text: '' , blank: true },
+      { text: 'Team certify: akf certify src/ --team', color: g },
+      { text: '  \u2192 Per-agent breakdown + all_agents_certified gate', color: g },
+    ],
+  },
 ];
 
 // ── Syntax-highlighted Python code ──────────────────────────────────────────
@@ -341,7 +387,7 @@ function OutputRenderer({ lines, visible }: { lines: OutputLine[]; visible: bool
 
 const FILE_FORMATS = [
   'docx', 'pdf', 'xlsx', 'pptx', 'png', 'html',
-  'json', 'py', 'ts', 'md', 'eml', 'csv',
+  'json', 'py', 'ts', 'md', 'mp4', 'mp3',
 ];
 
 // ── Main Component ──────────────────────────────────────────────────────────
@@ -422,6 +468,7 @@ export default function InteractiveDemo() {
                  active.id === 'trust' ? 'analyze_trust.py' :
                  active.id === 'security' ? 'security_scan.py' :
                  active.id === 'audit' ? 'audit_compliance.py' :
+                 active.id === 'teams' ? 'team_delegate.py' :
                  'multi_agent.py'}
               </span>
             </div>

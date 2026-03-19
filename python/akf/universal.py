@@ -97,6 +97,22 @@ def _register_builtin_formats() -> None:
     for ext in ("eml",):
         _FORMAT_REGISTRY[ext] = _email_factory
 
+    def _video_factory() -> AKFFormatHandler:
+        from .formats.video import VideoHandler
+        return VideoHandler()
+
+    def _audio_factory() -> AKFFormatHandler:
+        from .formats.audio import AudioHandler
+        return AudioHandler()
+
+    # Video
+    for ext in ("mp4", "mov", "webm", "mkv"):
+        _FORMAT_REGISTRY[ext] = _video_factory
+
+    # Audio
+    for ext in ("mp3", "wav", "flac", "ogg"):
+        _FORMAT_REGISTRY[ext] = _audio_factory
+
 
 # Initialize built-in formats
 _register_builtin_formats()

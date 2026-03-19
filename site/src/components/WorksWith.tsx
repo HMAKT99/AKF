@@ -15,11 +15,13 @@ const agents = [
   { name: 'Claude Agent SDK', category: 'Framework' },
   { name: 'OpenAI Agents SDK', category: 'Framework' },
   { name: 'MCP', category: 'Protocol' },
+  { name: 'A2A Protocol', category: 'Protocol' },
 ];
 
 const formats = [
   'DOCX', 'PDF', 'XLSX', 'PPTX', 'HTML', 'Markdown',
   'PNG', 'JPEG', 'JSON', 'CSV', 'Git',
+  'MP4', 'MOV', 'WebM', 'MP3', 'WAV', 'FLAC',
 ];
 
 const categoryColor: Record<string, string> = {
@@ -85,7 +87,7 @@ export default function WorksWith() {
           <div className="flex items-center justify-center gap-2 mb-6">
             <div className="h-px flex-1 max-w-16 bg-gradient-to-r from-transparent to-border-subtle" />
             <p className="text-[11px] font-semibold text-text-tertiary uppercase tracking-[0.2em]">
-              20+ File Formats
+              30+ File Formats
             </p>
             <div className="h-px flex-1 max-w-16 bg-gradient-to-l from-transparent to-border-subtle" />
           </div>

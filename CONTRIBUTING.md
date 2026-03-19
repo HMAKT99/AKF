@@ -82,10 +82,12 @@ Open a GitHub issue with the "feature request" label. Include:
 ## Areas for Contribution
 
 - Framework integrations (LangChain, LlamaIndex, CrewAI, etc.)
-- New file format handlers in `universal.py`
+- New file format handlers in `universal.py` (video, audio, and beyond)
 - Additional compliance regulation checks
 - Documentation and examples
 - IDE extensions
+- Multi-agent features: delegation policies, team streaming, A2A protocol bridge
+- Agent identity: AgentCard registry, cross-platform discovery
 
 ## License
 

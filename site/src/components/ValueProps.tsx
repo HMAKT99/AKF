@@ -3,9 +3,9 @@ import SectionHeading from '../ui/SectionHeading';
 
 const stats = [
   { value: '~15', label: 'tokens per stamp', detail: 'smaller than a tweet' },
-  { value: '20+', label: 'formats supported', detail: 'DOCX, PDF, MD, images, code' },
+  { value: '30+', label: 'formats supported', detail: 'DOCX, PDF, video, audio, code' },
   { value: '10', label: 'detection classes', detail: 'AI-specific security' },
-  { value: '0.1s', label: 'streaming', detail: 'real-time trust' },
+  { value: 'Multi', label: 'agent teams', detail: 'delegation & streaming' },
 ];
 
 const personaPreviews = [

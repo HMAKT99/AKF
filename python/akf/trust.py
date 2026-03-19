@@ -93,6 +93,7 @@ def effective_trust(
     claim: Claim,
     age_days: float = 0,
     penalty: float = 0,
+    delegation_ceiling: Optional[float] = None,
 ) -> TrustResult:
     """Compute effective trust for a single claim.
 
@@ -138,6 +139,24 @@ def effective_trust(
     score = base_score + grounding_bonus + review_bonus + chain_penalty
     score = max(0.0, min(1.0, score))  # clamp
 
+    breakdown = {
+        "confidence": conf,
+        "authority": authority,
+        "tier": tier,
+        "origin_weight": origin_weight,
+        "decay": round(decay, 4),
+        "penalty": penalty,
+        "penalty_factor": round(penalty_factor, 4),
+        "grounding_bonus": round(grounding_bonus, 4),
+        "review_bonus": round(review_bonus, 4),
+        "chain_penalty": chain_penalty,
+    }
+
+    # Apply delegation ceiling if set
+    if delegation_ceiling is not None:
+        score = min(score, delegation_ceiling)
+        breakdown["delegation_ceiling"] = delegation_ceiling
+
     if score >= 0.7:
         decision = "ACCEPT"
     elif score >= 0.4:
@@ -148,18 +167,7 @@ def effective_trust(
     return TrustResult(
         score=round(score, 4),
         decision=decision,
-        breakdown={
-            "confidence": conf,
-            "authority": authority,
-            "tier": tier,
-            "origin_weight": origin_weight,
-            "decay": round(decay, 4),
-            "penalty": penalty,
-            "penalty_factor": round(penalty_factor, 4),
-            "grounding_bonus": round(grounding_bonus, 4),
-            "review_bonus": round(review_bonus, 4),
-            "chain_penalty": chain_penalty,
-        },
+        breakdown=breakdown,
         grounded=is_grounded,
         evidence_count=ev_count,
     )
