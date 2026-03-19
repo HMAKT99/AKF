@@ -20,7 +20,7 @@ from .models import (
     AKF, Claim, Evidence, Fidelity, ProvHop,
     Origin, GenerationParams, MadeBy, Review, SourceDetail,
     ReasoningChain, Annotation, Freshness, CostMetadata, AgentProfile,
-    Calibration,
+    Calibration, DelegationPolicy,
 )
 from .core import create, create_multi, load, loads, validate, ValidationResult
 from .universal import ConvertResult
@@ -42,6 +42,7 @@ from .agent import (
     consume, derive, generation_prompt, validate_output,
     response_schema, from_tool_call, to_context, detect,
 )
+from .delegation import delegate, validate_delegation
 from .compliance import (
     audit, check_regulation, audit_trail, verify_human_oversight, AuditResult,
     check_explainability, check_fairness, export_audit, continuous_audit,
@@ -54,6 +55,9 @@ from .stamp import stamp, stamp_file
 from .certify import (
     certify_file, certify_directory, CertifyResult, CertifyReport,
     parse_junit_xml, parse_evidence_json,
+)
+from .agent_card import (
+    AgentCard, AgentRegistry, create_agent_card, verify_agent_card, to_agent_profile,
 )
 from .git_ops import stamp_commit, read_commit, trust_log
 from .streaming import StreamSession, AKFStream, stream_start, stream_claim, stream_end, collect_stream, iter_stream
@@ -295,6 +299,10 @@ __all__ = [
     "Freshness",
     "CostMetadata",
     "AgentProfile",
+    "DelegationPolicy",
+    # Delegation
+    "delegate",
+    "validate_delegation",
     # Core
     "add_hop",
     "can_share_external",
@@ -423,4 +431,10 @@ __all__ = [
     "is_enriched",
     "read",
     "scan",
+    # Agent Card
+    "AgentCard",
+    "AgentRegistry",
+    "create_agent_card",
+    "verify_agent_card",
+    "to_agent_profile",
 ]

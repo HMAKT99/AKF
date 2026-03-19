@@ -1728,3 +1728,93 @@ def log_cmd(count, trust_only) -> None:
         else:
             indicator = click.style("? none  ", dim=True)
             click.echo(f"{indicator}        {short_sha}  {subject}")
+
+
+# ---------------------------------------------------------------------------
+# Agent identity commands
+# ---------------------------------------------------------------------------
+
+@main.group("agent")
+def agent_group() -> None:
+    """Agent identity management commands."""
+    pass
+
+
+@agent_group.command("create")
+@click.option("--name", required=True, help="Agent display name")
+@click.option("--platform", default=None, help="Platform (e.g. claude-code, copilot)")
+@click.option("--capabilities", default=None, help="Comma-separated capabilities")
+@click.option("--trust-ceiling", type=float, default=None, help="Max trust score 0.0-1.0")
+@click.option("--model", default=None, help="AI model identifier")
+@click.option("--version", default=None, help="Agent version")
+@click.option("--provider", default=None, help="Provider name")
+@click.option("--register/--no-register", default=True, help="Auto-register in .akf/agents.json")
+def agent_create_cmd(name, platform, capabilities, trust_ceiling, model, version, provider, register) -> None:
+    """Create a new agent identity card."""
+    from .agent_card import AgentRegistry, create_agent_card
+
+    caps = [c.strip() for c in capabilities.split(",")] if capabilities else None
+    card = create_agent_card(
+        name=name,
+        platform=platform,
+        capabilities=caps,
+        trust_ceiling=trust_ceiling,
+        model=model,
+        version=version,
+        provider=provider,
+    )
+
+    if register:
+        registry = AgentRegistry()
+        registry.register(card)
+        click.secho(f"Registered agent: {card.id}", fg="green")
+    else:
+        click.secho(f"Created agent: {card.id}", fg="green")
+
+    click.echo(f"  Name:     {card.name}")
+    if card.platform:
+        click.echo(f"  Platform: {card.platform}")
+    if card.capabilities:
+        click.echo(f"  Caps:     {', '.join(card.capabilities)}")
+    if card.trust_ceiling is not None:
+        click.echo(f"  Ceiling:  {card.trust_ceiling}")
+    if card.model:
+        click.echo(f"  Model:    {card.model}")
+    click.echo(f"  Hash:     {card.card_hash}")
+
+
+@agent_group.command("list")
+def agent_list_cmd() -> None:
+    """List all registered agent cards."""
+    from .agent_card import AgentRegistry
+
+    registry = AgentRegistry()
+    cards = registry.list()
+    if not cards:
+        click.echo("No agents registered. Use 'akf agent create --name <name>' to add one.")
+        return
+
+    click.secho(f"Registered agents ({len(cards)}):", bold=True)
+    for card in cards:
+        plat = f" [{card.platform}]" if card.platform else ""
+        ceil = f" ceil={card.trust_ceiling}" if card.trust_ceiling is not None else ""
+        click.echo(f"  {card.id[:12]}..  {card.name}{plat}{ceil}")
+
+
+@agent_group.command("verify")
+@click.argument("agent_id")
+def agent_verify_cmd(agent_id) -> None:
+    """Verify the integrity of an agent card."""
+    from .agent_card import AgentRegistry, verify_agent_card
+
+    registry = AgentRegistry()
+    card = registry.get(agent_id)
+    if card is None:
+        click.secho(f"Agent not found: {agent_id}", fg="red")
+        sys.exit(1)
+
+    if verify_agent_card(card):
+        click.secho(f"PASS  Agent card {card.name} ({agent_id}) is valid.", fg="green")
+    else:
+        click.secho(f"FAIL  Agent card {card.name} ({agent_id}) has been tampered with!", fg="red")
+        sys.exit(1)

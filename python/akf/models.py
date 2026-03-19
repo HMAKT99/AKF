@@ -120,6 +120,14 @@ _CLAIM_COMPACT = {
     "relationship": "rel",
     "calibration": "cal",
 }
+_DELEGATION_POLICY_COMPACT = {
+    "delegator": "from",
+    "delegate": "to",
+    "trust_ceiling": "ceil",
+    "allowed_actions": "actions",
+    "expires": "exp",
+    "scope": "scope",
+}
 _PROVHOP_COMPACT = {
     "actor": "by",
     "action": "do",
@@ -133,6 +141,7 @@ _PROVHOP_COMPACT = {
     "output_hash": "out_h",
     "duration_ms": "dur",
     "tool_calls": "tools",
+    "delegation_policy": "deleg",
 }
 _AKF_COMPACT = {
     "version": "v",
@@ -515,6 +524,31 @@ class Claim(BaseModel):
         return d
 
 
+class DelegationPolicy(BaseModel):
+    """Policy controlling agent-to-agent trust delegation."""
+
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
+
+    delegator: str = Field(validation_alias=AliasChoices("delegator", "from"))
+    delegate: str = Field(validation_alias=AliasChoices("delegate", "to"))
+    trust_ceiling: float = Field(
+        validation_alias=AliasChoices("trust_ceiling", "ceil"), ge=0.0, le=1.0
+    )
+    allowed_actions: Optional[List[str]] = Field(
+        default=None, validation_alias=AliasChoices("allowed_actions", "actions")
+    )
+    expires: Optional[str] = Field(
+        default=None, validation_alias=AliasChoices("expires", "exp")
+    )
+    scope: Optional[str] = Field(default=None)
+
+    def to_dict(self, compact: bool = False) -> dict:
+        d = _strip_none(self.model_dump())
+        if compact:
+            d = _remap_keys(d, _DELEGATION_POLICY_COMPACT)
+        return d
+
+
 class ProvHop(BaseModel):
     """A single hop in the provenance chain."""
 
@@ -541,11 +575,16 @@ class ProvHop(BaseModel):
     tool_calls: Optional[List[str]] = Field(
         None, validation_alias=AliasChoices("tools", "tool_calls")
     )
+    delegation_policy: Optional[DelegationPolicy] = Field(
+        None, validation_alias=AliasChoices("deleg", "delegation_policy")
+    )
 
     def to_dict(self, compact: bool = False) -> dict:
         d = _strip_none(self.model_dump())
         if self.agent_profile is not None:
             d["agent_profile"] = self.agent_profile.to_dict(compact=compact)
+        if self.delegation_policy is not None:
+            d["delegation_policy"] = self.delegation_policy.to_dict(compact=compact)
         if compact:
             d = _remap_keys(d, _PROVHOP_COMPACT)
         return d
