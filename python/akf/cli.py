@@ -1391,7 +1391,8 @@ def doctor_cmd():
     click.echo()
 
     # Version
-    click.echo(f"  AKF version:    1.1.0")
+    from . import __version__
+    click.echo(f"  AKF version:    {__version__}")
     click.echo(f"  Python version: {sys.version.split()[0]}")
     click.echo(f"  Platform:       {platform.system()} {platform.machine()}")
     click.echo()

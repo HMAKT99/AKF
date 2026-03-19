@@ -440,7 +440,7 @@ def _render_json(report: EnterpriseReport) -> str:
 def _render_markdown(report: EnterpriseReport) -> str:
     """Render as executive Markdown briefing."""
     lines = [
-        "# AI Governance Report",
+        "# AKF Trust Report",
         "",
         f"*Generated: {report.generated_at}*",
         "",
@@ -846,7 +846,7 @@ def _render_pdf(report: EnterpriseReport) -> bytes:
 
     # Title
     pdf.set_font("Helvetica", "B", 18)
-    pdf.cell(0, 12, "AI Governance Report", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 12, "AKF Trust Report", new_x="LMARGIN", new_y="NEXT")
     pdf.set_font("Helvetica", "", 9)
     pdf.set_text_color(120, 120, 120)
     pdf.cell(0, 6, f"Generated: {report.generated_at}", new_x="LMARGIN", new_y="NEXT")

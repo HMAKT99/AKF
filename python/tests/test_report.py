@@ -394,7 +394,7 @@ class TestMarkdownRenderer:
     def test_markdown_title(self, sample_report):
         """Markdown starts with correct title."""
         output = sample_report.render("markdown")
-        assert output.startswith("# AI Governance Report")
+        assert output.startswith("# AKF Trust Report")
 
     def test_markdown_overview_table(self, sample_report):
         """Markdown has overview table with key metrics."""
@@ -686,7 +686,7 @@ class TestCLIReport:
         """Default format is markdown."""
         result = runner.invoke(main, ["report"] + sample_akf_files)
         assert result.exit_code == 0
-        assert "# AI Governance Report" in result.output
+        assert "# AKF Trust Report" in result.output
 
     def test_cli_json_format(self, runner, sample_akf_files):
         """--format json produces valid JSON."""
@@ -858,7 +858,7 @@ class TestIntegrationPipeline:
 
         # All text formats render without error
         md = report.render("markdown")
-        assert "# AI Governance Report" in md
+        assert "# AKF Trust Report" in md
 
         html = report.render("html")
         assert "<!DOCTYPE html>" in html
