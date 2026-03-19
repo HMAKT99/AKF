@@ -70,12 +70,15 @@ akf read quarterly-report.docx
       </svg>
     ),
     pain: '"Our agent pipeline ships content with zero provenance."',
-    snippet: `from akf import stamp_file
+    snippet: `from akf import stamp_file, TeamStream
 stamp_file("output.pdf",
   confidence=0.95, model="gpt-4o",
-  source="internal-kb")`,
+  source="internal-kb")
+# Multi-agent team streaming
+with TeamStream(["research", "writer"]) as ts:
+    ts.write("research", "Found sources")`,
     snippetLang: 'python',
-    outcome: 'Every file your agent produces carries embedded trust metadata automatically.',
+    outcome: 'Every file your agent produces carries embedded trust metadata. Multi-agent teams get per-agent attribution and delegation trust ceilings.',
   },
   {
     id: 'security',

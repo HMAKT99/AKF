@@ -47,10 +47,10 @@ const integrations = [
 ];
 
 const trustPipeline = [
-  { step: 'Agent writes code', icon: 'edit', detail: 'CLAUDE.md / .cursorrules / AGENTS.md / copilot-instructions.md' },
+  { step: 'Agent team writes code', icon: 'edit', detail: 'Delegation policies cap trust ceilings per agent' },
   { step: 'Git commit stamped', icon: 'git', detail: 'Post-commit hook writes trust metadata to git notes' },
-  { step: 'CI validates trust', icon: 'check', detail: 'akf certify checks trust scores on every PR' },
-  { step: 'Team reviews with context', icon: 'eye', detail: 'Reviewers see confidence, evidence, and provenance' },
+  { step: 'CI validates trust', icon: 'check', detail: 'akf certify --team checks per-agent trust scores' },
+  { step: 'Team reviews with context', icon: 'eye', detail: 'Per-agent breakdowns, confidence, and provenance' },
 ];
 
 const icons: Record<string, React.ReactNode> = {

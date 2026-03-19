@@ -70,6 +70,18 @@ You can also run the server directly for testing:
 python -m mcp_server_akf
 ```
 
+## Multi-Agent Support
+
+The MCP server works seamlessly with multi-agent orchestration platforms:
+
+- **Agent Identity**: Create and verify agent cards via `akf agent create` / `akf agent verify`
+- **A2A Protocol**: Export/import agent cards for cross-platform discovery via `akf agent export-a2a`
+- **Team Certification**: Use `akf certify --team` for per-agent trust breakdowns in CI
+- **Delegation**: Trust ceilings cap delegate output when agents hand off work
+- **Team Streaming**: Multi-agent sessions with per-agent claim attribution
+
+Supports: Claude Agent Teams, Copilot Cowork, Codex multi-agent, and any A2A-compatible platform.
+
 ## Requirements
 
 - Python >= 3.10

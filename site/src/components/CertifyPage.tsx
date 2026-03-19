@@ -34,7 +34,10 @@ akf certify app.akf --evidence-file test-results.xml
 akf certify . --format json
 
 # Fail CI if any file is untrusted
-akf certify . --fail-on-untrusted`;
+akf certify . --fail-on-untrusted
+
+# Team mode: per-agent breakdown
+akf certify src/ --team --min-trust 0.7`;
 
 const ghActionYaml = `name: AKF Trust Gate
 on: [pull_request]
@@ -72,6 +75,20 @@ CERTIFICATION FAILED
 
   Files:    1 checked, 0 certified, 1 failed
   Exit:     1`;
+
+const teamCertifyExample = `$ akf certify src/ --team --min-trust 0.7
+
+TEAM CERTIFICATION: team-myproject
+
+  PASS  research-agent   (4/4 certified, trust=0.8200)
+  PASS  code-agent       (6/6 certified, trust=0.7650)
+  FAIL  draft-agent      (2/5 certified, trust=0.5100)
+
+  Total: 15  Certified: 12  Failed: 3
+  Average trust: 0.6983
+
+  Team certification incomplete.
+  Exit: 1`;
 
 const jsonEvidenceExample = `{
   "tests": { "passed": 42, "failed": 0 },
@@ -145,6 +162,18 @@ export default function CertifyPage() {
           <CodeBlock code={failureExample} language="bash" filename="terminal" />
           <p className="text-sm text-text-secondary mt-4">
             A non-zero exit code lets CI pipelines catch untrusted content before it ships. Fix the flagged claims, re-run <code className="text-accent font-mono text-xs">akf certify</code>, and the gate turns green.
+          </p>
+        </section>
+
+        {/* Team Certification */}
+        <section className="mb-12">
+          <h2 className="text-xl font-bold text-text-primary mb-1">Team Certification</h2>
+          <p className="text-sm text-text-secondary mb-4">
+            In multi-agent workflows, use <code className="text-accent font-mono text-xs">--team</code> to get per-agent trust breakdowns. Every agent must individually pass for the team gate to turn green.
+          </p>
+          <CodeBlock code={teamCertifyExample} language="bash" filename="terminal" />
+          <p className="text-sm text-text-secondary mt-4">
+            Team mode groups certification results by the agent that produced each file, using provenance metadata. Works with Claude Agent Teams, Copilot Cowork, Codex multi-agent, and any orchestration framework.
           </p>
         </section>
 

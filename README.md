@@ -101,6 +101,47 @@ akf.stamp_commit(content="Refactored auth module", kind="code_change",
 print(akf.trust_log(n=10))  # + ACCEPT  ~ LOW  - REJECT  ? none
 ```
 
+## Multi-Agent Teams
+
+AKF supports multi-agent orchestration — Claude Agent Teams, Copilot Cowork, Codex multi-agent, and any A2A-compatible platform.
+
+```python
+import akf
+
+# Agent-to-agent delegation with trust ceiling
+policy = akf.DelegationPolicy(
+    delegator="lead-agent", delegate="research-bot",
+    trust_ceiling=0.7, allowed_actions=["search", "summarize"]
+)
+result = akf.delegate(parent_unit, policy)
+
+# Multi-agent streaming session
+with akf.TeamStream(["research", "writer", "reviewer"]) as ts:
+    ts.write("research", "Found 3 sources", confidence=0.8)
+    ts.write("writer", "Drafted summary", confidence=0.75)
+    ts.write("reviewer", "Approved with edits", confidence=0.9)
+    scores = ts.aggregate()  # per-agent + team trust
+
+# Cross-platform agent identity
+card = akf.create_agent_card(name="Research Bot", platform="claude-code",
+                             capabilities=["search", "summarize"])
+akf.verify_agent_card(card)  # SHA-256 hash verification
+
+# Team certification (per-agent breakdown)
+report = akf.certify_team("src/", min_trust=0.7)
+# report.all_agents_certified — each agent must individually pass
+```
+
+**CLI:**
+```bash
+akf agent create --name "Bot" --platform claude-code --capabilities search,summarize
+akf agent list
+akf agent verify <id>
+akf agent export-a2a <id> --output card.json   # A2A protocol bridge
+akf agent import-a2a card.json
+akf certify src/ --team                         # Per-agent breakdown
+```
+
 ## MCP Server
 
 AKF ships an [MCP](https://modelcontextprotocol.io) server so any AI agent can create, validate, scan, and audit trust metadata.
@@ -172,6 +213,8 @@ AKF provides [agent skill files](skills/) that AI agents can discover and use. D
 | [`stream.md`](skills/stream.md) | Stream trust metadata in real-time |
 | [`git.md`](skills/git.md) | Trust-annotated git workflows |
 | [`convert.md`](skills/convert.md) | Convert between formats |
+| `delegate` | Agent-to-agent trust delegation |
+| `team` | Multi-agent streaming sessions |
 
 ## Format at a Glance
 
@@ -211,6 +254,8 @@ AKF embeds natively — no sidecars needed for most formats:
 | `.md` | YAML frontmatter |
 | `.png` `.jpg` | EXIF/XMP metadata |
 | `.json` | Reserved `_akf` key |
+| `.mp4` `.mov` `.webm` `.mkv` | Sidecar `.akf.json` companion |
+| `.mp3` `.wav` `.flac` `.ogg` | Sidecar `.akf.json` companion |
 | Everything else | Sidecar `.akf.json` companion |
 
 ```python
@@ -287,6 +332,7 @@ akf certify report.akf                        # Trust + detection + compliance
 akf certify src/ --min-trust 0.8              # Custom threshold
 akf certify . --evidence-file results.xml     # Attach test evidence
 akf certify . --format json --fail-on-untrusted  # CI-friendly output
+akf certify src/ --team                       # Per-agent trust breakdown
 
 # ── Compliance ──
 akf audit report.akf                          # Compliance readiness check
@@ -307,6 +353,13 @@ akf shell-hook                                # Print shell hook code
 
 # ── Git integration ──
 akf stamp <file> --agent claude-code --evidence "tests pass"
+
+# ── Agent identity & teams ──
+akf agent create --name "Bot" --platform claude-code
+akf agent list
+akf agent verify <agent_id>
+akf agent export-a2a <id> --output card.json  # A2A protocol bridge
+akf agent import-a2a card.json
 
 # ── Knowledge Base ──
 akf kb stats ./kb
@@ -339,6 +392,8 @@ effective_trust = confidence × authority_weight × temporal_decay × (1 + penal
 | 5 | 0.30 | AI inference, extrapolations |
 
 **Decision:** score ≥ 0.7 → ACCEPT · ≥ 0.4 → LOW · < 0.4 → REJECT
+
+**Delegation ceiling:** When an agent delegates to another, the delegate's output trust is capped at `min(score, delegation_ceiling)`. This prevents trust inflation in multi-agent chains.
 
 ## Integrations & Extensions
 

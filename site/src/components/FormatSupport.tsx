@@ -9,6 +9,8 @@ const formats = [
   { format: '.png', method: 'EXIF / XMP metadata', description: 'Image metadata fields' },
   { format: '.jpg', method: 'EXIF / XMP metadata', description: 'Image metadata fields' },
   { format: '.json', method: 'Reserved _akf key', description: 'Top-level _akf property' },
+  { format: '.mp4 .mov .webm .mkv', method: 'Sidecar .akf.json', description: 'Video files with companion metadata' },
+  { format: '.mp3 .wav .flac .ogg', method: 'Sidecar .akf.json', description: 'Audio files with companion metadata' },
   { format: 'Everything else', method: 'Sidecar .akf.json', description: 'Companion file alongside the original' },
 ];
 
