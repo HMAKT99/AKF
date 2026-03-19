@@ -1,0 +1,33 @@
+{
+  "akf": "1.0",
+  "mode": "sidecar",
+  "target_file": "report.py",
+  "generated_at": "2026-03-19T13:38:03.914671+00:00",
+  "v": "1.0",
+  "claims": [
+    {
+      "c": "Trust metadata for python/akf/report.py",
+      "t": 0.7,
+      "id": "f3ad0088",
+      "src": "unspecified",
+      "tier": 5,
+      "ver": false,
+      "ai": true,
+      "evidence": [
+        {
+          "type": "other",
+          "detail": "upgraded HTML renderer to professional executive-ready report",
+          "at": "2026-03-19T13:38:03.914424+00:00"
+        }
+      ]
+    }
+  ],
+  "id": "akf-dc87e0cffc0b",
+  "agent": "claude-code",
+  "at": "2026-03-19T13:38:03.914607+00:00",
+  "label": "internal",
+  "inherit": true,
+  "ext": false,
+  "sv": "1.1",
+  "integrity_hash": "sha256:f99094ad62dde5860c5f0df6a1d7eea8e7e382557804ae0d11b9895b0ef3f3b7"
+}
