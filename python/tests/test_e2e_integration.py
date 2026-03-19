@@ -489,17 +489,17 @@ class TestPhase5Scan:
     def test_scan_directory(self):
         d = str(Path(TEST_DIR) / "markdown")
         rc, out, _ = akf("scan", d, "-r")
-        assert "Scanned" in out
-        assert "AKF-enriched" in out
+        assert "scanned" in out
+        assert "enriched" in out
 
     def test_scan_full_tree(self):
         rc, out, _ = akf("scan", TEST_DIR, "-r")
-        assert "Scanned" in out
+        assert "scanned" in out
 
     def test_scan_nested_recursive(self):
         d = str(Path(TEST_DIR) / "nested")
         rc, out, _ = akf("scan", d, "-r")
-        assert "Scanned" in out
+        assert "scanned" in out
 
 
 # ---------------------------------------------------------------------------
@@ -1050,10 +1050,10 @@ class TestPhase14Volume:
     def test_scan_entire_tree(self):
         """Scan the full test directory tree."""
         rc, out, _ = akf("scan", TEST_DIR, "-r")
-        assert "Scanned" in out
-        # Parse the count
+        assert "scanned" in out
+        # Parse the count from new box format: "X scanned"
         import re
-        m = re.search(r"Scanned (\d+) files", out)
+        m = re.search(r"(\d+) scanned", out)
         assert m and int(m.group(1)) > 20
 
 
