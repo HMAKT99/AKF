@@ -25,6 +25,8 @@ import CompareC2paPage from './components/CompareC2paPage';
 import ComparePurviewPage from './components/ComparePurviewPage';
 import CompareWatermarkingPage from './components/CompareWatermarkingPage';
 import EnterpriseReportPage from './components/EnterpriseReportPage';
+import ComplianceCountdown from './components/ComplianceCountdown';
+import ComplianceBanner, { useBannerVisible } from './components/ComplianceBanner';
 import Footer from './components/Footer';
 
 function HomePage() {
@@ -50,6 +52,7 @@ function HomePage() {
       <FormatComparison />
       <AgentIntegration />
       <AmbientTrust />
+      <ComplianceCountdown />
 
       {/* ── ENTERPRISE ── */}
       <div className="bg-surface-raised/50">
@@ -76,13 +79,18 @@ function ScrollToTop() {
   return null;
 }
 
-export default function App() {
+function AppShell() {
+  const banner = useBannerVisible();
+
   return (
-    <BrowserRouter>
+    <>
       <ScrollToTop />
       <div className="min-h-screen bg-surface">
-        <Navbar />
-        <main>
+        {banner.visible && (
+          <ComplianceBanner onDismiss={banner.dismiss} />
+        )}
+        <Navbar topOffset={banner.height} />
+        <main style={{ paddingTop: banner.height }}>
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/about" element={<AboutPage />} />
@@ -103,6 +111,14 @@ export default function App() {
         </main>
         <Footer />
       </div>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppShell />
     </BrowserRouter>
   );
 }
