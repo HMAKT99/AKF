@@ -30,9 +30,9 @@ provenance, or verification with that content. AKF is that format.
 - Integrations: LangChain, LlamaIndex, CrewAI, MCP
 - **Zero-touch auto-stamping** — background daemon + shell hooks + VS Code extension
 - **Smart context detection** — infers git author, download source, AI-generated flag, project classification rules
-- **Shell integration** — `eval "$(akf shell-hook)"` intercepts Claude, ChatGPT, Aider, Ollama and stamps outputs
+- **Shell integration** — `eval "$(akf shell-hook)"` intercepts Claude, ChatGPT, Aider, OpenClaw, Ollama and stamps outputs
 - **OS-native file monitoring** — kqueue on macOS, polling cross-platform
-- **Ambient Trust** — Works with Claude Code, Claude Agent Teams, Cursor, Windsurf, GitHub Copilot, OpenAI Codex, Manus, M365 Copilot — and any MCP-compatible agent
+- **Ambient Trust** — Works with Claude Code, Claude Agent Teams, Cursor, Windsurf, GitHub Copilot, OpenAI Codex, Manus, OpenClaw, M365 Copilot — and any MCP-compatible agent
 - **Trust Pipeline** — agent → git commit → CI validation → team review, all with trust metadata
 
 ---
@@ -81,7 +81,7 @@ degradation chains, etc.
 
 The latest version adds zero-touch auto-stamping. Install a background
 daemon (`akf install`) or add `eval "$(akf shell-hook)"` to your shell
-config, and every file that Claude, ChatGPT, Aider, or Ollama generates
+config, and every file that Claude, ChatGPT, Aider, OpenClaw, or Ollama generates
 gets stamped automatically. Smart context detection infers git author,
 download source, classification rules, and AI-generated flags without
 any manual intervention.
@@ -241,7 +241,7 @@ Even better — you can make it fully automatic:
     # Or install a background daemon
     akf install
 
-It intercepts claude, chatgpt, ollama, aider, and other AI tools, then
+It intercepts claude, chatgpt, openclaw, ollama, aider, and other AI tools, then
 stamps any files they create or modify. Smart context detection infers
 the model, git author, and project classification rules automatically.
 
@@ -306,7 +306,7 @@ Add one line to your shell config:
 
 eval "$(akf shell-hook)"
 
-Now every file Claude, ChatGPT, Aider, or Ollama touches gets stamped
+Now every file Claude, ChatGPT, Aider, OpenClaw, or Ollama touches gets stamped
 automatically. Smart context detection infers git author, download source,
 and project classification rules.
 
@@ -356,7 +356,7 @@ PDF, and 20+ others.
 
 For technical teams: pip install akf and you're up in 30 seconds. Add
 eval "$(akf shell-hook)" to your shell config and every file Claude,
-ChatGPT, or Copilot touches gets stamped automatically — zero manual work.
+ChatGPT, OpenClaw, or Copilot touches gets stamped automatically — zero manual work.
 
 For compliance teams: AKF maps directly to EU AI Act, SOX, and NIST AI RMF
 requirements. One command gives you an actionable compliance report.
@@ -428,7 +428,7 @@ One line in your shell config and every AI-generated file gets stamped
 automatically. Smart context detection infers git author, download source,
 and project classification rules.
 
-    eval "$(akf shell-hook)"    # Intercepts claude, chatgpt, aider, ollama
+    eval "$(akf shell-hook)"    # Intercepts claude, chatgpt, openclaw, aider, ollama
     akf install                 # Background daemon for ~/Downloads, ~/Desktop
 
 INSTALL
@@ -621,7 +621,7 @@ AKF has three layers of automatic stamping:
 eval "$(akf shell-hook)"
 ```
 
-Now whenever you run `claude`, `chatgpt`, `aider`, `ollama`, or any other AI
+Now whenever you run `claude`, `chatgpt`, `aider`, `openclaw`, `ollama`, or any other AI
 CLI tool, AKF snapshots the files before and stamps any new or modified files
 after. Smart context detection automatically infers git author, download
 source, project classification rules, and AI-generated flags.

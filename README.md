@@ -177,7 +177,7 @@ AKF works where AI agents work. Drop a config file, and every AI-generated file 
 | **OpenAI Codex** | Reads `AGENTS.md` — stamps files in cloud sandbox and local |
 | **Manus / Other Agents** | MCP server + shell hook — works with any agent that supports MCP or CLI |
 | **Any MCP agent** | 9 MCP tools — stamp, audit, embed, extract, detect, validate, scan, trust, create |
-| **Any CLI tool** | `eval "$(akf shell-hook)"` — intercepts `claude`, `chatgpt`, `aider`, `ollama`, `manus` |
+| **Any CLI tool** | `eval "$(akf shell-hook)"` — intercepts `claude`, `chatgpt`, `aider`, `openclaw`, `ollama`, `manus` |
 
 **The trust pipeline:**
 ```
@@ -292,7 +292,7 @@ The background watcher monitors directories for new and modified files and stamp
 eval "$(akf shell-hook)"
 ```
 
-Automatically detects when you run `claude`, `chatgpt`, `aider`, `ollama`, or other AI CLI tools, and stamps any files they create or modify. Also pre-stamps files before upload to content platforms (`gws`, `box`, `m365`, `dbxcli`, `rclone`) so trust metadata travels with the file. Use `--no-upload-hooks` to disable.
+Automatically detects when you run `claude`, `chatgpt`, `aider`, `openclaw`, `ollama`, or other AI CLI tools, and stamps any files they create or modify. Also pre-stamps files before upload to content platforms (`gws`, `box`, `m365`, `dbxcli`, `rclone`) so trust metadata travels with the file. Use `--no-upload-hooks` to disable.
 
 ### Project Rules
 
