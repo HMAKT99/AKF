@@ -524,7 +524,7 @@ export default function GetStartedPage() {
             <div>
               <p className="text-sm text-text-primary font-medium">Zero-touch auto-stamping</p>
               <p className="text-xs text-text-secondary mt-1">
-                <code className="text-accent">akf install</code> sets up a lightweight file watcher that auto-stamps new documents with smart context detection (git author, download source, AI-generated flags, project classification rules). Add <code className="text-accent">eval "$(akf shell-hook)"</code> to your shell config to intercept Claude, ChatGPT, Aider, and Ollama. Fully reversible with <code className="text-accent">akf uninstall</code>.
+                <code className="text-accent">akf install</code> sets up a lightweight file watcher that auto-stamps new documents with smart context detection (git author, download source, AI-generated flags, project classification rules). Add <code className="text-accent">eval "$(akf shell-hook)"</code> to your shell config to intercept Claude, ChatGPT, OpenClaw, Aider, and Ollama. Fully reversible with <code className="text-accent">akf uninstall</code>.
               </p>
             </div>
           </div>

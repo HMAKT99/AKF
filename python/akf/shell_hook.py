@@ -8,6 +8,7 @@ Usage::
     # Now any files created/modified by AI CLI tools get auto-stamped:
     claude "Write a Python script" > script.py   # → auto-stamped
     chatgpt "Summarize this doc" > summary.md    # → auto-stamped
+    openclaw "Refactor module" > refactored.py   # → auto-stamped
     aider --message "Add tests"                  # → modified files stamped
 
 The hook works by:
@@ -38,6 +39,7 @@ AI_CLI_TOOLS = [
     "mods",
     "tgpt",
     "manus",
+    "openclaw",
 ]
 
 # Content platform CLIs that upload files — stamp *before* upload

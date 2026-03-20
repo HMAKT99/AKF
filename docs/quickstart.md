@@ -63,7 +63,7 @@ brief.save("weekly-brief.akf")
 # Install background daemon — watches ~/Downloads, ~/Desktop, ~/Documents
 akf install
 
-# Or add shell hook — intercepts claude, chatgpt, aider, ollama
+# Or add shell hook — intercepts claude, chatgpt, openclaw, aider, ollama
 eval "$(akf shell-hook)"    # Add to ~/.zshrc or ~/.bashrc
 ```
 

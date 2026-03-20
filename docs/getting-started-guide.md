@@ -51,7 +51,7 @@ stamp_file("output.pdf",
     agent="my-agent")
 ```
 
-**The outcome:** Every file your agent produces carries embedded trust metadata automatically. Claude Code, Cursor, Copilot, and any MCP agent stamp their work without manual intervention.
+**The outcome:** Every file your agent produces carries embedded trust metadata automatically. Claude Code, Cursor, OpenClaw, Copilot, and any MCP agent stamp their work without manual intervention.
 
 ---
 
@@ -199,7 +199,7 @@ The daemon monitors directories for new and modified files, using **smart contex
 eval "$(akf shell-hook)"
 ```
 
-Automatically detects when you run `claude`, `chatgpt`, `aider`, `ollama`, or other AI CLI tools, and stamps any files they create or modify. Also pre-stamps files before upload to content platforms (`gws`, `box`, `m365`, `dbxcli`, `rclone`) so trust metadata travels with the file.
+Automatically detects when you run `claude`, `chatgpt`, `aider`, `openclaw`, `ollama`, or other AI CLI tools, and stamps any files they create or modify. Also pre-stamps files before upload to content platforms (`gws`, `box`, `m365`, `dbxcli`, `rclone`) so trust metadata travels with the file.
 
 ### VS Code Extension
 

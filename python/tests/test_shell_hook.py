@@ -107,6 +107,7 @@ class TestAIToolsList:
         assert "chatgpt" in AI_CLI_TOOLS
         assert "aider" in AI_CLI_TOOLS
         assert "ollama" in AI_CLI_TOOLS
+        assert "openclaw" in AI_CLI_TOOLS
 
     def test_extensions_complete(self):
         assert "py" in WATCHED_EXTENSIONS

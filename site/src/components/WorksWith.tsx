@@ -6,6 +6,7 @@ const agents = [
   { name: 'OpenAI Codex', category: 'Agent' },
   { name: 'Devin', category: 'Agent' },
   { name: 'Manus', category: 'Agent' },
+  { name: 'OpenClaw', category: 'Agent' },
   { name: 'GPT-4o', category: 'Model' },
   { name: 'Gemini', category: 'Model' },
   { name: 'M365 Copilot', category: 'Enterprise' },
