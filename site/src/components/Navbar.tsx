@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
-export default function Navbar() {
+export default function Navbar({ topOffset = 0 }: { topOffset?: number }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-md border-b border-border-subtle">
+    <nav className="fixed left-0 right-0 z-50 bg-surface/80 backdrop-blur-md border-b border-border-subtle" style={{ top: topOffset }}>
       <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 text-text-primary font-semibold tracking-tight">
           <span className="text-accent font-mono font-bold text-lg">.akf</span>
