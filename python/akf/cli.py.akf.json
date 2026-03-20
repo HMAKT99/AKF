@@ -2,32 +2,32 @@
   "akf": "1.0",
   "mode": "sidecar",
   "target_file": "cli.py",
-  "generated_at": "2026-03-19T13:38:04.061563+00:00",
+  "generated_at": "2026-03-20T03:31:08.419320+00:00",
   "v": "1.0",
   "claims": [
     {
-      "c": "Trust metadata for python/akf/cli.py",
+      "c": "Trust metadata for akf/cli.py",
       "t": 0.7,
-      "id": "067d4722",
+      "id": "8d082332",
       "src": "unspecified",
       "tier": 5,
       "ver": false,
       "ai": true,
       "evidence": [
         {
-          "type": "other",
-          "detail": "added --output/--open flags and structured terminal output for scan/audit",
-          "at": "2026-03-19T13:38:04.061310+00:00"
+          "type": "test_pass",
+          "detail": "upload-hooks flag and uploads command, tests pass",
+          "at": "2026-03-20T03:31:08.419047+00:00"
         }
       ]
     }
   ],
-  "id": "akf-613da87637cb",
+  "id": "akf-51b198a5d39b",
   "agent": "claude-code",
-  "at": "2026-03-19T13:38:04.061500+00:00",
+  "at": "2026-03-20T03:31:08.419256+00:00",
   "label": "internal",
   "inherit": true,
   "ext": false,
   "sv": "1.1",
-  "integrity_hash": "sha256:91d8f99acd678c9251590427bce8045ca9b2e421b9205c9e9ea0ba715bc00725"
+  "integrity_hash": "sha256:8033ffa8fb22dbb5d082441a84f337080cd73c539ca40a5469e9b58091667375"
 }

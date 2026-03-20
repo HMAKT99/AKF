@@ -3,7 +3,7 @@ import SectionHeading from '../ui/SectionHeading';
 const features = [
   {
     title: 'Shell Hook',
-    description: 'One line in your shell config. Every file Claude, ChatGPT, Aider, or Ollama touches gets stamped automatically.',
+    description: 'One line in your shell config. Every file Claude, ChatGPT, Aider, or Ollama touches gets stamped automatically. Also pre-stamps before upload to Google Workspace, Box, M365, Dropbox, and Rclone.',
     code: 'eval "$(akf shell-hook)"',
     icon: (
       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

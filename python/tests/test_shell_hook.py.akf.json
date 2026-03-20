@@ -1,0 +1,33 @@
+{
+  "akf": "1.0",
+  "mode": "sidecar",
+  "target_file": "test_shell_hook.py",
+  "generated_at": "2026-03-20T03:31:08.564782+00:00",
+  "v": "1.0",
+  "claims": [
+    {
+      "c": "Trust metadata for tests/test_shell_hook.py",
+      "t": 0.7,
+      "id": "46a58214",
+      "src": "unspecified",
+      "tier": 5,
+      "ver": false,
+      "ai": true,
+      "evidence": [
+        {
+          "type": "test_pass",
+          "detail": "44 tests pass covering upload hook generation and CLI",
+          "at": "2026-03-20T03:31:08.564520+00:00"
+        }
+      ]
+    }
+  ],
+  "id": "akf-f59c1f1e39eb",
+  "agent": "claude-code",
+  "at": "2026-03-20T03:31:08.564717+00:00",
+  "label": "internal",
+  "inherit": true,
+  "ext": false,
+  "sv": "1.1",
+  "integrity_hash": "sha256:d2d64de954d3907969a0ea40c551d5fca8f7c7a79bd0b9771032053b0f50f64b"
+}

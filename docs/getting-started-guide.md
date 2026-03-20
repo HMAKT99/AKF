@@ -199,7 +199,7 @@ The daemon monitors directories for new and modified files, using **smart contex
 eval "$(akf shell-hook)"
 ```
 
-Automatically detects when you run `claude`, `chatgpt`, `aider`, `ollama`, or other AI CLI tools, and stamps any files they create or modify.
+Automatically detects when you run `claude`, `chatgpt`, `aider`, `ollama`, or other AI CLI tools, and stamps any files they create or modify. Also pre-stamps files before upload to content platforms (`gws`, `box`, `m365`, `dbxcli`, `rclone`) so trust metadata travels with the file.
 
 ### VS Code Extension
 
@@ -236,6 +236,7 @@ Create `.akf/config.json` in your project root to auto-classify files:
 | `akf install`                        | Install background watcher daemon  |
 | `akf watch <dirs>`                   | Watch directories for new files    |
 | `akf shell-hook`                     | Print shell hook code for zsh/bash |
+| `akf uploads`                        | View/manage upload stamp log       |
 
 ---
 

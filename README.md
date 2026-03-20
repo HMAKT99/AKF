@@ -292,7 +292,7 @@ The background watcher monitors directories for new and modified files and stamp
 eval "$(akf shell-hook)"
 ```
 
-Automatically detects when you run `claude`, `chatgpt`, `aider`, `ollama`, or other AI CLI tools, and stamps any files they create or modify.
+Automatically detects when you run `claude`, `chatgpt`, `aider`, `ollama`, or other AI CLI tools, and stamps any files they create or modify. Also pre-stamps files before upload to content platforms (`gws`, `box`, `m365`, `dbxcli`, `rclone`) so trust metadata travels with the file. Use `--no-upload-hooks` to disable.
 
 ### Project Rules
 
@@ -350,6 +350,8 @@ akf scan ./docs/ --recursive
 akf install                                   # Install background watcher
 akf watch ~/Downloads ~/Documents             # Watch directories
 akf shell-hook                                # Print shell hook code
+akf shell-hook --no-upload-hooks              # Without content platform hooks
+akf uploads                                   # View upload stamp log
 
 # ── Git integration ──
 akf stamp <file> --agent claude-code --evidence "tests pass"
