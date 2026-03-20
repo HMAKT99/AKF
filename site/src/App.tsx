@@ -25,6 +25,7 @@ import CompareC2paPage from './components/CompareC2paPage';
 import ComparePurviewPage from './components/ComparePurviewPage';
 import CompareWatermarkingPage from './components/CompareWatermarkingPage';
 import EnterpriseReportPage from './components/EnterpriseReportPage';
+import ComplianceCountdown from './components/ComplianceCountdown';
 import Footer from './components/Footer';
 
 function HomePage() {
@@ -56,6 +57,10 @@ function HomePage() {
         <SectionDivider label="Security" id="enterprise" />
         <SecurityIntegration />
       </div>
+
+      {/* ── COMPLIANCE ── */}
+      <SectionDivider label="Compliance" id="compliance" />
+      <ComplianceCountdown />
     </>
   );
 }
