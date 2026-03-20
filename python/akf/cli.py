@@ -1608,11 +1608,17 @@ def uninstall_cmd():
 @main.command("shell-hook")
 @click.option("--shell", type=click.Choice(["auto", "zsh", "bash"]),
               default="auto", help="Shell type (auto-detected by default)")
-def shell_hook_cmd(shell):
+@click.option("--upload-hooks/--no-upload-hooks", default=True,
+              help="Include content platform upload hooks (gws, box, m365, dbxcli, rclone)")
+def shell_hook_cmd(shell, upload_hooks):
     """Output shell hook code for auto-stamping AI CLI output.
 
     Add to your shell profile to automatically stamp files created
     or modified by AI CLI tools (claude, chatgpt, aider, etc.).
+
+    Also includes pre-upload stamping for content platform CLIs
+    (gws, box, m365, dbxcli, obsidian-cli, rclone) so trust metadata
+    travels with uploaded files. Disable with --no-upload-hooks.
 
     Examples:
 
@@ -1621,10 +1627,77 @@ def shell_hook_cmd(shell):
 
         # Or for bash, add to ~/.bashrc:
         eval "$(akf shell-hook --shell bash)"
+
+        # Without upload hooks:
+        eval "$(akf shell-hook --no-upload-hooks)"
     """
     from .shell_hook import generate_shell_hook
 
-    click.echo(generate_shell_hook(shell))
+    click.echo(generate_shell_hook(shell, include_uploads=upload_hooks))
+
+
+@main.command("uploads")
+@click.option("--clear", is_flag=True, help="Clear the upload log")
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON")
+def uploads_cmd(clear, as_json):
+    """View or manage the AKF upload log.
+
+    Shows files that were pre-stamped before upload to content
+    platforms (Google Workspace, Box, M365, Dropbox, Rclone).
+
+    Examples:
+
+        akf uploads              # view upload log
+
+        akf uploads --json       # machine-readable output
+
+        akf uploads --clear      # reset the log
+    """
+    log_file = Path.home() / ".akf" / "upload.log"
+
+    if clear:
+        if log_file.exists():
+            log_file.unlink()
+            click.secho("Upload log cleared.", fg="green")
+        else:
+            click.secho("No upload log found.", fg="yellow")
+        return
+
+    if not log_file.exists() or log_file.stat().st_size == 0:
+        click.secho("No uploads tracked yet.", fg="yellow")
+        click.echo("  Upload hooks stamp files before upload to content platforms.")
+        click.echo('  Enable with: eval "$(akf shell-hook)"')
+        return
+
+    lines = log_file.read_text().strip().splitlines()
+
+    if as_json:
+        entries = []
+        for line in lines:
+            parts = line.split(None, 4)
+            if len(parts) >= 5:
+                entries.append({
+                    "timestamp": parts[0],
+                    "tool": parts[1],
+                    "action": parts[2],
+                    "file": parts[3],
+                    "status": parts[4],
+                })
+        click.echo(json.dumps(entries, indent=2))
+        return
+
+    # Pretty table output
+    click.secho(f"┌─ AKF Upload Log {'─' * 43}┐", bold=True)
+    click.secho(f"│  {len(lines)} upload(s) tracked{' ' * 40}│", bold=True)
+    click.secho(f"└{'─' * 61}┘", bold=True)
+
+    for line in lines:
+        parts = line.split(None, 4)
+        if len(parts) >= 5:
+            ts, tool, _action, fname, status = parts
+            # Format timestamp: remove seconds, replace T with space
+            ts_short = ts[:16].replace("T", " ")
+            click.echo(f"  {ts_short}  {tool:<12} {fname:<24} {status}")
 
 
 @main.command("watch")

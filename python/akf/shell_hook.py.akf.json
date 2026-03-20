@@ -1,0 +1,33 @@
+{
+  "akf": "1.0",
+  "mode": "sidecar",
+  "target_file": "shell_hook.py",
+  "generated_at": "2026-03-20T03:31:04.393604+00:00",
+  "v": "1.0",
+  "claims": [
+    {
+      "c": "Trust metadata for akf/shell_hook.py",
+      "t": 0.7,
+      "id": "b4340079",
+      "src": "unspecified",
+      "tier": 5,
+      "ver": false,
+      "ai": true,
+      "evidence": [
+        {
+          "type": "test_pass",
+          "detail": "pre-upload stamping for content platform CLIs, tests pass",
+          "at": "2026-03-20T03:31:04.393161+00:00"
+        }
+      ]
+    }
+  ],
+  "id": "akf-3f3149622611",
+  "agent": "claude-code",
+  "at": "2026-03-20T03:31:04.393533+00:00",
+  "label": "internal",
+  "inherit": true,
+  "ext": false,
+  "sv": "1.1",
+  "integrity_hash": "sha256:84fdbb6f131804911af6749e28d290014dead5e17b47229aa3639f5945eb9630"
+}
