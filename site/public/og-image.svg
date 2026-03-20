@@ -1,0 +1,64 @@
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0f;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#111120;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#818cf8;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Subtle grid pattern -->
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#ffffff" stroke-opacity="0.03" stroke-width="1"/>
+  </pattern>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+
+  <!-- Accent line top -->
+  <rect x="0" y="0" width="1200" height="3" fill="url(#accent)"/>
+
+  <!-- .akf badge -->
+  <rect x="80" y="80" width="90" height="40" rx="8" fill="#6366f1" fill-opacity="0.15" stroke="#6366f1" stroke-opacity="0.3" stroke-width="1"/>
+  <text x="125" y="107" font-family="monospace" font-size="20" font-weight="bold" fill="#818cf8" text-anchor="middle">.akf</text>
+
+  <!-- Title -->
+  <text x="80" y="200" font-family="system-ui, -apple-system, sans-serif" font-size="64" font-weight="800" fill="#f0f0f5" letter-spacing="-1">Agent Knowledge Format</text>
+
+  <!-- Tagline -->
+  <text x="80" y="260" font-family="system-ui, -apple-system, sans-serif" font-size="28" fill="#9090a8">The file format for the AI era</text>
+
+  <!-- Separator -->
+  <rect x="80" y="290" width="60" height="3" rx="1.5" fill="#6366f1"/>
+
+  <!-- Features -->
+  <text x="80" y="340" font-family="monospace" font-size="20" fill="#6366f1">&#x2713;</text>
+  <text x="110" y="340" font-family="system-ui, sans-serif" font-size="20" fill="#c0c0d0">Trust scores &amp; source provenance</text>
+
+  <text x="80" y="375" font-family="monospace" font-size="20" fill="#6366f1">&#x2713;</text>
+  <text x="110" y="375" font-family="system-ui, sans-serif" font-size="20" fill="#c0c0d0">Embeds into DOCX, PDF, images, code — 20+ formats</text>
+
+  <text x="80" y="410" font-family="monospace" font-size="20" fill="#6366f1">&#x2713;</text>
+  <text x="110" y="410" font-family="system-ui, sans-serif" font-size="20" fill="#c0c0d0">EU AI Act Article 50 compliance in one command</text>
+
+  <text x="80" y="445" font-family="monospace" font-size="20" fill="#6366f1">&#x2713;</text>
+  <text x="110" y="445" font-family="system-ui, sans-serif" font-size="20" fill="#c0c0d0">~15 tokens — compact enough for any LLM</text>
+
+  <!-- Install commands -->
+  <rect x="80" y="485" width="400" height="44" rx="8" fill="#ffffff" fill-opacity="0.05" stroke="#ffffff" stroke-opacity="0.08"/>
+  <text x="100" y="513" font-family="monospace" font-size="18" fill="#818cf8">pip install akf</text>
+  <text x="300" y="513" font-family="monospace" font-size="18" fill="#505068">|</text>
+  <text x="320" y="513" font-family="monospace" font-size="18" fill="#818cf8">npm i akf-format</text>
+
+  <!-- URL -->
+  <text x="80" y="580" font-family="monospace" font-size="22" fill="#6366f1">akf.dev</text>
+  <text x="230" y="580" font-family="monospace" font-size="22" fill="#505068">github.com/HMAKT99/AKF</text>
+
+  <!-- Open source badge -->
+  <rect x="1010" y="80" width="110" height="36" rx="18" fill="#22c55e" fill-opacity="0.1" stroke="#22c55e" stroke-opacity="0.3"/>
+  <text x="1065" y="104" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#4ade80" text-anchor="middle">MIT License</text>
+</svg>
