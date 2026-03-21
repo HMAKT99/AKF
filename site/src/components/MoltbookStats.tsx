@@ -2,13 +2,12 @@ import { useState, useEffect } from 'react';
 
 interface Stats {
   karma: number;
-  followers: number;
   posts: number;
-  comments: number;
+  mentions: number;
 }
 
-const FALLBACK: Stats = { karma: 52, followers: 0, posts: 0, comments: 0 };
-const POLL_INTERVAL = 60_000; // refresh every 60s
+const FALLBACK: Stats = { karma: 58, posts: 4, mentions: 7 };
+const POLL_INTERVAL = 60_000;
 
 export default function MoltbookStats() {
   const [stats, setStats] = useState<Stats>(FALLBACK);
@@ -25,9 +24,8 @@ export default function MoltbookStats() {
         if (data.karma > 0) {
           setStats({
             karma: data.karma || FALLBACK.karma,
-            followers: data.followers || FALLBACK.followers,
             posts: data.posts || FALLBACK.posts,
-            comments: data.comments || FALLBACK.comments,
+            mentions: data.mentions || FALLBACK.mentions,
           });
         }
       } catch {
@@ -56,8 +54,8 @@ export default function MoltbookStats() {
       <span className="h-4 w-px bg-border-subtle" />
       <span className="flex items-center gap-3 text-xs text-text-tertiary">
         <span><strong className="text-text-primary">{stats.karma}</strong> karma</span>
-        {stats.posts > 0 && <span><strong className="text-text-primary">{stats.posts}</strong> posts</span>}
-        {stats.comments > 0 && <span><strong className="text-text-primary">{stats.comments}</strong> comments</span>}
+        <span><strong className="text-text-primary">{stats.posts}</strong> posts</span>
+        <span><strong className="text-text-primary">{stats.mentions}</strong> agent mentions</span>
       </span>
       <svg className="w-3.5 h-3.5 text-text-tertiary group-hover:text-accent transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
