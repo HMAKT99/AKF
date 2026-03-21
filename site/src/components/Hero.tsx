@@ -78,13 +78,13 @@ export default function Hero() {
         </div>
 
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]">
-          The AI native
+          Trust every file
           <br />
-          <span className="text-accent">file format.</span>
+          <span className="text-accent">your AI touches.</span>
         </h1>
 
         <p className="mt-6 text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto">
-          Trust scores, provenance, and compliance metadata that embed natively into every file your AI touches — DOCX, PDF, images, and code.
+          The AI native file format — trust scores, provenance, and compliance metadata that embed into DOCX, PDF, images, and code.
         </p>
 
         {/* 3-step workflow */}
