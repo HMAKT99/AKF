@@ -12,12 +12,12 @@ _akf: '{"v":"1.0","claims":[{"c":"Trust metadata for README.md","t":0.7,"id":"19
   <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" />
 </p>
 
-<h1 align="center">AKF — Agent Knowledge Format</h1>
+<h1 align="center">AKF — The AI Native File Format</h1>
 
 <p align="center">
-  <strong>The file format for the AI era.</strong><br/>
-  Trust scores · Source provenance · Security classification · Compliance readiness<br/>
-  Embeds natively into DOCX, PDF, XLSX, images, code, and all major formats.
+  <strong>Trust scores · Source provenance · Security classification · Compliance readiness</strong><br/>
+  Embeds natively into DOCX, PDF, XLSX, images, code, and all major formats.<br/>
+  Think EXIF for AI — ~15 tokens of JSON that travel with your files.
 </p>
 
 <p align="center">
@@ -37,7 +37,7 @@ _akf: '{"v":"1.0","claims":[{"c":"Trust metadata for README.md","t":0.7,"id":"19
 
 ## What is AKF?
 
-AKF is to AI-generated content what **EXIF is to photos**. Every file that AI touches should carry:
+AKF is the **AI native file format** — every file that AI touches should carry:
 
 - **Trust scores** — How confident is this claim? (0–1)
 - **Source provenance** — Where did it come from? (SEC filing → analyst → AI agent)
