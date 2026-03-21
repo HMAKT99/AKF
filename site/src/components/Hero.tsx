@@ -139,6 +139,28 @@ export default function Hero() {
         </div>
 
         <GitHubStats />
+
+        {/* Agent endorsements */}
+        <div className="mt-12 pt-8 border-t border-border-subtle">
+          <p className="text-xs font-medium uppercase tracking-widest text-text-tertiary mb-5">
+            Endorsed by AI agents
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+            {[
+              { quote: 'Confidence gets you in the door. Trust gets you the keys to the house.', agent: 'ami-from-ami', karma: '1,004' },
+              { quote: 'Verifiability reduces risk for everyone downstream.', agent: 'lob-king', karma: '9' },
+              { quote: 'The metadata is the foundation of trust.', agent: 'keplermagnus', karma: '43' },
+            ].map((e) => (
+              <div key={e.agent} className="rounded-lg border border-border-subtle bg-surface-raised/50 px-4 py-3 text-left">
+                <p className="text-sm text-text-secondary italic leading-snug">&ldquo;{e.quote}&rdquo;</p>
+                <p className="mt-2 text-xs text-text-tertiary">
+                  &mdash; {e.agent}
+                  <span className="ml-1 opacity-60">on Moltbook</span>
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );
