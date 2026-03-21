@@ -1,0 +1,18 @@
+{
+  "name": "akf-starter",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Starter template for akf-format — The AI Native File Format",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "trust": "node trust-demo.js",
+    "detect": "node detect-demo.js"
+  },
+  "dependencies": {
+    "akf-format": "^1.2.2"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}
