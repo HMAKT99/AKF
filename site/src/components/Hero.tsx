@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import GitHubStats from './GitHubStats';
+import MoltbookStats from './MoltbookStats';
 
 function CopyCommand({ command }: { command: string }) {
   const [copied, setCopied] = useState(false);
@@ -127,6 +128,17 @@ export default function Hero() {
             </svg>
             View on GitHub
           </a>
+          <a
+            href="https://huggingface.co/spaces/HANAKT19/akf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#FF9D00] hover:bg-[#e68f00] text-white font-medium text-sm transition-colors"
+          >
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8.5 2a4.5 4.5 0 00-3.2 7.7C3.3 11.2 2 13.4 2 16c0 3.3 2.7 6 6 6h8c3.3 0 6-2.7 6-6 0-2.6-1.3-4.8-3.3-6.3A4.5 4.5 0 0015.5 2a4.5 4.5 0 00-3.5 1.7A4.5 4.5 0 008.5 2zM7 14.5a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm7 0a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm-5.5 3c0-.3.2-.5.5-.5h6a.5.5 0 01.4.8C14.5 19.2 13.3 20 12 20s-2.5-.8-3.4-2.2a.5.5 0 01.4-.8h.5z"/>
+            </svg>
+            Try on Hugging Face
+          </a>
           <Link
             to="/get-started"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-surface-raised border border-border-subtle hover:border-accent/40 text-text-primary font-medium text-sm transition-colors"
@@ -138,7 +150,17 @@ export default function Hero() {
           </Link>
         </div>
 
-        <GitHubStats />
+        {/* Social proof: Used by */}
+        <div className="mt-12 pt-8 border-t border-border-subtle">
+          <p className="text-xs font-medium uppercase tracking-widest text-text-tertiary mb-3">Used by Humans</p>
+          <GitHubStats />
+        </div>
+
+        {/* Social proof: Loved by Agents */}
+        <div className="mt-8 pt-8 border-t border-border-subtle">
+          <p className="text-xs font-medium uppercase tracking-widest text-text-tertiary mb-3">And Also Loved by Agents</p>
+          <MoltbookStats />
+        </div>
       </div>
     </section>
   );

@@ -44,7 +44,7 @@ export default function ComplianceBanner({
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-amber-600 via-amber-500 to-orange-500 text-white">
+    <div className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-blue-800 via-blue-700 to-indigo-700 text-white">
       <div className="max-w-6xl mx-auto px-4 h-9 flex items-center justify-center gap-3 text-[13px]">
         <button
           onClick={handleClick}
@@ -59,7 +59,7 @@ export default function ComplianceBanner({
             {days}d {String(hours).padStart(2, '0')}h {String(mins).padStart(2, '0')}m {String(secs).padStart(2, '0')}s
           </span>
 
-          <span className="hidden sm:inline text-amber-100">
+          <span className="hidden sm:inline text-blue-200">
             — your AI content must be labeled
           </span>
 
