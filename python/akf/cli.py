@@ -247,7 +247,12 @@ def validate_cmd(file) -> None:
 @click.argument("file", type=click.Path(exists=True))
 def inspect(file) -> None:
     """Pretty-print an .akf file with trust indicators."""
-    unit = load(file)
+    from . import universal as akf_u
+    meta = akf_u.extract(file)
+    if meta is not None:
+        unit = AKF(**meta)
+    else:
+        unit = load(file)
 
     click.secho(f"AKF {unit.version} | {unit.id}", bold=True)
     if unit.author:
@@ -295,7 +300,12 @@ def inspect(file) -> None:
 @click.option("--threshold", "-t", default=0.6, type=float, help="Trust threshold")
 def trust(file, threshold) -> None:
     """Compute effective trust for all claims."""
-    unit = load(file)
+    from . import universal as akf_u
+    meta = akf_u.extract(file)
+    if meta is not None:
+        unit = AKF(**meta)
+    else:
+        unit = load(file)
     results = compute_all(unit)
 
     for claim, result in zip(unit.claims, results):
