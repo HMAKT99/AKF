@@ -400,10 +400,14 @@ def check_regulation(
             recommendations.append("ISO 42001: Add integrity hash for monitoring")
 
     else:
+        valid = ["eu_ai_act", "sox", "hipaa", "gdpr", "nist_ai", "iso_42001"]
+        # Suggest closest match
+        suggestions = [v for v in valid if regulation.lower() in v or v in regulation.lower()]
+        hint = f" Did you mean: {', '.join(suggestions)}?" if suggestions else f" Available: {', '.join(valid)}"
         return AuditResult(
             compliant=False, score=0.0,
             checks=[{"check": "unknown_regulation", "passed": False}],
-            recommendations=[f"Unknown regulation: {regulation}"],
+            recommendations=[f"Unknown regulation: {regulation}.{hint}"],
             regulation=regulation,
         )
 
