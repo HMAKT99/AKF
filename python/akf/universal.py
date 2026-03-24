@@ -164,6 +164,32 @@ class _SidecarFallbackHandler(AKFFormatHandler):
 
 _SIDECAR_HANDLER = _SidecarFallbackHandler()
 
+MAX_CLAIM_SIZE = 100_000  # 100KB per claim field
+MAX_CLAIMS = 1_000
+
+
+def _sanitize_string(value: str) -> str:
+    """Strip path traversal sequences from string values."""
+    return value.replace("../", "").replace("..\\", "")
+
+
+def _validate_metadata(meta: Dict[str, Any]) -> None:
+    """Validate metadata before embedding — size limits and sanitization."""
+    claims = meta.get("claims", [])
+    if len(claims) > MAX_CLAIMS:
+        raise ValueError(f"Too many claims ({len(claims)}). Maximum is {MAX_CLAIMS}.")
+
+    for claim in claims:
+        for key in ("c", "content", "src", "source"):
+            val = claim.get(key)
+            if isinstance(val, str):
+                if len(val) > MAX_CLAIM_SIZE:
+                    raise ValueError(
+                        f"Claim field '{key}' exceeds {MAX_CLAIM_SIZE:,} byte limit "
+                        f"({len(val):,} bytes)."
+                    )
+                claim[key] = _sanitize_string(val)
+
 
 # ---------------------------------------------------------------------------
 # Public API
@@ -206,6 +232,9 @@ def embed(
     # Merge any extra kwargs
     for key, value in kwargs.items():
         meta[key] = value
+
+    # Input validation
+    _validate_metadata(meta)
 
     handler = _resolve_handler(filepath)
     if handler is not None:

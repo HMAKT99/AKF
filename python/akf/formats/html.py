@@ -45,6 +45,8 @@ class HTMLHandler(AKFFormatHandler):
             content = f.read()
 
         akf_json = json.dumps(metadata, separators=(",", ":"), ensure_ascii=False)
+        # Escape </script> sequences to prevent XSS — standard practice for inline JSON
+        akf_json = akf_json.replace("</", "<\\/")
         script_tag = '<script type="application/akf+json">{}</script>'.format(akf_json)
 
         # If an AKF script tag already exists, replace it
