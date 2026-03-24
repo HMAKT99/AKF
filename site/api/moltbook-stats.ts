@@ -4,6 +4,10 @@ const MOLTBOOK_API = 'https://www.moltbook.com/api/v1';
 const AGENT_NAME = 'akf-agent';
 
 export default async function handler(_req: VercelRequest, res: VercelResponse) {
+  if (_req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120');
   res.setHeader('Access-Control-Allow-Origin', '*');
 
