@@ -57,7 +57,16 @@ class ImageHandler(AKFFormatHandler):
         ext = os.path.splitext(filepath)[1].lower()
 
         if ext == ".png" and _check_pillow():
-            self._embed_png(filepath, metadata)
+            try:
+                self._embed_png(filepath, metadata)
+            except Exception as e:
+                logger.warning(
+                    "Failed to embed into PNG %s: %s — falling back to sidecar",
+                    filepath, e,
+                )
+                from ..sidecar import create as create_sidecar
+                create_sidecar(filepath, metadata)
+            return
         else:
             if ext == ".png" and not _check_pillow():
                 logger.info(
@@ -76,9 +85,12 @@ class ImageHandler(AKFFormatHandler):
         ext = os.path.splitext(filepath)[1].lower()
 
         if ext == ".png" and _check_pillow():
-            result = self._extract_png(filepath)
-            if result is not None:
-                return result
+            try:
+                result = self._extract_png(filepath)
+                if result is not None:
+                    return result
+            except Exception as e:
+                logger.warning("Failed to read PNG metadata from %s: %s", filepath, e)
 
         # Sidecar fallback
         from ..sidecar import read as read_sidecar
