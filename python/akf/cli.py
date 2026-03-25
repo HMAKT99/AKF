@@ -15,7 +15,7 @@ from .trust import compute_all, effective_trust
 
 
 @click.group(invoke_without_command=True)
-@click.version_option(version="1.2.2", prog_name="akf")
+@click.version_option(version="1.2.5", prog_name="akf")
 @click.pass_context
 def main(ctx) -> None:
     """AKF — Agent Knowledge Format CLI."""

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "akf"
-version = "1.2.2"
+version = "1.2.5"
 description = "AKF — Agent Knowledge Format. Lightweight file format for AI-generated knowledge with built-in trust, provenance, and security."
 requires-python = ">=3.9"
 authors = [
