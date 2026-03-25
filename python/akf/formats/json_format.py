@@ -52,8 +52,14 @@ class JSONHandler(AKFFormatHandler):
         with open(filepath, "r", encoding="utf-8") as f:
             raw = f.read()
 
-        indent = _detect_indent(raw)
-        data = json.loads(raw)
+        try:
+            indent = _detect_indent(raw)
+            data = json.loads(raw)
+        except json.JSONDecodeError:
+            # File has .json extension but invalid content — fall back to sidecar
+            from ..sidecar import create as create_sidecar
+            create_sidecar(filepath, metadata)
+            return
 
         if not isinstance(data, dict):
             raise TypeError(
@@ -69,8 +75,11 @@ class JSONHandler(AKFFormatHandler):
 
     def extract(self, filepath: str) -> Optional[dict]:
         """Extract AKF metadata from a JSON file."""
-        with open(filepath, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except json.JSONDecodeError:
+            return None
 
         if isinstance(data, dict) and "_akf" in data:
             return data["_akf"]  # type: ignore[no-any-return]
