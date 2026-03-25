@@ -1,6 +1,6 @@
 {
   "name": "akf-format",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "description": "AKF — Agent Knowledge Format SDK for TypeScript",
   "type": "module",
   "main": "./dist/index.js",
@@ -8,11 +8,12 @@
   "exports": {
     ".": {
       "import": "./dist/index.js",
+      "require": "./dist/cjs/index.js",
       "types": "./dist/index.d.ts"
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc -p tsconfig.cjs.json && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
     "test": "vitest run"
   },
   "devDependencies": {
@@ -33,7 +34,7 @@
     "url": "https://github.com/HMAKT99/AKF/issues"
   },
   "files": [
-    "dist",
+    "dist/**",
     "README.md",
     "CHANGELOG.md",
     "LICENSE"
