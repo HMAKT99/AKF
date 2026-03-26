@@ -1,0 +1,21 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.HMAKT99/akf",
+  "description": "The AI native file format. EXIF for AI — trust, provenance, and compliance for 20+ formats.",
+  "repository": {
+    "url": "https://github.com/HMAKT99/AKF",
+    "source": "github",
+    "subfolder": "packages/mcp-server-akf"
+  },
+  "version": "1.2.9",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "akf-format",
+      "version": "1.2.9",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
