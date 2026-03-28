@@ -117,8 +117,15 @@ def _register_builtin_formats() -> None:
         from .formats.toml_format import TOMLHandler
         return TOMLHandler()
 
+    def _csv_factory() -> AKFFormatHandler:
+        from .formats.csv import CSVHandler
+        return CSVHandler()
+
     # TOML
     _FORMAT_REGISTRY["toml"] = _toml_factory
+
+    # CSV
+    _FORMAT_REGISTRY["csv"] = _csv_factory
 
 
 # Initialize built-in formats
