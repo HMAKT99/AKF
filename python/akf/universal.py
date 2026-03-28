@@ -113,6 +113,13 @@ def _register_builtin_formats() -> None:
     for ext in ("mp3", "wav", "flac", "ogg"):
         _FORMAT_REGISTRY[ext] = _audio_factory
 
+    def _toml_factory() -> AKFFormatHandler:
+        from .formats.toml_format import TOMLHandler
+        return TOMLHandler()
+
+    # TOML
+    _FORMAT_REGISTRY["toml"] = _toml_factory
+
 
 # Initialize built-in formats
 _register_builtin_formats()
