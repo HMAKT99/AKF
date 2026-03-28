@@ -43,19 +43,38 @@ _akf: '{"v":"1.0","claims":[{"c":"Trust metadata for README.md","t":0.7,"id":"19
 
 ---
 
-## What is AKF?
+## The Problem
 
-AKF is the **AI native file format** — every file that AI touches should carry:
+AI generates reports, code, docs, images — and **none of it carries provenance.** Your team opens a file with no idea: Who made it? AI or human? Can we trust it? Is it compliant?
 
-- **Trust scores** — How confident is this claim? (0–1)
-- **Source provenance** — Where did it come from? (SEC filing → analyst → AI agent)
-- **Security classification** — Who can see it? (public, internal, confidential)
+**EU AI Act Article 50 takes effect August 2, 2026.** After that, AI-generated content must carry transparency metadata. Penalties: up to EUR 35M / 7% of global turnover.
 
-AKF answers all three in **~15 tokens** of JSON, embedded directly into the file.
+## The Solution
+
+AKF is the **AI native file format** — ~15 tokens of JSON that embed into any file:
+
+| What | How |
+|------|-----|
+| **Trust score** | 0–1 confidence based on source tier |
+| **Source provenance** | SEC filing → analyst → AI agent chain |
+| **Compliance** | One command: `akf audit file --regulation eu_ai_act` |
 
 ```
 AI generates content → AKF stamps trust metadata → Anyone can verify it
 ```
+
+### vs Alternatives
+
+| | AKF | C2PA | Watermarking | Manual tracking |
+|---|:---:|:---:|:---:|:---:|
+| Works on documents/code | ✅ | ❌ (media only) | ❌ | ⚠️ |
+| No Certificate Authority needed | ✅ | ❌ | ✅ | ✅ |
+| Trust scores | ✅ | ❌ | ❌ | ❌ |
+| Source provenance chain | ✅ | ✅ | ❌ | ⚠️ |
+| Compliance auditing | ✅ | ❌ | ❌ | ❌ |
+| ~15 tokens (LLM-friendly) | ✅ | ❌ | N/A | N/A |
+| 20+ file formats | ✅ | ⚠️ (media) | ⚠️ (text) | ❌ |
+| Free & open source | ✅ | ⚠️ | Varies | ✅ |
 
 ## Quickstart
 
