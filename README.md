@@ -6,10 +6,12 @@ _akf: '{"v":"1.0","claims":[{"c":"Trust metadata for README.md","t":0.7,"id":"19
 </p>
 
 <p align="center">
-  <a href="https://pypi.org/project/akf/"><img src="https://img.shields.io/pypi/v/akf?style=flat-square&label=PyPI" /></a>
+  <a href="https://github.com/HMAKT99/AKF/stargazers"><img src="https://img.shields.io/github/stars/HMAKT99/AKF?style=flat-square&color=yellow" alt="Stars" /></a>
   <a href="https://www.npmjs.com/package/akf-format"><img src="https://img.shields.io/npm/v/akf-format?style=flat-square&label=npm" /></a>
+  <a href="https://www.npmjs.com/package/akf-format"><img src="https://img.shields.io/npm/dw/akf-format?style=flat-square&label=npm%20downloads" /></a>
   <a href="https://github.com/HMAKT99/AKF/actions"><img src="https://img.shields.io/github/actions/workflow/status/HMAKT99/AKF/ci.yml?style=flat-square&label=CI" /></a>
   <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" />
+  <a href="https://akf.dev"><img src="https://img.shields.io/badge/docs-akf.dev-blue?style=flat-square" /></a>
 </p>
 
 <h1 align="center">AKF — The AI Native File Format</h1>
@@ -22,6 +24,12 @@ _akf: '{"v":"1.0","claims":[{"c":"Trust metadata for README.md","t":0.7,"id":"19
 
 <p align="center">
   <img src="https://vhs.charm.sh/vhs-5CBgpmZTfi8OsreNzeOdF5.gif" alt="AKF Demo" width="700" />
+</p>
+
+<p align="center">
+  <a href="https://github.com/HMAKT99/AKF">⭐ Star on GitHub</a> ·
+  <a href="https://akf.dev">Try Online</a> ·
+  <a href="https://huggingface.co/spaces/HANAKT19/akf">HuggingFace Demo</a>
 </p>
 
 <p align="center">

@@ -1,24 +1,35 @@
-# AKF Terminal Demo
-# Run: vhs demo.tape
-
+# AKF Demo — The AI Native File Format
 Output demo.gif
+Set Shell "bash"
+Set FontSize 16
+Set Width 900
+Set Height 500
+Set Theme "Dracula"
+Set TypingSpeed 50ms
 
-Set FontSize 15
-Set Width 860
-Set Height 480
-Set Theme "Catppuccin Mocha"
-Set Padding 15
-Set TypingSpeed 40ms
-Set Shell zsh
-
-Type "python3 -m akf quickstart"
+Type "# AKF — The AI Native File Format"
 Enter
-Sleep 6s
+Sleep 500ms
+Type "# EXIF for AI. ~15 tokens of trust metadata."
+Enter
+Sleep 1s
 
-Type "# One line. Every AI file stamped automatically."
+Type 'echo "Revenue was $4.2B, up 12% YoY" > report.md'
+Enter
+Sleep 500ms
+
+Type "akf stamp report.md --agent claude --evidence 'SEC 10-Q filing'"
 Enter
 Sleep 1.5s
 
-Type 'eval "$(python3 -m akf shell-hook)"'
+Type "akf inspect report.md"
+Enter
+Sleep 2s
+
+Type "akf audit report.md --regulation eu_ai_act"
+Enter
+Sleep 2s
+
+Type "# Trust metadata embeds into the file. Done."
 Enter
 Sleep 2s
