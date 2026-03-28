@@ -113,6 +113,13 @@ def _register_builtin_formats() -> None:
     for ext in ("mp3", "wav", "flac", "ogg"):
         _FORMAT_REGISTRY[ext] = _audio_factory
 
+    def _csv_factory() -> AKFFormatHandler:
+        from .formats.csv_format import CSVHandler
+        return CSVHandler()
+
+    # CSV
+    _FORMAT_REGISTRY["csv"] = _csv_factory
+
 
 # Initialize built-in formats
 _register_builtin_formats()
