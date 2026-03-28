@@ -69,6 +69,10 @@ def _register_builtin_formats() -> None:
         from .formats.email import EmailHandler
         return EmailHandler()
 
+    def _toml_factory() -> AKFFormatHandler:
+        from .formats.toml_format import TOMLHandler
+        return TOMLHandler()
+
     # Markdown
     for ext in ("md", "markdown", "mdx"):
         _FORMAT_REGISTRY[ext] = _markdown_factory
@@ -96,6 +100,10 @@ def _register_builtin_formats() -> None:
     # Email
     for ext in ("eml",):
         _FORMAT_REGISTRY[ext] = _email_factory
+
+    # TOML
+    for ext in ("toml",):
+        _FORMAT_REGISTRY[ext] = _toml_factory
 
     def _video_factory() -> AKFFormatHandler:
         from .formats.video import VideoHandler
