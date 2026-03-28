@@ -23,7 +23,7 @@ _akf: '{"v":"1.0","claims":[{"c":"Trust metadata for README.md","t":0.7,"id":"19
 </p>
 
 <p align="center">
-  <img src="https://vhs.charm.sh/vhs-5CBgpmZTfi8OsreNzeOdF5.gif" alt="AKF Demo" width="700" />
+  <img src="https://vhs.charm.sh/vhs-3OOIFnSZOds1SrvHNxwNY.gif" alt="AKF Demo — stamp, inspect, audit in 10 seconds" width="700" />
 </p>
 
 <p align="center">
