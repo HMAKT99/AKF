@@ -6,6 +6,7 @@ Supports EU AI Act, SOX, HIPAA, GDPR, NIST AI RMF, ISO 42001.
 from __future__ import annotations
 
 import json
+import difflib
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -402,7 +403,7 @@ def check_regulation(
     else:
         valid = ["eu_ai_act", "sox", "hipaa", "gdpr", "nist_ai", "iso_42001"]
         # Suggest closest match
-        suggestions = [v for v in valid if regulation.lower() in v or v in regulation.lower()]
+        suggestions = difflib.get_close_matches(regulation.lower(), valid, n=2, cutoff=0.3)
         hint = f" Did you mean: {', '.join(suggestions)}?" if suggestions else f" Available: {', '.join(valid)}"
         return AuditResult(
             compliant=False, score=0.0,
