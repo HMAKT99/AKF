@@ -117,8 +117,16 @@ def _register_builtin_formats() -> None:
         from .formats.toml_format import TOMLHandler
         return TOMLHandler()
 
+    def _code_factory() -> AKFFormatHandler:
+        from .formats.code_format import CodeHandler
+        return CodeHandler()
+
     # TOML
     _FORMAT_REGISTRY["toml"] = _toml_factory
+
+    # Code (Go, Python, JS, TS, etc)
+    for ext in ("go", "py", "js", "ts", "sh", "rb", "c", "cpp", "rs"):
+        _FORMAT_REGISTRY[ext] = _code_factory
 
 
 # Initialize built-in formats
