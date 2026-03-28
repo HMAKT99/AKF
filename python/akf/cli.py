@@ -2160,3 +2160,26 @@ def agent_import_a2a_cmd(card_path) -> None:
     registry = AgentRegistry()
     registry.register(card)
     click.secho(f"Imported agent: {card.name} ({card.id})", fg="green")
+
+
+@main.command("completion")
+@click.argument("shell", type=click.Choice(["bash", "zsh", "fish"]))
+def completion_cmd(shell) -> None:
+    """Generate shell completion script.
+
+    Install completions by adding the output to your shell profile:
+
+    \b
+      akf completion bash >> ~/.bashrc
+      akf completion zsh >> ~/.zshrc
+      akf completion fish > ~/.config/fish/completions/akf.fish
+    """
+    from click.shell_completion import get_completion_class
+
+    comp_cls = get_completion_class(shell)
+    if comp_cls is None:
+        click.secho(f"Unsupported shell: {shell}", fg="red")
+        sys.exit(1)
+
+    comp = comp_cls(main, {}, "akf", "_AKF_COMPLETE")
+    click.echo(comp.source())
