@@ -29,8 +29,10 @@ _akf: '{"v":"1.0","claims":[{"c":"Trust metadata for README.md","t":0.7,"id":"19
 
 <p align="center">
   <a href="https://github.com/HMAKT99/AKF">⭐ Star on GitHub</a> ·
-  <a href="https://akf.dev">Try Online</a> ·
-  <a href="https://huggingface.co/spaces/HANAKT19/akf">HuggingFace Demo</a>
+  <a href="https://akf.dev">Website</a> ·
+  <a href="https://huggingface.co/spaces/HANAKT19/is-this-ai-generated">🛡️ Is This AI-Generated?</a> ·
+  <a href="https://huggingface.co/spaces/HANAKT19/eu-ai-act-check">🇪🇺 Compliance Check</a> ·
+  <a href="https://huggingface.co/spaces/HANAKT19/ai-trust-report-card">📊 Repo Scanner</a>
 </p>
 
 <p align="center">
