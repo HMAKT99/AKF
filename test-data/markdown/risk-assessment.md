@@ -1,5 +1,15 @@
 ---
-_akf: '{"classification":"restricted","claims":[{"c":"Model drift: 3% accuracy decline","t":0.7,"src":"ML monitoring","ai":true},{"c":"12 PII incidents detected","t":0.95,"src":"Security audit","ai":true}]}'
+akf:
+  classification: restricted
+  claims:
+    - c: "Model drift: 3% accuracy decline"
+      t: 0.7
+      src: ML monitoring
+      ai: true
+    - c: 12 PII incidents detected
+      t: 0.95
+      src: Security audit
+      ai: true
 ---
 # Risk Assessment — AI Systems
 

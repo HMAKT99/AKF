@@ -1,5 +1,6 @@
 ---
-_akf: '{"classification":"internal"}'
+akf:
+  classification: internal
 ---
 # Board Meeting Notes — March 2026
 
