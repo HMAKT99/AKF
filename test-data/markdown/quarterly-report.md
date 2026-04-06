@@ -1,5 +1,16 @@
 ---
-_akf: '{"classification":"confidential","claims":[{"c":"Revenue was $4.2B","t":0.98,"src":"SEC Filing"},{"c":"Cloud revenue up 23% YoY","t":0.92,"src":"SEC Filing"},{"c":"AI copilot reached 2.3M MAU","t":0.85,"src":"Product Analytics"}]}'
+akf:
+  classification: confidential
+  claims:
+    - c: Revenue was $4.2B
+      t: 0.98
+      src: SEC Filing
+    - c: "Cloud revenue up 23% YoY"
+      t: 0.92
+      src: SEC Filing
+    - c: AI copilot reached 2.3M MAU
+      t: 0.85
+      src: Product Analytics
 ---
 # Q3 2026 Quarterly Report
 

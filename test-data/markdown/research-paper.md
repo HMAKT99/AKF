@@ -1,5 +1,10 @@
 ---
-_akf: '{"classification":"public","claims":[{"c":"Multi-agent verification reduces error by 40%","t":0.88,"src":"Experiment"}]}'
+akf:
+  classification: public
+  claims:
+    - c: "Multi-agent verification reduces error by 40%"
+      t: 0.88
+      src: Experiment
 ---
 # Trust Scoring in Multi-Agent AI Systems
 

@@ -31,6 +31,294 @@ function nowISO(): string {
 }
 
 // ---------------------------------------------------------------------------
+// YAML frontmatter parser (reads native YAML and legacy JSON-string)
+// ---------------------------------------------------------------------------
+
+/**
+ * Parse AKF metadata from a frontmatter block.
+ * Supports native YAML (`akf:` with indented children) and legacy `_akf: '{...}'`.
+ */
+function parseAKFFromFrontmatter(block: string): Record<string, unknown> | null {
+  const lines = block.split("\n");
+
+  // Try native YAML: "akf:" line with indented children
+  for (let i = 0; i < lines.length; i++) {
+    const stripped = lines[i].trim();
+    if (stripped === "akf:" || stripped.startsWith("akf: ")) {
+      const inline = stripped.slice(4).trim();
+      if (inline && inline.startsWith("{")) {
+        // Inline JSON: akf: {"v":"1.0",...}
+        try { return JSON.parse(inline); } catch { /* continue */ }
+      }
+      if (stripped === "akf:") {
+        // Collect indented block
+        const childLines: string[] = [];
+        for (let j = i + 1; j < lines.length; j++) {
+          if (lines[j].length > 0 && (lines[j][0] === " " || lines[j][0] === "\t")) {
+            childLines.push(lines[j]);
+          } else if (lines[j].trim() === "") {
+            childLines.push(lines[j]);
+          } else {
+            break;
+          }
+        }
+        if (childLines.length > 0) {
+          return parseYamlBlock(childLines);
+        }
+      }
+    }
+  }
+
+  // Try legacy: _akf: '{...}' or _akf: "{...}"
+  for (const line of lines) {
+    const stripped = line.trim();
+    if (stripped.startsWith("_akf:")) {
+      let val = stripped.slice(5).trim();
+      if (val.length >= 2 && val[0] === val[val.length - 1] && (val[0] === "'" || val[0] === '"')) {
+        val = val.slice(1, -1);
+      }
+      try { return JSON.parse(val); } catch { /* continue */ }
+    }
+  }
+
+  return null;
+}
+
+function indentLevel(line: string): number {
+  let count = 0;
+  for (const ch of line) {
+    if (ch === " ") count++;
+    else if (ch === "\t") count += 2;
+    else break;
+  }
+  return count;
+}
+
+function parseYamlValue(val: string): unknown {
+  if (!val) return "";
+  // Quoted string
+  if (val.length >= 2 && val[0] === val[val.length - 1] && (val[0] === "'" || val[0] === '"')) {
+    return val.slice(1, -1);
+  }
+  // Boolean
+  if (val.toLowerCase() === "true") return true;
+  if (val.toLowerCase() === "false") return false;
+  // Null
+  if (val.toLowerCase() === "null" || val === "~") return null;
+  // Number
+  if (/^-?\d+\.\d+$/.test(val)) return parseFloat(val);
+  if (/^-?\d+$/.test(val)) return parseInt(val, 10);
+  // Inline array
+  if (val.startsWith("[") && val.endsWith("]")) {
+    const inner = val.slice(1, -1).trim();
+    if (!inner) return [];
+    return inner.split(",").map((s) => parseYamlValue(s.trim()));
+  }
+  return val;
+}
+
+function parseYamlBlock(lines: string[]): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  const baseIndent = lines.length > 0 ? indentLevel(lines[0]) : 0;
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+    const stripped = line.trim();
+    const indent = indentLevel(line);
+
+    if (!stripped || stripped.startsWith("#") || indent < baseIndent) {
+      i++;
+      continue;
+    }
+
+    const colonIdx = stripped.indexOf(":");
+    if (colonIdx < 0) { i++; continue; }
+
+    const key = stripped.slice(0, colonIdx).trim();
+    const valStr = stripped.slice(colonIdx + 1).trim();
+
+    if (valStr === "" || valStr === null) {
+      // Nested object or list
+      const childLines: string[] = [];
+      for (let j = i + 1; j < lines.length; j++) {
+        const jStripped = lines[j].trim();
+        if (indentLevel(lines[j]) > indent || !jStripped) {
+          childLines.push(lines[j]);
+        } else {
+          break;
+        }
+      }
+      if (childLines.length > 0 && childLines.find((l) => l.trim().startsWith("- "))) {
+        result[key] = parseYamlList(childLines);
+      } else if (childLines.length > 0) {
+        result[key] = parseYamlBlock(childLines);
+      }
+      i += 1 + childLines.length;
+    } else {
+      result[key] = parseYamlValue(valStr);
+      i++;
+    }
+  }
+  return result;
+}
+
+function parseYamlList(lines: string[]): unknown[] {
+  const items: unknown[] = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const stripped = lines[i].trim();
+    if (!stripped) { i++; continue; }
+    if (!stripped.startsWith("- ")) { i++; continue; }
+
+    const itemIndent = indentLevel(lines[i]);
+    const first = stripped.slice(2).trim();
+
+    if (first.includes(":")) {
+      // Dict item
+      const obj: Record<string, unknown> = {};
+      const colonIdx = first.indexOf(":");
+      obj[first.slice(0, colonIdx).trim()] = parseYamlValue(first.slice(colonIdx + 1).trim());
+      let j = i + 1;
+      while (j < lines.length) {
+        const nextLine = lines[j];
+        const ns = nextLine.trim();
+        if (!ns) { j++; continue; }
+        if (indentLevel(nextLine) > itemIndent && !ns.startsWith("- ")) {
+          if (ns.includes(":")) {
+            const ci = ns.indexOf(":");
+            obj[ns.slice(0, ci).trim()] = parseYamlValue(ns.slice(ci + 1).trim());
+          }
+          j++;
+        } else {
+          break;
+        }
+      }
+      items.push(obj);
+      i = j;
+    } else {
+      items.push(parseYamlValue(first));
+      i++;
+    }
+  }
+  return items;
+}
+
+// ---------------------------------------------------------------------------
+// YAML serializer (writes native YAML for markdown frontmatter)
+// ---------------------------------------------------------------------------
+
+/**
+ * Serialize an AKFUnit as native YAML for markdown frontmatter.
+ * Produces human-readable, Obsidian/Dataview-friendly output.
+ */
+function akfToYaml(unit: AKFUnit): string {
+  const obj = JSON.parse(toJSON(unit));
+  const lines = ["akf:"];
+  dictToYaml(obj, lines, 2, 2);
+  return lines.join("\n");
+}
+
+function dictToYaml(d: Record<string, unknown>, lines: string[], base: number, step: number): void {
+  const prefix = " ".repeat(base);
+  for (const [key, val] of Object.entries(d)) {
+    if (val === undefined || val === null) continue;
+    if (typeof val === "object" && !Array.isArray(val)) {
+      lines.push(`${prefix}${key}:`);
+      dictToYaml(val as Record<string, unknown>, lines, base + step, step);
+    } else if (Array.isArray(val)) {
+      if (val.length === 0) {
+        lines.push(`${prefix}${key}: []`);
+      } else if (typeof val[0] === "object" && val[0] !== null) {
+        lines.push(`${prefix}${key}:`);
+        listOfDictsToYaml(val as Record<string, unknown>[], lines, base + step, step);
+      } else {
+        const items = val.map((v) => yamlScalar(v)).join(", ");
+        lines.push(`${prefix}${key}: [${items}]`);
+      }
+    } else {
+      lines.push(`${prefix}${key}: ${yamlScalar(val)}`);
+    }
+  }
+}
+
+function listOfDictsToYaml(items: Record<string, unknown>[], lines: string[], base: number, step: number): void {
+  const prefix = " ".repeat(base);
+  for (const item of items) {
+    let first = true;
+    for (const [key, val] of Object.entries(item)) {
+      if (val === undefined || val === null) continue;
+      if (first) {
+        if (typeof val === "object" && !Array.isArray(val)) {
+          lines.push(`${prefix}- ${key}:`);
+          dictToYaml(val as Record<string, unknown>, lines, base + step + 2, step);
+        } else {
+          lines.push(`${prefix}- ${key}: ${yamlScalar(val)}`);
+        }
+        first = false;
+      } else {
+        const innerPrefix = " ".repeat(base + 2);
+        if (typeof val === "object" && !Array.isArray(val)) {
+          lines.push(`${innerPrefix}${key}:`);
+          dictToYaml(val as Record<string, unknown>, lines, base + step + 2, step);
+        } else if (Array.isArray(val)) {
+          if (val.length > 0 && typeof val[0] === "object") {
+            lines.push(`${innerPrefix}${key}:`);
+            listOfDictsToYaml(val as Record<string, unknown>[], lines, base + step + 2, step);
+          } else {
+            const s = val.map((v) => yamlScalar(v)).join(", ");
+            lines.push(`${innerPrefix}${key}: [${s}]`);
+          }
+        } else {
+          lines.push(`${innerPrefix}${key}: ${yamlScalar(val)}`);
+        }
+      }
+    }
+  }
+}
+
+function yamlScalar(val: unknown): string {
+  if (typeof val === "boolean") return val ? "true" : "false";
+  if (typeof val === "number") return String(val);
+  if (val === null || val === undefined) return "null";
+  const s = String(val);
+  // Quote strings that look like numbers to prevent YAML type coercion
+  if (/^-?\d+(\.\d+)?$/.test(s)) return `"${s}"`;
+  if (/[:{}\[\],&*?|<>=!%@`#\-]/.test(s) || /^(true|false|null|~|yes|no|on|off)$/i.test(s)) {
+    return `"${s.replace(/"/g, '\\"')}"`;
+  }
+  if (!s) return '""';
+  return s;
+}
+
+/**
+ * Strip akf: and _akf: lines (and their indented children) from frontmatter.
+ */
+function stripAKFLines(lines: string[]): string[] {
+  const result: string[] = [];
+  let skipping = false;
+  let skipIndent = 0;
+
+  for (const line of lines) {
+    const stripped = line.trim();
+    if (stripped.startsWith("akf:") || stripped.startsWith("_akf:")) {
+      skipping = true;
+      skipIndent = indentLevel(line);
+      continue;
+    }
+    if (skipping) {
+      if (stripped === "" || indentLevel(line) > skipIndent) {
+        continue; // Skip indented children of akf block
+      }
+      skipping = false;
+    }
+    result.push(line);
+  }
+  return result;
+}
+
+// ---------------------------------------------------------------------------
 // Read / Extract
 // ---------------------------------------------------------------------------
 
@@ -63,15 +351,10 @@ export function read(filepath: string): AKFUnit {
     const content = readFileSync(filepath, "utf-8");
     const match = content.match(/^---\n([\s\S]*?)\n---/);
     if (match) {
-      // Simple YAML frontmatter parsing for akf key
-      const fmLines = match[1].split("\n");
-      const akfIdx = fmLines.findIndex((l) => l.startsWith("akf:"));
-      if (akfIdx >= 0) {
-        // Extract indented block after akf:
-        const jsonStr = fmLines[akfIdx].replace("akf:", "").trim();
-        if (jsonStr) {
-          return fromJSON(jsonStr);
-        }
+      const fmBlock = match[1];
+      const parsed = parseAKFFromFrontmatter(fmBlock);
+      if (parsed) {
+        return normalizeUnit(parsed);
       }
     }
     // Fall through to sidecar
@@ -163,20 +446,20 @@ export function embed(filepath: string, unitOrOpts: AKFUnit | EmbedOptions): voi
     if (existsSync(filepath)) {
       content = readFileSync(filepath, "utf-8");
     }
-    const compactJson = toJSON(unit);
+    const akfYaml = akfToYaml(unit);
     // Check if frontmatter exists
     if (content.startsWith("---\n")) {
       const endIdx = content.indexOf("\n---", 4);
       if (endIdx > 0) {
         const frontmatter = content.slice(4, endIdx);
         const rest = content.slice(endIdx + 4);
-        // Replace or add akf key
-        const lines = frontmatter.split("\n").filter((l) => !l.startsWith("akf:"));
-        lines.push(`akf: ${compactJson}`);
+        // Remove existing akf/_ akf lines and their indented children
+        const lines = stripAKFLines(frontmatter.split("\n"));
+        lines.push(akfYaml);
         content = `---\n${lines.join("\n")}\n---${rest}`;
       }
     } else {
-      content = `---\nakf: ${compactJson}\n---\n${content}`;
+      content = `---\n${akfYaml}\n---\n${content}`;
     }
     writeFileSync(filepath, content, "utf-8");
     return;

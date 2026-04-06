@@ -1,5 +1,6 @@
 ---
-_akf: '{"classification":"internal"}'
+akf:
+  classification: internal
 ---
 # AKF SDK v2.0 — Product Specification
 
