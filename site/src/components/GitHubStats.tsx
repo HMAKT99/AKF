@@ -2,14 +2,12 @@ import { useState, useEffect } from 'react';
 
 const GITHUB_REPO = 'HMAKT99/AKF';
 const NPM_PACKAGE = 'akf-format';
-const PYPI_PACKAGE = 'akf';
 
 interface Stats {
   stars: number;
   forks: number;
   issues: number;
   npmDownloads: number;
-  pypiDownloads: number;
   watchers: number;
   contributors: number;
 }
@@ -38,10 +36,9 @@ export default function GitHubStats() {
 
     async function fetchStats() {
       try {
-        const [ghRes, npmRes, pypiRes, contribRes] = await Promise.allSettled([
+        const [ghRes, npmRes, contribRes] = await Promise.allSettled([
           fetch(`https://api.github.com/repos/${GITHUB_REPO}`),
           fetch(`https://api.npmjs.org/downloads/point/last-month/${NPM_PACKAGE}`),
-          fetch(`https://pypistats.org/api/packages/${PYPI_PACKAGE}/recent`),
           fetch(`https://api.github.com/repos/${GITHUB_REPO}/contributors?per_page=1&anon=true`, {
             headers: { Accept: 'application/json' },
           }),
@@ -56,10 +53,6 @@ export default function GitHubStats() {
         const npm =
           npmRes.status === 'fulfilled' && npmRes.value.ok
             ? await npmRes.value.json()
-            : null;
-        const pypi =
-          pypiRes.status === 'fulfilled' && pypiRes.value.ok
-            ? await pypiRes.value.json()
             : null;
 
         // Get contributor count from Link header
@@ -80,7 +73,6 @@ export default function GitHubStats() {
           forks: gh?.forks_count ?? 0,
           issues: gh?.open_issues_count ?? 0,
           npmDownloads: npm?.downloads ?? 0,
-          pypiDownloads: pypi?.data?.last_month ?? 0,
           watchers: gh?.subscribers_count ?? 0,
           contributors: contributorCount,
         });
@@ -109,7 +101,7 @@ export default function GitHubStats() {
     );
   }
 
-  const totalDownloads = stats.npmDownloads + stats.pypiDownloads;
+  const totalDownloads = stats.npmDownloads;
 
   return (
     <div className="flex justify-center py-6">
@@ -139,7 +131,7 @@ export default function GitHubStats() {
             </svg>
           }
           value={formatNumber(totalDownloads)}
-          label="Downloads/mo"
+          label="npm Downloads/mo"
         />
         <StatItem
           icon={
