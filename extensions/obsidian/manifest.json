@@ -1,0 +1,9 @@
+{
+  "id": "akf-obsidian",
+  "name": "AKF — Agent Knowledge Format",
+  "version": "0.1.0",
+  "minAppVersion": "1.4.0",
+  "description": "Read, stamp, and visualize AKF trust metadata in your Obsidian notes. EXIF for AI.",
+  "author": "AKF Project",
+  "isDesktopOnly": false
+}

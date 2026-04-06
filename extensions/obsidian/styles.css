@@ -1,0 +1,289 @@
+/* AKF Obsidian Plugin Styles */
+
+/* ── Status Bar ────────────────────────────────────────────────── */
+
+.akf-status-bar {
+  cursor: pointer;
+  padding: 0 6px;
+}
+
+.akf-status-bar:hover {
+  background: var(--background-modifier-hover);
+  border-radius: 4px;
+}
+
+/* ── Sidebar ───────────────────────────────────────────────────── */
+
+.akf-sidebar {
+  padding: 12px;
+}
+
+.akf-sidebar-header h3 {
+  margin: 0 0 4px 0;
+  font-size: 1.1em;
+}
+
+.akf-source-badge {
+  font-size: 0.75em;
+  color: var(--text-muted);
+}
+
+.akf-empty-message {
+  color: var(--text-muted);
+  font-style: italic;
+  margin-top: 20px;
+  text-align: center;
+}
+
+.akf-empty-hint {
+  font-size: 0.8em;
+  color: var(--text-faint);
+  text-align: center;
+}
+
+/* ── Trust Badge ───────────────────────────────────────────────── */
+
+.akf-sidebar-section {
+  margin: 12px 0;
+}
+
+.akf-trust-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+.akf-trust-high {
+  background: rgba(34, 197, 94, 0.12);
+  color: #22c55e;
+}
+
+.akf-trust-medium {
+  background: rgba(234, 179, 8, 0.12);
+  color: #eab308;
+}
+
+.akf-trust-low {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+}
+
+.akf-trust-emoji {
+  font-size: 1.3em;
+}
+
+.akf-trust-score {
+  font-family: var(--font-monospace);
+}
+
+.akf-trust-label {
+  font-size: 0.8em;
+  opacity: 0.8;
+}
+
+/* ── Classification Pill ───────────────────────────────────────── */
+
+.akf-classification-pill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.7em;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #fff;
+}
+
+/* ── Info Section ──────────────────────────────────────────────── */
+
+.akf-info-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.akf-info-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85em;
+}
+
+.akf-info-label {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.akf-info-value {
+  color: var(--text-normal);
+  font-family: var(--font-monospace);
+  font-size: 0.9em;
+}
+
+/* ── Claims ────────────────────────────────────────────────────── */
+
+.akf-claim-card {
+  padding: 10px;
+  margin: 8px 0;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-secondary);
+}
+
+.akf-claim-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.akf-claim-trust {
+  font-family: var(--font-monospace);
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+.akf-ai-badge {
+  font-size: 0.7em;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(139, 92, 246, 0.15);
+  color: #8b5cf6;
+}
+
+.akf-verified-badge {
+  font-size: 0.7em;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.akf-claim-content {
+  font-size: 0.9em;
+  margin: 4px 0;
+  line-height: 1.4;
+}
+
+.akf-claim-source {
+  font-size: 0.8em;
+  color: var(--text-muted);
+  margin: 2px 0;
+}
+
+/* ── Evidence ──────────────────────────────────────────────────── */
+
+.akf-evidence-list {
+  margin: 4px 0;
+  padding-left: 16px;
+  font-size: 0.8em;
+}
+
+.akf-evidence-item {
+  margin: 2px 0;
+  color: var(--text-muted);
+}
+
+.akf-evidence-type {
+  font-weight: 600;
+  text-transform: capitalize;
+  color: var(--text-normal);
+}
+
+/* ── Tags ──────────────────────────────────────────────────────── */
+
+.akf-tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.akf-tag {
+  font-size: 0.7em;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--background-modifier-border);
+  color: var(--text-muted);
+}
+
+/* ── Provenance Timeline ───────────────────────────────────────── */
+
+.akf-provenance-timeline {
+  position: relative;
+  padding-left: 20px;
+}
+
+.akf-provenance-timeline::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--background-modifier-border);
+}
+
+.akf-prov-entry {
+  position: relative;
+  margin: 10px 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.akf-prov-dot {
+  position: absolute;
+  left: -16px;
+  top: 4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--interactive-accent);
+  border: 2px solid var(--background-primary);
+  z-index: 1;
+}
+
+.akf-prov-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.85em;
+}
+
+.akf-prov-time {
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+
+.akf-prov-model {
+  font-size: 0.8em;
+  color: var(--text-faint);
+  font-family: var(--font-monospace);
+}
+
+.akf-prov-penalty {
+  font-size: 0.8em;
+  color: #ef4444;
+  font-weight: 600;
+}
+
+/* ── Stamp Modal ───────────────────────────────────────────────── */
+
+.akf-stamp-modal {
+  min-width: 400px;
+}
+
+.akf-stamp-preview {
+  margin: 12px 0;
+  padding: 8px 12px;
+  border-left: 4px solid var(--text-muted);
+  border-radius: 2px;
+  font-size: 0.85em;
+  color: var(--text-muted);
+  background: var(--background-secondary);
+}

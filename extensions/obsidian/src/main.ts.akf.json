@@ -1,0 +1,34 @@
+{
+  "akf": "1.0",
+  "mode": "sidecar",
+  "target_file": "main.ts",
+  "generated_at": "2026-04-04T11:19:13.973878+00:00",
+  "v": "1.0",
+  "claims": [
+    {
+      "c": "Trust metadata for extensions/obsidian/src/main.ts",
+      "t": 0.7,
+      "id": "9efc6550",
+      "src": "unspecified",
+      "tier": 5,
+      "ver": false,
+      "ai": true,
+      "evidence": [
+        {
+          "type": "other",
+          "detail": "full plugin skeleton, builds clean, zero type errors",
+          "at": "2026-04-04T11:19:13.973481+00:00"
+        }
+      ]
+    }
+  ],
+  "id": "akf-a010880444d0",
+  "agent": "claude-code",
+  "at": "2026-04-04T11:19:13.973758+00:00",
+  "label": "internal",
+  "inherit": true,
+  "ext": false,
+  "hash": "sha256:b87f47933d31bbfc",
+  "sv": "1.1",
+  "integrity_hash": "sha256:b87f47933d31bbfccc6ea9333da1d567499b3f69b704d3bf7241e8c11eb0936e"
+}
