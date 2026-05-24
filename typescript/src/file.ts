@@ -501,7 +501,8 @@ export interface StampOptions {
   claims?: Array<string | Partial<Claim>>;
   trustScore?: number;
   classification?: string;
-  evidence?: string[];
+  /** Evidence strings. A single string is accepted and wrapped automatically. */
+  evidence?: string | string[];
 }
 
 /**
@@ -515,8 +516,23 @@ export function stampFile(filepath: string, options: StampOptions = {}): AKFUnit
     claims: rawClaims = [],
     trustScore = 0.7,
     classification,
-    evidence,
+    evidence: rawEvidence,
   } = options;
+
+  let evidence: string[] | undefined;
+  if (rawEvidence !== undefined) {
+    if (typeof rawEvidence === "string") {
+      evidence = [rawEvidence];
+    } else if (Array.isArray(rawEvidence)) {
+      evidence = rawEvidence;
+    } else {
+      throw new TypeError(
+        `stampFile: 'evidence' must be a string or string[], got ${
+          rawEvidence === null ? "null" : typeof rawEvidence
+        }`
+      );
+    }
+  }
 
   const claims: Partial<Claim>[] = rawClaims.map((c) => {
     const base = typeof c === "string"

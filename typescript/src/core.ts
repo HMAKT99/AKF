@@ -59,12 +59,27 @@ export function stripNulls<T>(obj: T): T {
 // Create
 // ---------------------------------------------------------------------------
 
+function assertConfidence(t: unknown, label: string): asserts t is number {
+  if (typeof t !== "number" || !Number.isFinite(t) || t < 0 || t > 1) {
+    const hint =
+      t !== null && typeof t === "object"
+        ? " — did you mean create(content, confidence, options)?"
+        : "";
+    throw new TypeError(
+      `${label} must be a finite number in [0, 1], got ${
+        t === null ? "null" : typeof t
+      }${hint}`
+    );
+  }
+}
+
 /** Create a single-claim AKF unit. */
 export function create(
   content: string,
   t: number,
   opts?: Partial<Omit<Claim, "c" | "t">>
 ): AKFUnit {
+  assertConfidence(t, "create: 'confidence' (2nd arg)");
   const claim: Claim = {
     c: content,
     t,
@@ -84,12 +99,16 @@ export function createMulti(
   claims: Partial<Claim>[],
   envelope?: Partial<Omit<AKFUnit, "v" | "claims">>
 ): AKFUnit {
-  const claimObjects: Claim[] = claims.map((c) => ({
-    ...c,
-    c: c.c || "",
-    t: c.t ?? 0.7,
-    id: c.id || shortId(),
-  }));
+  const claimObjects: Claim[] = claims.map((c, i) => {
+    const t = c.t ?? 0.7;
+    assertConfidence(t, `createMulti: claims[${i}].t`);
+    return {
+      ...c,
+      c: c.c || "",
+      t,
+      id: c.id || shortId(),
+    };
+  });
   return {
     v: AKF_VERSION,
     claims: claimObjects,

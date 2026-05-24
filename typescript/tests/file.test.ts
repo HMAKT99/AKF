@@ -105,6 +105,25 @@ describe("stampFile", () => {
     const sidecarContent = JSON.parse(readFileSync(sidecar, "utf-8"));
     expect(sidecarContent.claims.length).toBe(1);
   });
+
+  it("should accept a single evidence string (issue #101)", () => {
+    const filepath = join(tmpDir, "ev.md");
+    writeFileSync(filepath, "# Hello\n", "utf-8");
+    const unit = stampFile(filepath, { agent: "test", evidence: "tests pass" });
+    const ev = unit.claims[0].evidence;
+    expect(Array.isArray(ev)).toBe(true);
+    expect(ev!.length).toBe(1);
+    expect(ev![0].detail).toBe("tests pass");
+  });
+
+  it("should reject non-string non-array evidence with a clear error", () => {
+    const filepath = join(tmpDir, "ev.md");
+    writeFileSync(filepath, "# Hello\n", "utf-8");
+    expect(() =>
+      // @ts-expect-error — runtime check for JS callers
+      stampFile(filepath, { evidence: 42 })
+    ).toThrowError(/'evidence' must be a string or string\[\]/);
+  });
 });
 
 // ---------------------------------------------------------------------------
