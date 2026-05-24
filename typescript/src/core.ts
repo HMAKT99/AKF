@@ -65,6 +65,11 @@ export function create(
   t: number,
   opts?: Partial<Omit<Claim, "c" | "t">>
 ): AKFUnit {
+  if (typeof t !== "number" || !Number.isFinite(t) || t < 0 || t > 1) {
+    throw new TypeError(
+      `create: 'confidence' must be a finite number in [0, 1] (got ${typeof t}: ${JSON.stringify(t)})`
+    );
+  }
   const claim: Claim = {
     c: content,
     t,

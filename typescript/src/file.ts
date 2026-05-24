@@ -542,7 +542,12 @@ export function stampFile(filepath: string, options: StampOptions = {}): AKFUnit
   }
 
   // Add evidence to claims if provided
-  if (evidence && evidence.length > 0) {
+  if (evidence != null) {
+    if (!Array.isArray(evidence)) {
+      throw new TypeError(
+        `stampFile: 'evidence' must be an array of strings or evidence objects (got ${typeof evidence})`
+      );
+    }
     const evidenceObjs = evidence.map((e) => ({
       type: detectEvidenceType(e),
       detail: e,
