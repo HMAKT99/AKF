@@ -323,9 +323,11 @@ def _extract_agent_id(filepath: str) -> Optional[str]:
     if agent:
         return agent
 
-    # Try made_by
+    # Try made_by (can be a string or a dict)
     made_by = meta.get("made_by", meta.get("by"))
-    if made_by:
+    if isinstance(made_by, str):
+        return made_by
+    if isinstance(made_by, dict):
         return made_by.get("agent", made_by.get("a"))
 
     return None
