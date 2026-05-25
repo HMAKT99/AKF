@@ -4,6 +4,11 @@ All notable changes to `akf-format` will be documented in this file.
 
 This project follows [semantic versioning](https://semver.org/).
 
+## [1.2.11] — 2026-05-25
+
+### Fixed
+- Markdown stamp → extract roundtrip on `.md` files with nested-list values (e.g. `evidence`) — the YAML parser was bubbling nested list items up into the parent list and silently dropping item-level keys that came after a nested list. Affected the headline format (used by the Obsidian plugin and every README demo). — #105
+
 ## [1.2.10] — 2026-05-24
 
 ### Fixed

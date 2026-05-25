@@ -124,6 +124,46 @@ describe("stampFile", () => {
       stampFile(filepath, { evidence: 42 })
     ).toThrowError(/'evidence' must be a string or string\[\]/);
   });
+
+  it("should roundtrip markdown stamp -> extract with nested-list values (issue #105)", () => {
+    const filepath = join(tmpDir, "roundtrip.md");
+    writeFileSync(filepath, "# Hello\n", "utf-8");
+    const stamped = stampFile(filepath, { agent: "rt", evidence: "tests pass" });
+
+    const extracted = extract(filepath);
+    expect(extracted).not.toBeNull();
+    expect(extracted!.claims.length).toBe(1);
+    const ev = extracted!.claims[0].evidence;
+    expect(Array.isArray(ev)).toBe(true);
+    expect(ev!.length).toBe(1);
+    expect(ev![0].detail).toBe("tests pass");
+    expect(extracted!.claims[0].id).toBe(stamped.claims[0].id);
+  });
+
+  it("should roundtrip markdown with multiple claims, each carrying nested evidence (issue #105)", () => {
+    const filepath = join(tmpDir, "multi.md");
+    writeFileSync(filepath, "# X\n", "utf-8");
+    const unit = createMulti([
+      {
+        c: "A",
+        t: 0.9,
+        evidence: [
+          { type: "test_pass", detail: "a1", at: "2026-01-01T00:00:00Z" },
+          { type: "human_review", detail: "a2", at: "2026-01-01T00:00:00Z" },
+        ],
+      },
+      { c: "B", t: 0.5 },
+    ]);
+    embed(filepath, unit);
+
+    const x = extract(filepath);
+    expect(x!.claims.length).toBe(2);
+    expect(x!.claims[0].evidence!.length).toBe(2);
+    expect(x!.claims[0].evidence![0].detail).toBe("a1");
+    expect(x!.claims[0].evidence![1].detail).toBe("a2");
+    expect(x!.claims[1].c).toBe("B");
+    expect(x!.claims[1].evidence).toBeUndefined();
+  });
 });
 
 // ---------------------------------------------------------------------------
