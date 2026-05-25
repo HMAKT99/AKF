@@ -36,6 +36,20 @@ describe("create", () => {
     expect(unit.claims[0].id).toBeDefined();
     expect(typeof unit.claims[0].id).toBe("string");
   });
+
+  it("should reject an options object passed as confidence (issue #100)", () => {
+    expect(() =>
+      // @ts-expect-error — runtime check for users without TS types
+      create("text", { confidence: 0.9, source: "src" })
+    ).toThrowError(/did you mean create\(content, confidence, options\)/);
+  });
+
+  it("should reject confidence outside [0, 1]", () => {
+    expect(() => create("text", 1.5)).toThrowError(/finite number in \[0, 1\]/);
+    expect(() => create("text", -0.1)).toThrowError(/finite number in \[0, 1\]/);
+    // @ts-expect-error — runtime check
+    expect(() => create("text", NaN)).toThrowError(/finite number/);
+  });
 });
 
 describe("createMulti", () => {

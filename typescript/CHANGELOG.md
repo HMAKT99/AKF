@@ -4,6 +4,13 @@ All notable changes to `akf-format` will be documented in this file.
 
 This project follows [semantic versioning](https://semver.org/).
 
+## [1.2.10] — 2026-05-24
+
+### Fixed
+- `create()` now throws a clear `TypeError` when the second argument is not a finite number in `[0, 1]` (was silently producing units that broke `effectiveTrust`) — #100
+- `stampFile()` now accepts a single evidence string and auto-wraps it into an array; non-string non-array values throw a clear validation error (was throwing a cryptic `evidence.map is not a function`) — #101
+- `createMulti()` validates each claim's `t` value with the same rules as `create()`
+
 ## [1.2.1] — 2026-03-19
 
 ### Fixed
