@@ -168,39 +168,43 @@ function parseYamlList(lines: string[]): unknown[] {
   let i = 0;
 
   while (i < lines.length) {
-    const stripped = lines[i].trim();
+    const line = lines[i];
+    const stripped = line.trim();
     if (!stripped) { i++; continue; }
     if (!stripped.startsWith("- ")) { i++; continue; }
 
-    const itemIndent = indentLevel(lines[i]);
+    const itemIndent = indentLevel(line);
     const first = stripped.slice(2).trim();
 
-    if (first.includes(":")) {
-      // Dict item
-      const obj: Record<string, unknown> = {};
-      const colonIdx = first.indexOf(":");
-      obj[first.slice(0, colonIdx).trim()] = parseYamlValue(first.slice(colonIdx + 1).trim());
-      let j = i + 1;
-      while (j < lines.length) {
-        const nextLine = lines[j];
-        const ns = nextLine.trim();
-        if (!ns) { j++; continue; }
-        if (indentLevel(nextLine) > itemIndent && !ns.startsWith("- ")) {
-          if (ns.includes(":")) {
-            const ci = ns.indexOf(":");
-            obj[ns.slice(0, ci).trim()] = parseYamlValue(ns.slice(ci + 1).trim());
-          }
-          j++;
-        } else {
-          break;
-        }
+    // Gather every continuation line that belongs to this item:
+    // anything indented strictly deeper than the dash, plus interleaved blanks.
+    const childLines: string[] = [];
+    let j = i + 1;
+    while (j < lines.length) {
+      const next = lines[j];
+      const ns = next.trim();
+      if (!ns) { childLines.push(next); j++; continue; }
+      if (indentLevel(next) > itemIndent) {
+        childLines.push(next);
+        j++;
+      } else {
+        break;
       }
-      items.push(obj);
-      i = j;
+    }
+
+    if (first.includes(":")) {
+      // Dict item. Synthesize the first KV as a line at the same indent as the
+      // continuation children, then let parseYamlBlock handle the whole item —
+      // that way nested objects, nested lists, and KVs after a nested list all
+      // parse correctly (without re-implementing the YAML state machine here).
+      const refLine = childLines.find((l) => l.trim() !== "");
+      const childIndent = refLine !== undefined ? indentLevel(refLine) : itemIndent + 2;
+      const blockLines = [" ".repeat(childIndent) + first, ...childLines];
+      items.push(parseYamlBlock(blockLines));
     } else {
       items.push(parseYamlValue(first));
-      i++;
     }
+    i = j;
   }
   return items;
 }
