@@ -520,12 +520,16 @@ def _trust_bar(count, total, width=20):
 
 @main.command("scan")
 @click.argument("file_or_dir", type=click.Path(exists=True))
-@click.option("--recursive", "-r", is_flag=True, default=True, help="Scan directories recursively (default: on)")
-@click.option("--no-recursive", is_flag=True, help="Scan only top-level files in directory")
+@click.option(
+    "--recursive/--no-recursive",
+    "-r/-R",
+    default=True,
+    help="Scan directories recursively (default: on; --no-recursive scans top-level only)",
+)
 @click.option("--max-files", "-n", default=10000, type=int, help="Maximum files to scan (default: 10000)")
 @click.option("--output", "-o", type=click.Path(), help="Export report (.html, .json, .csv, .md, .pdf)")
 @click.option("--open", "open_report", is_flag=True, help="Open report in browser after export")
-def scan_cmd(file_or_dir, recursive, no_recursive, max_files, output, open_report) -> None:
+def scan_cmd(file_or_dir, recursive, max_files, output, open_report) -> None:
     """Security scan any file or directory for AKF metadata."""
     from . import universal as akf_u
     from pathlib import Path
@@ -534,9 +538,6 @@ def scan_cmd(file_or_dir, recursive, no_recursive, max_files, output, open_repor
     if output:
         _export_report(file_or_dir, output, open_report, "scan")
         return
-
-    if no_recursive:
-        recursive = False
 
     target = Path(file_or_dir)
     if target.is_dir():
