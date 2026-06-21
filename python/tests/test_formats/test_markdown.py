@@ -129,6 +129,46 @@ class TestEmbedExtractWithFrontmatter:
         assert result is not None
         assert result["overall_trust"] == 0.9
 
+    def test_claim_with_nested_evidence_list_round_trips(
+        self, handler: MarkdownHandler, tmp_md
+    ) -> None:
+        # Regression: a claim carrying a nested ``evidence`` list of dicts must
+        # round-trip as a single claim. Previously the nested ``- `` lines leaked
+        # back into the claims sequence as bogus sibling claims (missing c/t),
+        # which crashed read/inspect/trust on every evidence-stamped Markdown file.
+        filepath = tmp_md("# Hello\n")
+        metadata = {
+            "akf": "1.0",
+            "claims": [
+                {
+                    "c": "Trust metadata for doc",
+                    "t": 0.7,
+                    "tier": 5,
+                    "ai": True,
+                    "evidence": [
+                        {
+                            "type": "other",
+                            "detail": "roundtrip test",
+                            "at": "2026-06-21T00:00:00+00:00",
+                        }
+                    ],
+                }
+            ],
+        }
+
+        handler.embed(filepath, metadata)
+        result = handler.extract(filepath)
+
+        assert result is not None
+        assert len(result["claims"]) == 1
+        claim = result["claims"][0]
+        assert claim["c"] == "Trust metadata for doc"
+        assert claim["t"] == 0.7
+        assert isinstance(claim["evidence"], list)
+        assert len(claim["evidence"]) == 1
+        assert claim["evidence"][0]["type"] == "other"
+        assert claim["evidence"][0]["detail"] == "roundtrip test"
+
 
 # --------------------------------------------------------------------------
 # is_enriched
