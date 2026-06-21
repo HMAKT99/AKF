@@ -298,7 +298,8 @@ def inspect(file) -> None:
 @main.command()
 @click.argument("file", type=click.Path(exists=True))
 @click.option("--threshold", "-t", default=0.6, type=float, help="Trust threshold")
-def trust(file, threshold) -> None:
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON")
+def trust(file, threshold, as_json) -> None:
     """Compute effective trust for all claims."""
     from . import universal as akf_u
     meta = akf_u.extract(file)
@@ -307,6 +308,25 @@ def trust(file, threshold) -> None:
     else:
         unit = load(file)
     results = compute_all(unit)
+
+    if as_json:
+        payload = {
+            "file": file,
+            "threshold": threshold,
+            "claims": [
+                {
+                    "content": claim.content,
+                    "decision": result.decision,
+                    "score": round(result.score, 4),
+                    "confidence": claim.confidence,
+                    "tier": claim.authority_tier or 3,
+                    "breakdown": result.breakdown,
+                }
+                for claim, result in zip(unit.claims, results)
+            ],
+        }
+        click.echo(json.dumps(payload, indent=2, ensure_ascii=False))
+        return
 
     for claim, result in zip(unit.claims, results):
         if result.decision == "ACCEPT":

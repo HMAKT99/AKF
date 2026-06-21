@@ -104,6 +104,16 @@ class TestTrustCmd:
         assert result.exit_code == 0
         assert "ACCEPT" in result.output or "REJECT" in result.output
 
+    def test_trust_json(self, runner, sample_file):
+        result = runner.invoke(main, ["trust", sample_file, "--json"])
+        assert result.exit_code == 0
+        payload = json.loads(result.output)
+        assert payload["file"] == sample_file
+        assert isinstance(payload["claims"], list) and payload["claims"]
+        claim = payload["claims"][0]
+        assert set(claim) >= {"content", "decision", "score", "confidence", "tier", "breakdown"}
+        assert claim["decision"] in {"ACCEPT", "LOW", "REJECT"}
+
 
 class TestConsumeCmd:
     def test_consume(self, runner, sample_file):
