@@ -278,7 +278,7 @@ def read(filepath):
         return meta
 
 
-__version__ = "1.2.11"
+__version__ = "1.4.0"
 __all__ = [
     # Models
     "AKF",
