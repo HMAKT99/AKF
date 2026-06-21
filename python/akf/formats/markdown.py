@@ -196,26 +196,24 @@ def _parse_yaml_list(lines: List[str]) -> List[Any]:
         first = stripped[2:].strip()
 
         if ":" in first:
-            # Dict item starting on this line
-            obj: Dict[str, Any] = {}
-            k, v = first.split(":", 1)
-            obj[k.strip()] = _parse_yaml_value(v.strip())
-            # Collect continuation lines at deeper indent
+            # Dict item. Reconstruct the item body (the inline ``key: val`` plus
+            # every deeper-indented continuation line) and delegate to the block
+            # parser. This keeps nested structures owned by the item — e.g. a
+            # claim's ``evidence:`` list — instead of letting their ``- `` lines
+            # leak back into this sequence as bogus sibling items.
+            body_lines = [" " * (item_indent + 2) + first]
             j = i + 1
             while j < len(lines):
                 next_line = lines[j]
                 if not next_line.strip():
                     j += 1
                     continue
-                if _indent_level(next_line) > item_indent and not next_line.strip().startswith("- "):
-                    ns = next_line.strip()
-                    if ":" in ns:
-                        ck, cv = ns.split(":", 1)
-                        obj[ck.strip()] = _parse_yaml_value(cv.strip())
+                if _indent_level(next_line) > item_indent:
+                    body_lines.append(next_line)
                     j += 1
                 else:
                     break
-            items.append(obj)
+            items.append(_parse_yaml_block(body_lines))
             i = j
         else:
             items.append(_parse_yaml_value(first))
