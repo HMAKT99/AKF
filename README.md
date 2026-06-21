@@ -108,6 +108,30 @@ result = akf.audit("report.akf", regulation="eu_ai_act")
 print(f"Compliant: {result.compliant}")
 ```
 
+**TypeScript / Node.js** (`akf-format`):
+
+```typescript
+import { create, validate, effectiveTrust, stampFile } from 'akf-format';
+
+// Create a trust-stamped unit from any AI output
+const unit = create('Revenue was $4.2B, up 12% YoY', 0.98, {
+  source: 'SEC 10-Q',
+  agent: 'claude-code',
+});
+
+// Validate against the AKF schema
+const { valid } = validate(unit);
+
+// Compute effective trust for a claim
+const trust = effectiveTrust(unit.claims[0]);
+console.log(`valid: ${valid}, score: ${trust.score}, decision: ${trust.decision}`);
+
+// Stamp trust metadata directly into a file (markdown, json, code, …)
+stampFile('report.md', { agent: 'claude-code', evidence: 'tests pass' });
+```
+
+> Full TypeScript API and more examples: [`typescript/README.md`](typescript/README.md).
+
 ## For AI Agents
 
 AKF is designed **agent-first**. One-line APIs for stamping, streaming, and auditing.
