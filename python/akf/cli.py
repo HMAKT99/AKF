@@ -35,47 +35,105 @@ def main(ctx) -> None:
 
 
 @main.command("init")
-@click.option("--git-hooks", is_flag=True, help="Install post-commit hook for akf stamp-commit")
+@click.option("--only", "only", multiple=True,
+              type=click.Choice(["config", "git", "claude", "rules"]),
+              help="Limit setup to specific pieces (repeatable)")
+@click.option("--git-hooks", is_flag=True, hidden=True,
+              help="Deprecated: git hooks are now installed by default")
 @click.option("--agent", help="Default AI agent ID")
 @click.option("--label", "classification", default="internal", help="Default classification")
 @click.option("--path", "target", default=".", type=click.Path(), help="Project root")
-def init_cmd(git_hooks, agent, classification, target) -> None:
-    """Initialize AKF in a project directory."""
+def init_cmd(only, git_hooks, agent, classification, target) -> None:
+    """Wire AKF into a project — config, git hooks, Claude Code hooks, agent rules.
+
+    Default-on: one command sets up everything it can detect, so every
+    commit and every agent-written file carries trust metadata automatically.
+    Idempotent — safe to re-run. Use --only to scope (e.g. --only git).
+    """
+    from . import init_setup
+
     root = Path(target).resolve()
-    akf_dir = root / ".akf"
-    akf_dir.mkdir(exist_ok=True)
+    sections = set(only) if only else {"config", "git", "claude", "rules"}
 
-    config = {
-        "version": "1.0",
-        "classification": classification,
-        "auto_embed": True,
-    }
-    if agent:
-        config["agent"] = agent
+    messages = []
+    if "config" in sections:
+        messages += init_setup.setup_config(root, agent, classification)
+    if "git" in sections:
+        messages += init_setup.setup_git_hooks(root)
+    if "claude" in sections:
+        messages += init_setup.setup_claude(root)
+    if "rules" in sections:
+        messages += init_setup.setup_rules(root)
 
-    config_path = akf_dir / "config.json"
-    config_path.write_text(json.dumps(config, indent=2) + "\n")
-    click.secho(f"Created {config_path}", fg="green")
-
-    if git_hooks:
-        hooks_dir = root / ".git" / "hooks"
-        if not hooks_dir.parent.exists():
-            click.secho("Warning: .git directory not found, skipping hooks", fg="yellow")
-        else:
-            hooks_dir.mkdir(exist_ok=True)
-            hook = hooks_dir / "post-commit"
-            hook.write_text("#!/bin/sh\nakf stamp-commit\n")
-            hook.chmod(0o755)
-            click.secho(f"Installed post-commit hook: {hook}", fg="green")
+    for msg in messages:
+        color = "yellow" if "skipped" in msg else "green"
+        click.secho(f"  {msg}", fg=color)
 
     click.echo()
     click.secho("AKF initialized!", bold=True)
-    click.echo("  Config:  .akf/config.json")
     click.echo()
-    click.echo("Quick start:")
-    click.echo("  akf embed report.docx         # add trust metadata")
-    click.echo("  akf read report.docx           # view trust metadata")
-    click.echo("  akf audit report.docx          # compliance check")
+    click.echo("Using MCP? Register the server:")
+    click.echo(init_setup.MCP_SNIPPET)
+    click.echo()
+    click.echo("The loop:")
+    click.echo("  akf check <file>     # before building on a file")
+    click.echo("  akf stamp <file> --agent <id> --evidence \"tests pass\"")
+
+
+@main.group("hook")
+def hook_group() -> None:
+    """Hook entry points used by akf init (git, Claude Code)."""
+
+
+@hook_group.command("post-commit")
+def hook_post_commit() -> None:
+    """Stamp the HEAD commit with AKF metadata (called by the git hook).
+
+    Never fails: hooks must not break commits.
+    """
+    try:
+        from .git_ops import stamp_commit
+        import subprocess
+
+        subject = subprocess.run(
+            ["git", "log", "-1", "--format=%s"],
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
+
+        agent = None
+        config_path = Path(".akf/config.json")
+        if config_path.exists():
+            try:
+                agent = json.loads(config_path.read_text()).get("agent")
+            except (json.JSONDecodeError, OSError):
+                pass
+
+        stamp_commit(content=subject or "commit", agent=agent)
+    except Exception:
+        pass
+
+
+@hook_group.command("claude")
+def hook_claude() -> None:
+    """Stamp a file written by Claude Code (PostToolUse hook entry point).
+
+    Reads the hook payload from stdin, stamps tool_input.file_path.
+    Always exits 0: a provenance hook must never block the agent.
+    """
+    try:
+        payload = json.load(sys.stdin)
+        filepath = (payload.get("tool_input") or {}).get("file_path")
+        if not filepath or not Path(filepath).is_file():
+            return
+        if filepath.endswith(".akf.json") or "/.git/" in filepath:
+            return
+
+        from .stamp import stamp_file as _stamp_file
+
+        _stamp_file(filepath, agent="claude-code",
+                    claims=[f"Written by Claude Code: {Path(filepath).name}"])
+    except Exception:
+        pass
 
 
 @main.command("read")
