@@ -1,6 +1,6 @@
 {
   "name": "akf-format",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "mcpName": "io.github.HMAKT99/akf",
   "description": "AKF — Agent Knowledge Format SDK for TypeScript",
   "type": "module",
