@@ -215,7 +215,7 @@ export default function GetStartedPage() {
             <span className="text-accent">in 60 seconds.</span>
           </h1>
           <p className="mt-6 text-lg text-text-secondary max-w-2xl mx-auto">
-            One install. Trust scores, evidence, and provenance embed natively into every file your AI produces.
+            One install. Agents stamp what they verify — the next agent runs <code className="text-accent font-mono">akf check</code> and builds on it instead of re-verifying. Trust scores, evidence, and provenance embed natively into every file.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
             <CopyCommand command="pip install akf" />

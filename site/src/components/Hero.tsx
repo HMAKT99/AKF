@@ -36,11 +36,50 @@ function CopyCommand({ command }: { command: string }) {
   );
 }
 
+const AGENT_INSTALL_PROMPT = `Install AKF (pip install akf, or pipx install akf) and set it up: run \`akf init\`.
+From now on:
+- After you create or modify a file, stamp it:
+    akf stamp <file> --agent <your-id> --evidence "<what you verified, e.g. 42/42 tests passed>"
+- Before building on any existing file, check it first:
+    akf check <file>
+  OK = fresh stamp with verified evidence, skip re-verification. STALE/LOW/UNSTAMPED = verify before trusting.
+If you support MCP, also register the server: {"mcpServers":{"akf":{"command":"python","args":["-m","mcp_server_akf"]}}}`;
+
+function CopyAgentPrompt() {
+  const [copied, setCopied] = useState(false);
+
+  function handleCopy() {
+    navigator.clipboard.writeText(AGENT_INSTALL_PROMPT).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  return (
+    <button
+      onClick={handleCopy}
+      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent hover:bg-accent-hover text-white font-medium text-sm transition-colors cursor-pointer"
+      aria-label="Copy the agent install prompt to clipboard"
+    >
+      {copied ? (
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      ) : (
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+        </svg>
+      )}
+      {copied ? 'Copied — paste it to your agent' : 'Copy the agent install prompt'}
+    </button>
+  );
+}
+
 const steps = [
   {
-    title: 'Install once',
-    description: 'One command. Works with Office, git, and every AI agent.',
-    code: 'pip install akf',
+    title: 'Paste to your agent',
+    description: 'Your agent installs AKF and wires up hooks itself — git, Claude Code, rules files.',
+    code: 'akf init',
     icon: (
       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -48,9 +87,9 @@ const steps = [
     ),
   },
   {
-    title: 'It just embeds',
-    description: 'Trust metadata auto-attaches to every file — .docx, .pdf, images, code, and more.',
-    code: 'native format support',
+    title: 'Agents stamp their work',
+    description: 'Every file carries who made it, what was verified, and how much to trust it.',
+    code: 'akf stamp app.py --evidence "42/42 tests passed"',
     icon: (
       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
@@ -58,9 +97,9 @@ const steps = [
     ),
   },
   {
-    title: 'Audit anytime',
-    description: 'Check compliance when you need it — EU AI Act, HIPAA, and more.',
-    code: 'akf audit report.pdf',
+    title: 'Check before you trust',
+    description: 'The next agent checks the stamp instead of re-verifying. One line, ~20 tokens.',
+    code: 'akf check app.py',
     icon: (
       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
@@ -85,7 +124,9 @@ export default function Hero() {
         </h1>
 
         <p className="mt-6 text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto">
-          Trust scores, provenance, and compliance metadata that embed natively into every file your AI touches — DOCX, PDF, images, and code.
+          <span className="text-text-primary font-semibold">A stamp costs ~15 tokens. Re-verifying costs 15,000.</span>
+          <br />
+          Trust metadata that travels with every AI-generated file — so the next agent (or human) knows what it can build on.
         </p>
 
         {/* 3-step workflow */}
@@ -112,6 +153,7 @@ export default function Hero() {
         </div>
 
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <CopyAgentPrompt />
           <CopyCommand command="pip install akf" />
           <CopyCommand command="npm install akf-format" />
         </div>
