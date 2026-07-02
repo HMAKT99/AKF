@@ -1,24 +1,52 @@
+---
+akf:
+  v: "1.0"
+  claims:
+    - c: Trust metadata for CLAUDE.md
+      t: 0.7
+      id: cf117d0c
+      src: unspecified
+      tier: 5
+      ver: false
+      ai: true
+      evidence:
+        - type: other
+          detail: "docs reviewed, protocol matches shipped akf check behavior"
+          at: "2026-07-02T16:52:28.182634+00:00"
+  id: "akf-c8cf5407d8a6"
+  agent: "claude-code"
+  at: "2026-07-02T16:52:28.183459+00:00"
+  label: public
+  inherit: true
+  ext: false
+  hash: "sha256:2cc31b8895ecb034"
+  sv: "1.1"
+---
 # AKF — Agent Knowledge Format
 
-AKF is the trust metadata standard for AI-generated content. When you create or modify files, stamp them with trust metadata so every output carries provenance.
+AKF is the trust metadata standard for AI-generated content. Stamps are notes agents leave for the next agent: what was done, what was verified, and how much to trust it. A stamp costs ~15 tokens; re-verifying costs thousands.
 
-## Rules
+## The protocol
 
-### After creating or modifying files
+### Before building on an existing file — check it
+```bash
+akf check <file>
+```
+- `OK` — fresh stamp with verified evidence. Build on it; skip re-verification.
+- `STALE` — modified after stamping. Re-verify before trusting.
+- `LOW` — stamped but unverified (no test/review evidence). Verify before trusting.
+- `UNSTAMPED` — no metadata. Treat as unverified.
+
+### After creating or modifying files — stamp what you verified
 ```bash
 akf stamp <file> --agent claude-code --evidence "<evidence>"
 ```
-Evidence examples: "tests pass", "docs reviewed", "refactored from existing code", "generated from spec"
+Evidence is auto-classified and drives trust: `"42/42 tests passed"` (test_pass), `"mypy: 0 errors"` (type_check), `"reviewed by @user"` (human_review), `"CI green"` (ci_pass). Only claim evidence you actually observed — a stamp that says tests passed when they didn't poisons every agent that trusts it.
 
-### After completing a task with commits
+### Deeper inspection when needed
 ```bash
-akf stamp <file> --agent claude-code --evidence "<summary of evidence>"
-```
-
-### When working with existing AKF-stamped files
-```bash
-akf read <file>          # Check existing trust metadata before modifying
-akf inspect <file>       # See detailed trust scores
+akf read <file>          # Full trust metadata
+akf inspect <file>       # Pretty-printed trust scores
 ```
 
 ### Classification
@@ -27,6 +55,7 @@ akf inspect <file>       # See detailed trust scores
 - Default is `internal`
 
 ## Available Commands
+- `akf check <file>` — One-line trust check (OK/LOW/STALE/UNSTAMPED, exit codes 0/1/2)
 - `akf stamp <file>` — Add trust metadata to any file
 - `akf read <file>` — Read trust metadata from any file
 - `akf inspect <file>` — Pretty-print trust scores

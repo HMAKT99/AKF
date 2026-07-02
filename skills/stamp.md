@@ -1,12 +1,18 @@
 # Skill: Stamp Trust Metadata
 
-Stamp trust metadata onto any AI-generated output using AKF.
+Stamp trust metadata onto any AI-generated output using AKF. A stamp is a note you leave for the next agent: what you did, what you verified, how much to trust it. It costs ~15 tokens and saves the next session thousands in re-verification.
 
 ## When to use
 
 - After generating content, code, or analysis
 - After completing a task with verifiable evidence
 - When committing code changes
+- Before checking existing files, see the companion skill: `check.md` (`akf check <file>`)
+
+## Rules
+
+- Only claim evidence you actually observed. A stamp saying tests passed when they didn't poisons every agent that trusts it.
+- Stamp with the strongest evidence you have: test runs and human review make the stamp trustworthy (`akf check` → OK); bare stamps stay LOW.
 
 ## Python API
 
