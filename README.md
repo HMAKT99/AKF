@@ -18,9 +18,9 @@ _akf: '{"v":"1.0","claims":[{"c":"Trust metadata for README.md","t":0.7,"id":"19
 <h1 align="center">AKF — The AI Native File Format</h1>
 
 <p align="center">
-  <strong>Trust scores · Source provenance · Security classification · Compliance readiness</strong><br/>
-  Embeds natively into DOCX, PDF, XLSX, images, code, and all major formats.<br/>
-  Think EXIF for AI — ~15 tokens of JSON that travel with your files.
+  <strong>A stamp costs ~15 tokens. Re-verifying costs 15,000.</strong><br/>
+  Think EXIF for AI — trust metadata that travels with every AI-generated file,<br/>
+  so the next agent (or human) knows what it can build on.
 </p>
 
 <p align="center">
@@ -46,38 +46,50 @@ _akf: '{"v":"1.0","claims":[{"c":"Trust metadata for README.md","t":0.7,"id":"19
 
 ---
 
-## The Problem
+## Paste this to your agent
 
-AI generates reports, code, docs, images — and **none of it carries provenance.** Your team opens a file with no idea: Who made it? AI or human? Can we trust it? Is it compliant?
+Don't install AKF yourself — let your agent do it. Paste this into Claude Code, Cursor, OpenClaw, or any coding agent:
 
-**EU AI Act Article 50 takes effect August 2, 2026.** After that, AI-generated content must carry transparency metadata. Penalties: up to EUR 35M / 7% of global turnover.
+```
+Install AKF (pip install akf, or pipx install akf) and set it up: run `akf init --git-hooks`.
+From now on:
+- After you create or modify a file, stamp it:
+    akf stamp <file> --agent <your-id> --evidence "<what you verified, e.g. 42/42 tests passed>"
+- Before building on any existing file, check it first:
+    akf check <file>
+  OK = fresh stamp with verified evidence, skip re-verification. STALE/LOW/UNSTAMPED = verify before trusting.
+If you support MCP, also register the server: {"mcpServers":{"akf":{"command":"python","args":["-m","mcp_server_akf"]}}}
+```
 
-## The Solution
+Your agent installs its own provenance layer — and every file it touches carries trust metadata from then on.
 
-AKF is the **AI native file format** — ~15 tokens of JSON that embed into any file:
+## Why agents need this
 
-| What | How |
+Agents redo work constantly: re-read files, re-run tests, re-derive conclusions — because nothing tells them what was already verified. A stamp is cached verification state:
+
+```console
+# Session 1 — agent fixes auth, tests pass
+$ akf stamp auth.py --agent claude-code --evidence "42/42 tests passed"
+
+# Session 2 — tomorrow, any agent, any tool
+$ akf check auth.py
+OK trust=0.65 agent=claude-code evidence=test_pass age=1d claims=1
+# → build on it, skip re-verification
+
+# Someone edits auth.py without re-testing
+$ akf check auth.py
+STALE trust=0.65 agent=claude-code evidence=test_pass age=1d claims=1 reason=modified_after_stamp
+# → re-verify before trusting (exit code 1 — gate CI or hooks on it)
+```
+
+Stamps are trail markers agents leave for other agents — across sessions, across tools (Claude Code → Cursor → Copilot), across teams. Humans get the same trail: who made this file, AI or human, was it tested, can we trust it.
+
+| What travels with the file | How |
 |------|-----|
-| **Trust score** | 0–1 confidence based on source tier |
+| **Trust score** | 0–1 confidence, weighted by evidence and source tier |
+| **Verification evidence** | tests passed, type check clean, human reviewed — with timestamps |
 | **Source provenance** | SEC filing → analyst → AI agent chain |
 | **Compliance** | One command: `akf audit file --regulation eu_ai_act` |
-
-```
-AI generates content → AKF stamps trust metadata → Anyone can verify it
-```
-
-### vs Alternatives
-
-| | AKF | C2PA | Watermarking | Manual tracking |
-|---|:---:|:---:|:---:|:---:|
-| Works on documents/code | ✅ | ❌ (media only) | ❌ | ⚠️ |
-| No Certificate Authority needed | ✅ | ❌ | ✅ | ✅ |
-| Trust scores | ✅ | ❌ | ❌ | ❌ |
-| Source provenance chain | ✅ | ✅ | ❌ | ⚠️ |
-| Compliance auditing | ✅ | ❌ | ❌ | ❌ |
-| ~15 tokens (LLM-friendly) | ✅ | ❌ | N/A | N/A |
-| 20+ file formats | ✅ | ⚠️ (media) | ⚠️ (text) | ❌ |
-| Free & open source | ✅ | ⚠️ | Varies | ✅ |
 
 ## Quickstart
 
@@ -92,13 +104,19 @@ akf doctor         # Check your install — detects PATH issues and guides setup
 > - Install with pipx: `pipx install akf` (recommended — auto-handles PATH)
 > - **Windows:** use `python3 -m akf` or install via `pipx`
 
+```bash
+# The core loop — stamp what you verified, check before you trust
+akf stamp auth.py --agent claude-code --evidence "42/42 tests passed"
+akf check auth.py        # OK trust=0.65 agent=claude-code evidence=test_pass age=0d
+```
+
 ```python
 import akf
 
-# Stamp trust metadata onto any AI output
-akf.stamp("Revenue was $4.2B, up 12% YoY",
-          confidence=0.98, source="SEC 10-Q",
-          agent="claude-code", model="claude-sonnet-4-20250514")
+# Same loop from Python
+akf.stamp_file("auth.py", agent="claude-code", evidence=["42/42 tests passed"])
+result = akf.check_file("auth.py")
+print(result.summary_line())   # OK trust=0.65 agent=claude-code evidence=test_pass age=0d claims=1
 
 # Embed into Office docs, PDFs, images — any format
 akf.embed("report.docx", claims=[...], classification="confidential")
@@ -134,12 +152,18 @@ stampFile('report.md', { agent: 'claude-code', evidence: 'tests pass' });
 
 ## For AI Agents
 
-AKF is designed **agent-first**. One-line APIs for stamping, streaming, and auditing.
+AKF is designed **agent-first**. One-line APIs for checking, stamping, streaming, and auditing.
 
 ```python
 import akf
 
-# Stamp with evidence (auto-detected: test_pass, type_check, etc.)
+# Check before you trust — can I build on this file without re-verifying?
+result = akf.check_file("auth.py")
+if result.status == "OK":      # fresh stamp, verified evidence
+    ...                        # skip re-verification, save the tokens
+# LOW / STALE / UNSTAMPED → verify before trusting
+
+# Stamp with evidence (auto-detected: test_pass, type_check, human_review, etc.)
 akf.stamp("Fixed auth bypass", kind="code_change",
           evidence=["42/42 tests passed", "mypy: 0 errors"],
           agent="claude-code", model="claude-sonnet-4-20250514")
@@ -216,7 +240,7 @@ pip install ./packages/mcp-server-akf
 }
 ```
 
-**9 MCP tools:** `create_claim` · `validate_file` · `scan_file` · `trust_score` · `stamp_file` · `audit_file` · `embed_file` · `extract_file` · `detect_threats`
+**10 MCP tools:** `check_file` · `create_claim` · `validate_file` · `scan_file` · `trust_score` · `stamp_file` · `audit_file` · `embed_file` · `extract_file` · `detect_threats`
 
 ## Ambient Trust
 
@@ -230,7 +254,7 @@ AKF works where AI agents work. Drop a config file, and every AI-generated file 
 | **GitHub Copilot** | Reads `.github/copilot-instructions.md` (native) + shell hook for CLI |
 | **OpenAI Codex** | Reads `AGENTS.md` — stamps files in cloud sandbox and local |
 | **Manus / Other Agents** | MCP server + shell hook — works with any agent that supports MCP or CLI |
-| **Any MCP agent** | 9 MCP tools — stamp, audit, embed, extract, detect, validate, scan, trust, create |
+| **Any MCP agent** | 10 MCP tools — check, stamp, audit, embed, extract, detect, validate, scan, trust, create |
 | **Any CLI tool** | `eval "$(akf shell-hook)"` — intercepts `claude`, `chatgpt`, `aider`, `openclaw`, `ollama`, `manus` |
 
 **The trust pipeline:**
@@ -259,6 +283,7 @@ AKF provides [agent skill files](skills/) that AI agents can discover and use. D
 
 | Skill | What it does |
 |-------|-------------|
+| [`check.md`](skills/check.md) | Check a file's trust before building on it |
 | [`stamp.md`](skills/stamp.md) | Stamp trust metadata onto AI outputs |
 | [`audit.md`](skills/audit.md) | Audit files for regulatory compliance |
 | [`scan.md`](skills/scan.md) | Security scan files and directories |
@@ -375,6 +400,10 @@ akf doctor                   # Check installation health
 akf create report.akf \
   --claim "Revenue $4.2B" --trust 0.98 --src "SEC 10-Q" \
   --by sarah@acme.com --label confidential
+
+# ── Check before you trust ──
+akf check auth.py            # One line: OK / LOW / STALE / UNSTAMPED
+akf check auth.py --json     # Structured output; exit codes 0/1/2 for gating
 
 # ── Validate & inspect ──
 akf validate report.akf
@@ -494,6 +523,29 @@ See [LLM-PROMPT.md](spec/LLM-PROMPT.md) for a full system prompt.
 | [LLM Integration](docs/llm-integration.md) | Prompting strategies |
 | [EU AI Act](docs/compliance/eu-ai-act-mapping.md) | Compliance mapping |
 | [NIST AI RMF](docs/compliance/nist-ai-rmf-mapping.md) | Framework mapping |
+
+## vs Alternatives
+
+| | AKF | C2PA | Watermarking | Manual tracking |
+|---|:---:|:---:|:---:|:---:|
+| Works on documents/code | ✅ | ❌ (media only) | ❌ | ⚠️ |
+| No Certificate Authority needed | ✅ | ❌ | ✅ | ✅ |
+| Trust scores | ✅ | ❌ | ❌ | ❌ |
+| Source provenance chain | ✅ | ✅ | ❌ | ⚠️ |
+| Compliance auditing | ✅ | ❌ | ❌ | ❌ |
+| ~15 tokens (LLM-friendly) | ✅ | ❌ | N/A | N/A |
+| 20+ file formats | ✅ | ⚠️ (media) | ⚠️ (text) | ❌ |
+| Free & open source | ✅ | ⚠️ | Varies | ✅ |
+
+## Compliance
+
+**EU AI Act Article 50 takes effect August 2, 2026** — AI-generated content must carry transparency metadata (penalties up to EUR 35M / 7% of global turnover). Files stamped with AKF already carry it:
+
+```bash
+akf audit report.docx --regulation eu_ai_act
+```
+
+Mappings for [EU AI Act](docs/compliance/eu-ai-act-mapping.md) and [NIST AI RMF](docs/compliance/nist-ai-rmf-mapping.md).
 
 ## Contributing
 
