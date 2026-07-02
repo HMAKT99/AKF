@@ -612,6 +612,34 @@ def _export_report(file_or_dir, output, open_report, command_name):
         webbrowser.open("file://" + os.path.abspath(output))
 
 
+def _build_badge(reports) -> dict:
+    """Build a shields.io endpoint JSON payload from scan reports.
+
+    Message: "<stamped>% stamped · trust <avg>". Color tracks avg trust
+    of stamped files (green >= 0.7, yellow >= 0.4, red below).
+    """
+    total = len(reports)
+    enriched = [r for r in reports if r.enriched]
+    if not total or not enriched:
+        return {
+            "schemaVersion": 1,
+            "label": "AKF",
+            "message": "no trust metadata",
+            "color": "lightgrey",
+        }
+
+    pct = round(100 * len(enriched) / total)
+    scores = [r.overall_trust for r in enriched if r.overall_trust is not None]
+    avg = sum(scores) / len(scores) if scores else 0.0
+    color = "brightgreen" if avg >= 0.7 else "yellow" if avg >= 0.4 else "red"
+    return {
+        "schemaVersion": 1,
+        "label": "AKF",
+        "message": f"{pct}% stamped · trust {avg:.2f}",
+        "color": color,
+    }
+
+
 def _trust_bar(count, total, width=20):
     """Render an ASCII trust bar."""
     if total <= 0:
@@ -631,11 +659,27 @@ def _trust_bar(count, total, width=20):
 @click.option("--max-files", "-n", default=10000, type=int, help="Maximum files to scan (default: 10000)")
 @click.option("--output", "-o", type=click.Path(), help="Export report (.html, .json, .csv, .md, .pdf)")
 @click.option("--open", "open_report", is_flag=True, help="Open report in browser after export")
-def scan_cmd(file_or_dir, recursive, max_files, output, open_report) -> None:
+@click.option("--badge", "badge_path", type=click.Path(),
+              help="Write a shields.io endpoint JSON badge (stamped %, avg trust); use - for stdout")
+def scan_cmd(file_or_dir, recursive, max_files, output, open_report, badge_path) -> None:
     """Security scan any file or directory for AKF metadata."""
     from . import universal as akf_u
     from pathlib import Path
     from collections import Counter
+
+    if badge_path:
+        reports = akf_u.scan_directory(str(file_or_dir), recursive=recursive, max_files=max_files)
+        badge = _build_badge(reports)
+        payload = json.dumps(badge, indent=2) + "\n"
+        if badge_path == "-":
+            click.echo(payload, nl=False)
+        else:
+            with open(badge_path, "w") as f:
+                f.write(payload)
+            click.secho(f"Badge written to {badge_path}", fg="green")
+            click.echo("Embed it with shields.io:")
+            click.echo("  https://img.shields.io/endpoint?url=<public URL of this JSON>")
+        return
 
     if output:
         _export_report(file_or_dir, output, open_report, "scan")
@@ -1962,19 +2006,42 @@ def _print_certify_summary(report) -> None:
         click.secho("  Certification incomplete.", fg="red", bold=True)
 
 
-def _print_certify_markdown(report) -> None:
-    """Print a Markdown table of certification results."""
-    click.echo("| File | Status | Trust | Issues |")
-    click.echo("|------|--------|-------|--------|")
-    for r in report.results:
-        status = "PASS" if r.certified else "FAIL"
+def _print_certify_markdown(report, max_rows: int = 50) -> None:
+    """Print a Markdown certification report (rendered in PR comments)."""
+    headline_icon = "✅" if report.all_certified else "❌"
+    parts = [f"**{headline_icon} {report.certified_count}/{report.total_files} files certified**"]
+    if report.avg_trust:
+        parts.append(f"average trust **{report.avg_trust:.2f}**")
+    if report.failed_count:
+        parts.append(f"{report.failed_count} failed")
+    click.echo(" · ".join(parts))
+    click.echo()
+
+    click.echo("| | File | Trust | Evidence | Issues |")
+    click.echo("|---|------|-------|----------|--------|")
+    # Failures first — that's what a reviewer needs to see.
+    ordered = sorted(report.results, key=lambda r: (r.certified, r.filepath))
+    for r in ordered[:max_rows]:
+        status = "✅" if r.certified else "❌"
+        ev_types = []
+        for e in r.evidence or []:
+            ev_type = getattr(e, "type", None) or "other"
+            if ev_type not in ev_types:
+                ev_types.append(ev_type)
+        evidence_str = ", ".join(f"`{t}`" for t in ev_types) if ev_types else "—"
         issues = []
         if r.error:
             issues.append(r.error)
         issues.extend(d.detection_class for d in r.detections)
         issues.extend(r.compliance_issues)
-        issues_str = ", ".join(issues) if issues else "-"
-        click.echo(f"| {r.filepath} | {status} | {r.trust_score:.2f} | {issues_str} |")
+        issues_str = ", ".join(issues) if issues else "—"
+        click.echo(f"| {status} | `{r.filepath}` | {r.trust_score:.2f} | {evidence_str} | {issues_str} |")
+
+    if len(ordered) > max_rows:
+        click.echo()
+        click.echo(f"<sub>…and {len(ordered) - max_rows} more files "
+                   f"({report.certified_count} certified in total).</sub>")
+
     click.echo()
     click.echo(f"**Total:** {report.total_files} | "
                f"**Certified:** {report.certified_count} | "

@@ -79,6 +79,9 @@ def create(filepath: str, metadata: Dict[str, Any]) -> str:
 
     sidecar_data: Dict[str, Any] = {
         "akf": "1.0",
+        # Self-documenting: anyone who finds a .akf.json in a repo can
+        # follow this to learn what the format is.
+        "spec": "https://akf.dev",
         "mode": "sidecar",
         "target_file": os.path.basename(filepath),
         "generated_at": now,
@@ -86,7 +89,7 @@ def create(filepath: str, metadata: Dict[str, Any]) -> str:
 
     # Merge user metadata, but preserve our envelope fields
     for key, value in metadata.items():
-        if key not in ("akf", "mode", "target_file", "generated_at"):
+        if key not in ("akf", "spec", "mode", "target_file", "generated_at"):
             sidecar_data[key] = value
 
     # Always set integrity_hash from the actual file

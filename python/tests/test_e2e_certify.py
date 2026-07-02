@@ -714,12 +714,12 @@ class TestCertifyCliFormats:
         result = _run_cli(["certify", str(self.akf_file), "--format", "markdown"])
         assert result.exit_code == 0
         assert "| File |" in result.output
-        assert "| Status |" in result.output or "Status" in result.output
-        assert "|" in result.output
+        assert "| Evidence |" in result.output
+        assert "files certified" in result.output
 
     def test_markdown_shows_pass(self):
         result = _run_cli(["certify", str(self.akf_file), "--format", "markdown", "--min-trust", "0.3"])
-        assert "PASS" in result.output
+        assert "✅" in result.output
 
     def test_summary_shows_counts(self):
         result = _run_cli(["certify", str(self.akf_file), "--format", "summary"])
@@ -904,7 +904,7 @@ class TestCertifyE2ESubprocess:
         rc, out, err = akf_cli("certify", str(d / "report.akf"), "--format", "markdown")
         assert rc == 0
         assert "| File |" in out
-        assert "PASS" in out
+        assert "✅" in out
 
     def test_certify_directory_e2e(self):
         d = Path(TEST_DIR) / "e2e_dir"
