@@ -46,6 +46,7 @@ _EVIDENCE_PATTERNS = [
     (r"human.*review", "human_review"),
     (r"code.*review", "human_review"),
     (r"approved\s*by", "human_review"),
+    (r"reviewed\s*by", "human_review"),
     (r"peer.*review", "human_review"),
 ]
 

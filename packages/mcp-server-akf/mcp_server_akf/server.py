@@ -1,6 +1,7 @@
 """MCP server implementation for AKF — Agent Knowledge Format.
 
-Exposes 9 tools via Model Context Protocol:
+Exposes 10 tools via Model Context Protocol:
+  - check_file: One-line trust check — can an agent build on this file?
   - create_claim: Create AKF trust metadata
   - validate_file: Validate an .akf file
   - scan_file: Security scan any file
@@ -27,6 +28,16 @@ from mcp.types import Tool, TextContent
 # ---------------------------------------------------------------------------
 # Tool implementations
 # ---------------------------------------------------------------------------
+
+def check_file(path: str, threshold: float = 0.6) -> dict:
+    """One-line trust check: can an agent build on this file without re-verifying?"""
+    from akf.check import check_file as _check
+
+    result = _check(path, threshold=threshold)
+    payload = result.to_dict()
+    payload["summary"] = result.summary_line()
+    return payload
+
 
 def create_claim(content: str, confidence: float, source: str | None = None, ai_generated: bool = True) -> dict:
     """Create an AKF claim and return as JSON."""
@@ -159,6 +170,18 @@ def detect_threats(path: str) -> dict:
 
 TOOLS = [
     Tool(
+        name="check_file",
+        description="One-line trust check before building on a file. Returns OK (fresh stamp, trust above threshold — skip re-verification), LOW (trust below threshold), STALE (modified after stamping or claims expired — re-verify), or UNSTAMPED (no metadata). Use this before re-reading, re-testing, or re-deriving work another agent already verified.",
+        inputSchema={
+            "type": "object",
+            "required": ["path"],
+            "properties": {
+                "path": {"type": "string", "description": "Path to the file to check"},
+                "threshold": {"type": "number", "minimum": 0, "maximum": 1, "default": 0.6, "description": "Trust threshold for OK vs LOW"},
+            },
+        },
+    ),
+    Tool(
         name="create_claim",
         description="Create an AKF claim with trust metadata. Returns a JSON object with the claim, trust score, and provenance.",
         inputSchema={
@@ -275,6 +298,7 @@ TOOLS = [
 
 # Map tool names to handler functions
 HANDLERS = {
+    "check_file": check_file,
     "create_claim": create_claim,
     "validate_file": validate_file,
     "scan_file": scan_file,

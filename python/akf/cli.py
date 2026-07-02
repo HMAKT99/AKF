@@ -143,6 +143,30 @@ def read_cmd(file, as_json) -> None:
             click.echo(f"    {actor} — {action} @ {ts}")
 
 
+@main.command("check")
+@click.argument("file", type=click.Path(exists=True))
+@click.option("--threshold", "-t", default=0.6, type=float, help="Trust threshold")
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON")
+def check_cmd(file, threshold, as_json) -> None:
+    """One-line trust check — can an agent build on this file?
+
+    Prints OK, LOW, STALE, or UNSTAMPED with trust, agent, evidence, and age.
+    Exit codes: 0=OK, 1=LOW/STALE (re-verify), 2=UNSTAMPED.
+    """
+    from .check import check_file
+
+    result = check_file(file, threshold=threshold)
+
+    if as_json:
+        click.echo(json.dumps(result.to_dict(), indent=2, ensure_ascii=False))
+    else:
+        color = {"OK": "green", "LOW": "yellow", "STALE": "yellow"}.get(result.status, "red")
+        click.secho(result.summary_line(), fg=color)
+
+    if result.exit_code:
+        raise SystemExit(result.exit_code)
+
+
 @main.command("create")
 @click.argument("file", type=click.Path(), required=False)
 @click.option("--claim", "-c", multiple=True, help="Claim content")

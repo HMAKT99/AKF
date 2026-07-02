@@ -52,6 +52,7 @@ from .data import load_dataset, quality_report, merge, filter_claims
 from .report import enterprise_report, EnterpriseReport, FileReport, register_renderer, RENDERERS
 from .knowledge_base import KnowledgeBase
 from .stamp import stamp, stamp_file
+from .check import check_file, CheckResult
 from .certify import (
     certify_file, certify_directory, certify_team,
     CertifyResult, CertifyReport, AgentCertifyReport, TeamCertifyReport,
@@ -414,6 +415,8 @@ __all__ = [
     # Stamp & Git
     "stamp",
     "stamp_file",
+    "check_file",
+    "CheckResult",
     "stamp_commit",
     "read_commit",
     "trust_log",
