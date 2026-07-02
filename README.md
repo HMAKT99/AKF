@@ -10,6 +10,7 @@ _akf: '{"v":"1.0","claims":[{"c":"Trust metadata for README.md","t":0.7,"id":"19
   <a href="https://www.npmjs.com/package/akf-format"><img src="https://img.shields.io/npm/v/akf-format?style=flat-square&label=npm" /></a>
   <a href="https://www.npmjs.com/package/akf-format"><img src="https://img.shields.io/npm/dw/akf-format?style=flat-square&label=npm%20downloads" /></a>
   <a href="https://github.com/HMAKT99/AKF/actions"><img src="https://img.shields.io/github/actions/workflow/status/HMAKT99/AKF/ci.yml?style=flat-square&label=CI" /></a>
+  <a href="https://github.com/HMAKT99/AKF/blob/main/.github/akf-badge.json"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FHMAKT99%2FAKF%2Fmain%2F.github%2Fakf-badge.json&style=flat-square" alt="AKF trust" /></a>
   <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" />
   <a href="https://akf.dev"><img src="https://img.shields.io/badge/docs-akf.dev-blue?style=flat-square" /></a>
   <a href="https://stackshare.io/akf-the-ai-native-file-format"><img src="https://img.shields.io/badge/stackshare-listed-blue?style=flat-square" /></a>
@@ -428,6 +429,7 @@ akf embed report.docx --classification confidential \
 akf extract report.docx
 akf scan report.docx
 akf scan ./docs/ --recursive
+akf scan . --badge badge.json     # shields.io endpoint: "14% stamped · trust 0.76"
 
 # ── Auto-stamping ──
 akf install                                   # Install background watcher

@@ -1,0 +1,35 @@
+name: AKF Badge
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  badge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install AKF from this repo
+        run: pip install ./python
+
+      - name: Regenerate trust badge
+        run: akf scan . --badge .github/akf-badge.json --max-files 3000
+
+      - name: Commit badge if changed
+        run: |
+          if ! git diff --quiet .github/akf-badge.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add .github/akf-badge.json
+            git commit -m "chore(badge): refresh AKF trust badge"
+            git push
+          fi
