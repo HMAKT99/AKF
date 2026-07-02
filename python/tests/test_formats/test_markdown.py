@@ -319,3 +319,46 @@ class TestModuleConvenience:
         result = md_extract(filepath)
         assert result is not None
         assert result["akf"] == "1.0"
+
+
+# --------------------------------------------------------------------------
+# Nested frontmatter preservation (regression: stamping destroyed nested YAML)
+# --------------------------------------------------------------------------
+
+
+class TestNestedFrontmatterPreservation:
+    NESTED = (
+        "---\n"
+        "name: my-skill\n"
+        "metadata:\n"
+        "  openclaw:\n"
+        "    emoji: \"X\"\n"
+        "    install:\n"
+        "      - id: pip\n"
+        "        package: akf\n"
+        "tags:\n"
+        "  - trust\n"
+        "  - provenance\n"
+        "---\n"
+        "\n# Body\n"
+    )
+
+    def test_embed_preserves_nested_yaml(self, handler: MarkdownHandler, tmp_md) -> None:
+        path = tmp_md(self.NESTED)
+        handler.embed(path, {"v": "1.0", "claims": [{"c": "test", "t": 0.9}]})
+        content = open(path).read()
+        assert "openclaw:" in content
+        assert "- id: pip" in content
+        assert "- trust" in content
+        assert "akf:" in content
+        assert "# Body" in content
+
+    def test_restamp_replaces_akf_only(self, handler: MarkdownHandler, tmp_md) -> None:
+        path = tmp_md(self.NESTED)
+        handler.embed(path, {"v": "1.0", "claims": [{"c": "first", "t": 0.9}]})
+        handler.embed(path, {"v": "1.0", "claims": [{"c": "second", "t": 0.8}]})
+        content = open(path).read()
+        assert content.count("openclaw:") == 1
+        assert "second" in content and "first" not in content
+        meta = handler.extract(path)
+        assert meta["claims"][0].get("c", meta["claims"][0].get("content")) == "second"
