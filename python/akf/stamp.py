@@ -207,6 +207,7 @@ def stamp_file(
             claim_kwargs["evidence"] = evidence_objects
         if model:
             claim_kwargs["origin"] = Origin(type="ai", model=model)
+        claim_kwargs.update(kwargs)  # extra Claim fields (kind, decay_half_life, ...)
         claim_list.append(
             Claim(content=text, confidence=trust_score, **claim_kwargs)
         )

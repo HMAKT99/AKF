@@ -359,12 +359,32 @@ def _yaml_scalar(val: Any) -> str:
     return s
 
 
-def _build_frontmatter(akf_yaml: str, other_fields: Dict[str, str]) -> str:
-    """Build a complete frontmatter block with AKF YAML and other preserved fields."""
+def _strip_akf_from_frontmatter(block: str) -> str:
+    """Remove the akf:/_akf: entries (with their nested lines) from a raw
+    frontmatter block, preserving everything else verbatim.
+
+    Non-AKF frontmatter must survive stamping byte-for-byte — nested
+    structures (tags lists, tool metadata) can't round-trip through a
+    scalar-only parser.
+    """
+    kept: List[str] = []
+    skipping = False
+    for line in block.splitlines():
+        is_top_level = bool(line.strip()) and line[0] not in (" ", "\t")
+        if is_top_level:
+            key = line.split(":", 1)[0].strip()
+            skipping = key in ("akf", "_akf")
+        if not skipping:
+            kept.append(line)
+    return "\n".join(kept)
+
+
+def _build_frontmatter(akf_yaml: str, preserved: str = "") -> str:
+    """Build a complete frontmatter block: preserved fields verbatim, then AKF YAML."""
     lines = ["---"]
-    for key, val in other_fields.items():
-        if key not in ("akf", "_akf"):
-            lines.append("{}: {}".format(key, val))
+    preserved = preserved.strip("\n")
+    if preserved.strip():
+        lines.append(preserved)
     lines.append(akf_yaml)
     lines.append("---")
     return "\n".join(lines) + "\n"
@@ -397,15 +417,16 @@ class MarkdownHandler(AKFFormatHandler):
         fm_block = _parse_frontmatter_raw(content)
 
         if fm_block is not None:
-            # File already has frontmatter — preserve non-AKF keys, replace AKF
-            other_fields = _parse_frontmatter_simple(fm_block)
+            # File already has frontmatter — preserve non-AKF content verbatim,
+            # replace only the akf:/_akf: entries
+            preserved = _strip_akf_from_frontmatter(fm_block)
             m = _FRONTMATTER_RE.match(content)
             assert m is not None
             body = content[m.end():]
-            new_content = _build_frontmatter(akf_yaml, other_fields) + body
+            new_content = _build_frontmatter(akf_yaml, preserved) + body
         else:
             # No frontmatter — add one
-            new_content = _build_frontmatter(akf_yaml, {}) + content
+            new_content = _build_frontmatter(akf_yaml) + content
 
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(new_content)

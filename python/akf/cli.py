@@ -1082,8 +1082,10 @@ def kb_prune_cmd(directory, max_age, min_trust) -> None:
 @click.option("--claim", "claims", multiple=True, help="Claim text (repeatable)")
 @click.option("--model", default=None, help="Model identifier (e.g. gpt-4o)")
 @click.option("--label", default=None, help="Classification label")
+@click.option("--preset", type=click.Choice(["memory", "skill"]), default=None,
+              help="Context preset: memory (30-day trust decay) or skill (public, supply-chain trust)")
 @click.option("--format", "fmt", default="auto", help="Output format: auto, embed, sidecar")
-def stamp_cmd(file, agent, evidence, confidence, claims, model, label, fmt):
+def stamp_cmd(file, agent, evidence, confidence, claims, model, label, preset, fmt):
     """Add AKF trust metadata to any file.
 
     Stamps the file with trust scores, provenance, and classification.
@@ -1094,10 +1096,20 @@ def stamp_cmd(file, agent, evidence, confidence, claims, model, label, fmt):
       akf stamp report.md --agent claude-code --evidence "tests pass"
 
       akf stamp output.pdf --claim "Revenue $4.2B" --confidence 0.95 --model gpt-4o
+
+      akf stamp memory/facts.md --preset memory --agent claude-code
     """
     from .stamp import stamp_file as _stamp_file
 
-    classification = label or "internal"
+    preset_label = None
+    preset_claim_kwargs = {}
+    if preset:
+        from .presets import get_stamp_preset
+        p = get_stamp_preset(preset)
+        preset_label = p.get("classification")
+        preset_claim_kwargs = dict(p.get("claim_kwargs", {}))
+
+    classification = label or preset_label or "internal"
     trust_score = confidence if confidence is not None else 0.7
     evidence_list = list(evidence) if evidence else None
     claim_list = list(claims) if claims else None
@@ -1116,6 +1128,7 @@ def stamp_cmd(file, agent, evidence, confidence, claims, model, label, fmt):
         trust_score=trust_score,
         classification=classification,
         evidence=evidence_list,
+        **preset_claim_kwargs,
     )
 
     claims_count = len(unit.claims)

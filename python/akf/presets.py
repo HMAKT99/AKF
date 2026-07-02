@@ -125,6 +125,36 @@ TEMPLATES: dict[str, Template] = {
 }
 
 
+# ---------------------------------------------------------------------------
+# Stamp presets — defaults for `akf stamp --preset <name>`
+# ---------------------------------------------------------------------------
+
+STAMP_PRESETS: dict[str, dict[str, Any]] = {
+    # Agent memory entries: trust decays with a 30-day half-life so stale
+    # memories stop being trusted automatically instead of poisoning
+    # future sessions.
+    "memory": {
+        "classification": "internal",
+        "claim_kwargs": {"kind": "memory", "decay_half_life": 30},
+    },
+    # Skill / plugin files: public artifacts whose provenance is
+    # supply-chain trust. Long half-life; tier 3 until verified.
+    "skill": {
+        "classification": "public",
+        "claim_kwargs": {"kind": "skill", "decay_half_life": 365, "authority_tier": 3},
+    },
+}
+
+
+def get_stamp_preset(name: str) -> dict[str, Any]:
+    """Get a stamp preset by name. Raises KeyError if not found."""
+    if name not in STAMP_PRESETS:
+        raise KeyError(
+            f"Unknown stamp preset: {name}. Available: {', '.join(STAMP_PRESETS.keys())}"
+        )
+    return STAMP_PRESETS[name]
+
+
 def register(name: str, template: Template) -> None:
     """Register a custom template."""
     TEMPLATES[name] = template

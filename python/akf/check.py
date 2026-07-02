@@ -109,11 +109,12 @@ def _evidence_types(unit: AKF) -> List[str]:
     return types
 
 
-def _claim_score(claim: Claim) -> float:
-    """Effective trust with evidence-aware authority.
+def _claim_score(claim: Claim, age_days: float = 0) -> float:
+    """Effective trust with evidence-aware authority and temporal decay.
 
     Verification receipts (tests, type checks, human review) floor the
-    authority tier — see _EVIDENCE_TIER_FLOOR.
+    authority tier — see _EVIDENCE_TIER_FLOOR. Stamp age drives decay for
+    claims with a decay_half_life (e.g. memory stamps).
     """
     floors = [
         _EVIDENCE_TIER_FLOOR[ev.type]
@@ -125,7 +126,7 @@ def _claim_score(claim: Claim) -> float:
         floored = min(min(floors), tier)
         if floored != tier:
             claim = claim.model_copy(update={"authority_tier": floored})
-    return effective_trust(claim).score
+    return effective_trust(claim, age_days=age_days).score
 
 
 def check_file(filepath: str, threshold: float = 0.6) -> CheckResult:
@@ -155,13 +156,13 @@ def check_file(filepath: str, threshold: float = 0.6) -> CheckResult:
             threshold=threshold, reason="no_metadata",
         )
 
-    scores = [_claim_score(claim) for claim in unit.claims]
-    overall = round(min(scores), 4) if scores else 0.0
-
     stamped_at = _parse_ts(unit.created) if unit.created else None
     age_days: Optional[int] = None
     if stamped_at is not None:
         age_days = max(0, (datetime.now(timezone.utc) - stamped_at).days)
+
+    scores = [_claim_score(claim, age_days=age_days or 0) for claim in unit.claims]
+    overall = round(min(scores), 4) if scores else 0.0
 
     base = dict(
         file=filepath,
