@@ -14,7 +14,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: HMAKT99/akf-action@v1
         with:
-          paths: 'skills docs/recipes'
+          paths: 'skills'
           min-trust: '0.3'
           fail-on-untrusted: 'false'
           post-comment: 'true'
