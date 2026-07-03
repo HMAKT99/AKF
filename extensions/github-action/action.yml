@@ -29,6 +29,10 @@ inputs:
     description: 'Post certification results as a PR comment'
     required: false
     default: 'true'
+  akf-version:
+    description: 'AKF version to install (pinned for reproducible runs)'
+    required: false
+    default: '1.5.0'
 runs:
   using: 'composite'
   steps:
@@ -39,7 +43,7 @@ runs:
 
     - name: Install AKF
       shell: bash
-      run: pip install akf
+      run: pip install "akf==${{ inputs.akf-version }}"
 
     - name: Run AKF Certify
       id: certify

@@ -1,0 +1,20 @@
+name: AKF Trust Certification
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  certify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: HMAKT99/akf-action@v1
+        with:
+          paths: 'skills docs/recipes'
+          min-trust: '0.3'
+          fail-on-untrusted: 'false'
+          post-comment: 'true'
