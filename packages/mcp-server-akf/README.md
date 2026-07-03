@@ -1,13 +1,19 @@
 # mcp-server-akf
 
-MCP (Model Context Protocol) server that exposes 9 AKF tools to AI agents.
-Any MCP-compatible client (Claude Desktop, Cursor, Windsurf, etc.) can stamp,
-validate, audit, and scan files using the Agent Knowledge Format.
+mcp-name: io.github.HMAKT99/akf
+
+MCP (Model Context Protocol) server that exposes 10 AKF tools to AI agents.
+Any MCP-compatible client (Claude Desktop, Claude Code, Cursor, Windsurf, etc.)
+can check, stamp, validate, audit, and scan files using the Agent Knowledge Format.
+
+**A stamp costs ~15 tokens. Re-verifying costs 15,000.** Agents stamp what they
+verify; the next agent calls `check_file` and builds on it instead of redoing
+the work.
 
 ## Installation
 
 ```bash
-pip install ./packages/mcp-server-akf
+pip install mcp-server-akf
 ```
 
 ## Configuration
@@ -46,6 +52,7 @@ Add to `.cursor/mcp.json` in your project root:
 
 | Tool | Description |
 |------|-------------|
+| `check_file` | One-line trust check — can an agent build on this file without re-verifying? (OK / LOW / STALE / UNSTAMPED) |
 | `create_claim` | Create an AKF claim with trust metadata |
 | `validate_file` | Validate an `.akf` file against the spec |
 | `scan_file` | Security scan any file for AKF metadata |
