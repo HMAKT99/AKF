@@ -1,41 +1,39 @@
-# AKF — VS Code Extension
+# AKF — Agent Knowledge Format
 
-Syntax highlighting, validation, and hover info for `.akf` files (Agent Knowledge Format).
+Syntax highlighting, validation, and hover info for `.akf` files — the trust metadata format for AI-generated content.
+
+AKF stamps travel with files your AI agents produce: who made them, what was verified (tests, review), and how much to trust them. This extension makes those stamps readable and checkable inside VS Code.
 
 ## Features
 
-- Syntax highlighting for `.akf` files (trust scores, claims, provenance, classification)
-- Hover info on trust scores (ACCEPT/LOW/REJECT) and authority tiers (1–5)
-- **AKF: Validate Current File** — checks structure, version, and claims
+- **Syntax highlighting** for `.akf` files — trust scores, claims, provenance chains, classification labels
+- **Hover info** on trust scores (ACCEPT / LOW / REJECT) and authority tiers (1–5)
+- **AKF: Validate Current File** — checks structure, version, and claims against the spec
 - **AKF: Inspect Claims** — lists all claims with trust scores in the Output panel
 
-## Install from source
+## Works with the AKF CLI
 
 ```bash
-cd extensions/vscode
-npm install
-npm run compile
-npm run package    # creates akf-vscode-0.1.0.vsix
+pip install akf
+akf init          # wire stamping into git + your agents
+akf check <file>  # OK / LOW / STALE / UNSTAMPED — before you build on a file
 ```
 
-Then in VS Code: `Extensions` → `...` → `Install from VSIX...` → select the `.vsix` file.
+A stamp costs ~15 tokens; re-verifying costs 15,000. Agents stamp what they verify — the next agent (or you, in VS Code) checks the stamp instead of redoing the work.
 
-## Publish to Marketplace
+## Links
 
-1. Create a publisher at https://marketplace.visualstudio.com/manage
-2. Update `"publisher"` in `package.json` to match
-3. Add an `icon.png` (128x128 min) to this directory
-4. Run:
-
-```bash
-npx vsce login <publisher-name>
-npm run publish
-```
+- [AKF on GitHub](https://github.com/HMAKT99/AKF) — spec, CLI, SDKs (Python + TypeScript)
+- [akf.dev](https://akf.dev)
+- [MCP server](https://pypi.org/project/mcp-server-akf/) for Claude Desktop / Claude Code / Cursor
 
 ## Development
 
 ```bash
-npm run watch    # recompile on changes
+npm install && npm run compile   # build
+npm run watch                    # recompile on changes
 ```
 
-Press `F5` in VS Code to launch the Extension Development Host.
+Press `F5` in VS Code to launch the Extension Development Host. Package with `npx @vscode/vsce package`.
+
+MIT licensed.
