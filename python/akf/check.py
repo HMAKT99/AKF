@@ -189,6 +189,14 @@ def check_file(filepath: str, threshold: float = 0.6) -> CheckResult:
     if any(is_expired(claim) for claim in unit.claims):
         return CheckResult(status="STALE", exit_code=1, reason="claims_expired", **base)
 
+    # Transitive staleness: this file is unchanged, but a local dependency it
+    # imports moved — what the stamp verified is no longer true (#124).
+    recorded_deps = (unit.meta or {}).get("deps")
+    if recorded_deps:
+        from .deps import changed_deps
+        if changed_deps(filepath, recorded_deps):
+            return CheckResult(status="STALE", exit_code=1, reason="dependency_changed", **base)
+
     if overall < threshold:
         return CheckResult(status="LOW", exit_code=1, reason="below_threshold", **base)
 

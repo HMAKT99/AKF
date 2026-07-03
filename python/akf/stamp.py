@@ -228,6 +228,13 @@ def stamp_file(
         file_hash = hashlib.sha256(fh.read()).hexdigest()[:16]
     unit = unit.model_copy(update={"integrity_hash": f"sha256:{file_hash}"})
 
+    # Record first-degree local import hashes (Python files) so `akf check`
+    # can flag staleness when a dependency changes, not just this file (#124).
+    from .deps import resolve_local_deps
+    dep_hashes = resolve_local_deps(filepath)
+    if dep_hashes:
+        unit = unit.model_copy(update={"meta": {**(unit.meta or {}), "deps": dep_hashes}})
+
     # Embed into the file using universal format layer
     from .universal import embed as _embed
     _embed(filepath, metadata=unit.to_dict(compact=True))
