@@ -254,6 +254,8 @@ AKF works where AI agents work. Drop a config file, and every AI-generated file 
 | **Windsurf** | Reads `.windsurfrules` — stamps AI edits with trust metadata |
 | **GitHub Copilot** | Reads `.github/copilot-instructions.md` (native) + shell hook for CLI |
 | **OpenAI Codex** | Reads `AGENTS.md` — stamps files in cloud sandbox and local |
+| **OpenClaw** | Skill on ClawHub: `clawhub install akf` — check/stamp protocol + memory trust |
+| **Hermes Agent** | agentskills.io skill: `hermes skills tap add HMAKT99/AKF` — files, memories, and skill supply-chain |
 | **Manus / Other Agents** | MCP server + shell hook — works with any agent that supports MCP or CLI |
 | **Any MCP agent** | 10 MCP tools — check, stamp, audit, embed, extract, detect, validate, scan, trust, create |
 | **Any CLI tool** | `eval "$(akf shell-hook)"` — intercepts `claude`, `chatgpt`, `aider`, `openclaw`, `ollama`, `manus` |
