@@ -74,11 +74,16 @@ runs:
     - name: Post PR comment
       if: inputs.post-comment == 'true' && github.event_name == 'pull_request'
       uses: actions/github-script@v7
+      env:
+        CERTIFY_OUTPUT: ${{ steps.certify.outputs.output }}
+        CERTIFY_EXIT_CODE: ${{ steps.certify.outputs.exit_code }}
       with:
         script: |
           const marker = '<!-- akf-certify-report -->';
-          const output = `${{ steps.certify.outputs.output }}`;
-          const exitCode = '${{ steps.certify.outputs.exit_code }}';
+          // Read via env, not template interpolation — output contains
+          // backticks and arbitrary file names (script injection risk).
+          const output = process.env.CERTIFY_OUTPUT;
+          const exitCode = process.env.CERTIFY_EXIT_CODE;
           const status = exitCode === '0' ? '✅ Certified' : '❌ Certification Failed';
 
           const body = [
