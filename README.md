@@ -249,7 +249,7 @@ AKF works where AI agents work. Drop a config file, and every AI-generated file 
 
 | Agent | How it works |
 |-------|-------------|
-| **Claude Code** | Reads `CLAUDE.md` — stamps every file it creates with confidence and evidence |
+| **Claude Code** | Plugin: `/plugin marketplace add HMAKT99/AKF` → `/plugin install akf` — auto-stamp hook + check skill. Or reads `CLAUDE.md` |
 | **Cursor** | Reads `.cursorrules` — stamps AI edits before you review |
 | **Windsurf** | Reads `.windsurfrules` — stamps AI edits with trust metadata |
 | **GitHub Copilot** | Reads `.github/copilot-instructions.md` (native) + shell hook for CLI |
