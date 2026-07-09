@@ -25,6 +25,7 @@ import CompareC2paPage from './components/CompareC2paPage';
 import ComparePurviewPage from './components/ComparePurviewPage';
 import CompareWatermarkingPage from './components/CompareWatermarkingPage';
 import EnterpriseReportPage from './components/EnterpriseReportPage';
+import ArticleFiftyPage from './components/ArticleFiftyPage';
 import ComplianceCountdown from './components/ComplianceCountdown';
 import ComplianceBanner, { useBannerVisible } from './components/ComplianceBanner';
 import Footer from './components/Footer';
@@ -104,6 +105,8 @@ function AppShell() {
             <Route path="/certify" element={<CertifyPage />} />
             <Route path="/audit" element={<ValidatePage />} />
             <Route path="/enterprise-report" element={<EnterpriseReportPage />} />
+            <Route path="/article50" element={<ArticleFiftyPage />} />
+            <Route path="/eu-ai-act" element={<ArticleFiftyPage />} />
             <Route path="/compare/c2pa" element={<CompareC2paPage />} />
             <Route path="/compare/purview" element={<ComparePurviewPage />} />
             <Route path="/compare/watermarking" element={<CompareWatermarkingPage />} />
