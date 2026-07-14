@@ -205,6 +205,10 @@ class Evidence(BaseModel):
     timestamp: Optional[str] = Field(None, validation_alias=AliasChoices("at", "timestamp"))
     tool: Optional[str] = None
     replay: Optional[Replay] = None
+    # Parsed receipt strength (#125): e.g. {"coverage": 0.85,
+    # "tests_passed": 42, "tests_total": 42}. Lets trust weighting scale
+    # with how strong the receipt is, not just its type.
+    metrics: Optional[Dict[str, float]] = None
 
     def to_dict(self, compact: bool = False) -> dict:
         d = _strip_none(self.model_dump())

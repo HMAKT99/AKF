@@ -137,3 +137,49 @@ class TestCheckCmd:
         payload = json.loads(result.output)
         assert payload["status"] == "OK"
         assert payload["agent"] == "claude-code"
+
+
+class TestReceiptStrengthScaling:
+    """#125 — evidence weight scales with receipt strength, additively."""
+
+    def test_bare_tests_pass_unchanged(self, tmp_path):
+        # The documented hero flow must not regress.
+        p = tmp_path / "hero.md"
+        p.write_text("# H\n")
+        stamp_file(str(p), agent="claude-code", evidence=["tests pass"])
+        assert check_file(str(p)).status == "OK"
+
+    def test_full_pass_fraction_keeps_strong_floor(self, tmp_path):
+        p = tmp_path / "full.md"
+        p.write_text("# F\n")
+        stamp_file(str(p), agent="claude-code", evidence=["42/42 tests passed"])
+        assert check_file(str(p)).status == "OK"
+
+    def test_partial_pass_fraction_weakens(self, tmp_path):
+        p = tmp_path / "partial.md"
+        p.write_text("# P\n")
+        stamp_file(str(p), agent="claude-code", evidence=["40/42 tests passed"])
+        result = check_file(str(p))
+        assert result.status == "LOW"
+
+    def test_low_coverage_weakens(self, tmp_path):
+        p = tmp_path / "lowcov.md"
+        p.write_text("# L\n")
+        stamp_file(str(p), agent="claude-code",
+                   evidence=["tests pass, coverage: 12%"])
+        assert check_file(str(p)).status == "LOW"
+
+    def test_high_coverage_keeps_strong_floor(self, tmp_path):
+        p = tmp_path / "hicov.md"
+        p.write_text("# H\n")
+        stamp_file(str(p), agent="claude-code",
+                   evidence=["tests pass, coverage: 85%"])
+        assert check_file(str(p)).status == "OK"
+
+    def test_replayable_evidence_keeps_strong_floor(self, tmp_path):
+        p = tmp_path / "rep.md"
+        p.write_text("# R\n")
+        stamp_file(str(p), agent="claude-code", replay="true")
+        # replay recipe of "true" classifies as type other, but replayability
+        # itself earns the strong floor
+        assert check_file(str(p)).status == "OK"
