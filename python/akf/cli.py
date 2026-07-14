@@ -225,6 +225,34 @@ def check_cmd(file, threshold, as_json) -> None:
         raise SystemExit(result.exit_code)
 
 
+@main.command("replay")
+@click.argument("file", type=click.Path(exists=True))
+@click.option("--run", "do_run", is_flag=True,
+              help="Execute the recorded replay command (review it first — it runs with your privileges)")
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON")
+def replay_cmd(file, do_run, as_json) -> None:
+    """Re-verify a stamp's replay recipe — claimed evidence, checked.
+
+    Without --run: shows the recipe and whether the claim's inputs have
+    drifted since issuance. With --run: executes the probe.
+    Verdicts: CONFIRMED (0), CONFIRMED_DRIFTED (1), REFUTED (2),
+    UNREPLAYABLE (3).
+    """
+    from .verify import verify_file
+
+    result = verify_file(file, run=do_run)
+
+    if as_json:
+        click.echo(json.dumps(result.to_dict(), indent=2, ensure_ascii=False))
+    else:
+        color = {"CONFIRMED": "green", "REPLAY_AVAILABLE": "cyan",
+                 "CONFIRMED_DRIFTED": "yellow"}.get(result.verdict, "red")
+        click.secho(result.summary_line(), fg=color)
+
+    if result.exit_code:
+        raise SystemExit(result.exit_code)
+
+
 @main.command("create")
 @click.argument("file", type=click.Path(), required=False)
 @click.option("--claim", "-c", multiple=True, help="Claim content")
@@ -1186,8 +1214,10 @@ def kb_prune_cmd(directory, max_age, min_trust) -> None:
 @click.option("--label", default=None, help="Classification label")
 @click.option("--preset", type=click.Choice(["memory", "skill"]), default=None,
               help="Context preset: memory (30-day trust decay) or skill (public, supply-chain trust)")
+@click.option("--replay", default=None,
+              help='Falsifiable probe recipe, e.g. --replay "pytest -q" — akf verify can re-run it')
 @click.option("--format", "fmt", default="auto", help="Output format: auto, embed, sidecar")
-def stamp_cmd(file, agent, evidence, confidence, claims, model, label, preset, fmt):
+def stamp_cmd(file, agent, evidence, confidence, claims, model, label, preset, replay, fmt):
     """Add AKF trust metadata to any file.
 
     Stamps the file with trust scores, provenance, and classification.
@@ -1230,6 +1260,7 @@ def stamp_cmd(file, agent, evidence, confidence, claims, model, label, preset, f
         trust_score=trust_score,
         classification=classification,
         evidence=evidence_list,
+        replay=replay,
         **preset_claim_kwargs,
     )
 

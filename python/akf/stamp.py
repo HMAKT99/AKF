@@ -169,6 +169,7 @@ def stamp_file(
     classification: str = "internal",
     ai_generated: bool = True,
     evidence: Optional[list] = None,
+    replay: Optional[Union[str, dict]] = None,
     **kwargs,
 ) -> AKF:
     """Stamp a file with AKF trust metadata.
@@ -244,6 +245,26 @@ def stamp_file(
         h = hash_source(claim.source, base_dir)
         pinned.append(claim.model_copy(update={"src_hash": h}) if h else claim)
     unit = unit.model_copy(update={"claims": pinned})
+
+    # Replay recipe (#128): record how to falsify the claim, with the input
+    # closure fingerprint pinned at issuance so a later replay can tell
+    # "confirmed against the original inputs" from "confirmed against drift".
+    if replay is not None:
+        from .deps import input_fingerprint
+        from .models import Replay
+
+        recipe = Replay(command=replay) if isinstance(replay, str) else Replay(**replay)
+        recipe.input_hash = input_fingerprint(
+            dep_hashes, [c.src_hash for c in unit.claims])
+        ev = Evidence(
+            type=parse_evidence_string(recipe.command).type,
+            detail=f"replayable: {recipe.command}",
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            replay=recipe,
+        )
+        first = unit.claims[0]
+        updated = first.model_copy(update={"evidence": [*(first.evidence or []), ev]})
+        unit = unit.model_copy(update={"claims": [updated, *unit.claims[1:]]})
 
     # Embed into the file using universal format layer
     from .universal import embed as _embed
