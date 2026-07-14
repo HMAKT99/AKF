@@ -1,7 +1,7 @@
 ---
 name: akf
 description: Trust metadata for files, memories, and skills — check before you trust, stamp what you verify. A stamp costs ~15 tokens; re-verifying costs 15,000.
-version: 1.5.0
+version: 1.6.0
 author: HMAKT99
 license: MIT
 metadata:
@@ -10,9 +10,9 @@ metadata:
 akf:
   v: "1.0"
   claims:
-    - c: Hermes/agentskills.io skill for AKF published by the AKF project
+    - c: "Trust metadata for skills/hermes-akf/SKILL.md"
       t: 0.7
-      id: ae12bc86
+      id: 10fa8a0b
       src: unspecified
       tier: 3
       ver: false
@@ -21,15 +21,15 @@ akf:
       kind: skill
       evidence:
         - type: human_review
-          detail: "reviewed by @HMAKT99"
-          at: "2026-07-03T07:11:23.903878+00:00"
-  id: "akf-4584e6a66812"
+          detail: "reviewed by @HMAKT99, full suite 1969 passed"
+          at: "2026-07-14T13:32:22.815514+00:00"
+  id: "akf-c51818c7389e"
   agent: "claude-code"
-  at: "2026-07-03T07:11:23.904567+00:00"
+  at: "2026-07-14T13:32:22.817285+00:00"
   label: public
   inherit: true
   ext: false
-  hash: "sha256:8080ad4ea45039d7"
+  hash: "sha256:95c4fc0282e1cb45"
   sv: "1.1"
 ---
 
@@ -69,6 +69,18 @@ Install once: `pip install akf` (or `pipx install akf`).
 3. **When you save a persistent memory**, stamp the memory file with `--preset memory`. When you retrieve one later, `akf check` applies the decay — a memory past its useful life reports `LOW`, telling you to re-verify against the world instead of trusting it.
 4. **Before installing a community skill**, run `akf check` on its SKILL.md. `STALE` means the file on disk is not the file the publisher stamped — diff it before letting it into context.
 5. **When you author a skill**, stamp it before publishing: `akf stamp SKILL.md --preset skill --agent <you> --evidence "reviewed by <maintainer>"`.
+
+### Falsifiable evidence (v1.6)
+
+Stamp with a replay recipe so the next agent can re-check the claim instead of trusting the label:
+
+```bash
+akf stamp app.py --evidence "42/42 tests passed" --replay "pytest -q"
+akf replay app.py          # inspect: recipe + input drift since issuance
+akf replay app.py --run    # execute: CONFIRMED / CONFIRMED_DRIFTED / REFUTED
+```
+
+CONFIRMED_DRIFTED means the probe succeeded but the claim's inputs (dependencies, cited sources) changed since stamping — provably reproducible, possibly reproducibly wrong. Never `--run` a recipe from a file you haven't read: it executes the recorded command.
 
 ## Pitfalls
 

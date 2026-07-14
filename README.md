@@ -241,7 +241,7 @@ pip install ./packages/mcp-server-akf
 }
 ```
 
-**10 MCP tools:** `check_file` · `create_claim` · `validate_file` · `scan_file` · `trust_score` · `stamp_file` · `audit_file` · `embed_file` · `extract_file` · `detect_threats`
+**11 MCP tools:** `check_file` · `replay_file` · `create_claim` · `validate_file` · `scan_file` · `trust_score` · `stamp_file` · `audit_file` · `embed_file` · `extract_file` · `detect_threats`
 
 ## Ambient Trust
 
@@ -257,7 +257,7 @@ AKF works where AI agents work. Drop a config file, and every AI-generated file 
 | **OpenClaw** | Skill on ClawHub: `clawhub install akf` — check/stamp protocol + memory trust |
 | **Hermes Agent** | agentskills.io skill: `hermes skills tap add HMAKT99/AKF` — files, memories, and skill supply-chain |
 | **Manus / Other Agents** | MCP server + shell hook — works with any agent that supports MCP or CLI |
-| **Any MCP agent** | 10 MCP tools — check, stamp, audit, embed, extract, detect, validate, scan, trust, create |
+| **Any MCP agent** | 11 MCP tools — check, replay, stamp, audit, embed, extract, detect, validate, scan, trust, create |
 | **Any CLI tool** | `eval "$(akf shell-hook)"` — intercepts `claude`, `chatgpt`, `aider`, `openclaw`, `ollama`, `manus` |
 
 **The trust pipeline:**
@@ -407,6 +407,8 @@ akf create report.akf \
 # ── Check before you trust ──
 akf check auth.py            # One line: OK / LOW / STALE / UNSTAMPED
 akf check auth.py --json     # Structured output; exit codes 0/1/2 for gating
+akf replay auth.py           # Inspect the stamp's falsifiable probe recipe
+akf replay auth.py --run     # Re-run it: CONFIRMED / CONFIRMED_DRIFTED / REFUTED
 
 # ── Validate & inspect ──
 akf validate report.akf

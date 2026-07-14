@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcp-server-akf"
-version = "1.5.0"
+version = "1.6.0"
 description = "MCP server for AKF — check, stamp, and audit trust metadata on any file"
 readme = "README.md"
 license = { text = "MIT" }
@@ -17,7 +17,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries",
 ]
 dependencies = [
-    "akf>=1.5.0",
+    "akf>=1.6.0",
     "mcp>=1.0.0",
 ]
 

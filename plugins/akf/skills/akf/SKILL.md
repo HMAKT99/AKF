@@ -6,7 +6,7 @@ akf:
   claims:
     - c: Trust metadata for plugins/akf/skills/akf/SKILL.md
       t: 0.7
-      id: a569fafc
+      id: 9fe717de
       src: unspecified
       tier: 3
       ver: false
@@ -15,15 +15,15 @@ akf:
       kind: skill
       evidence:
         - type: human_review
-          detail: "reviewed by @HMAKT99, claude plugin validate passed"
-          at: "2026-07-04T07:38:00.697134+00:00"
-  id: "akf-fc4aaa7b1cff"
+          detail: "reviewed by @HMAKT99, full suite 1969 passed"
+          at: "2026-07-14T13:32:22.966864+00:00"
+  id: "akf-493d364d1822"
   agent: "claude-code"
-  at: "2026-07-04T07:38:00.698185+00:00"
+  at: "2026-07-14T13:32:22.967275+00:00"
   label: public
   inherit: true
   ext: false
-  hash: "sha256:68a8c0fdc8d95249"
+  hash: "sha256:b67461d0a202741f"
   sv: "1.1"
 ---
 
@@ -64,3 +64,15 @@ akf check downloaded-skill.md               # STALE = not the file the publisher
 ## Setup
 
 If `akf` isn't installed: `pip install akf` (or `pipx install akf`), then `akf init` in the project to wire git hooks. `akf doctor` diagnoses PATH issues.
+
+### Falsifiable evidence (v1.6)
+
+Stamp with a replay recipe so the next agent can re-check the claim instead of trusting the label:
+
+```bash
+akf stamp app.py --evidence "42/42 tests passed" --replay "pytest -q"
+akf replay app.py          # inspect: recipe + input drift since issuance
+akf replay app.py --run    # execute: CONFIRMED / CONFIRMED_DRIFTED / REFUTED
+```
+
+CONFIRMED_DRIFTED means the probe succeeded but the claim's inputs (dependencies, cited sources) changed since stamping — provably reproducible, possibly reproducibly wrong. Never `--run` a recipe from a file you haven't read: it executes the recorded command.
