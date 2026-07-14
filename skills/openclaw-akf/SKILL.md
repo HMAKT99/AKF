@@ -21,9 +21,9 @@ metadata:
 akf:
   v: "1.0"
   claims:
-    - c: OpenClaw skill for AKF published by the AKF project
+    - c: "Trust metadata for skills/openclaw-akf/SKILL.md"
       t: 0.7
-      id: d3ba7fea
+      id: 61200a7e
       src: unspecified
       tier: 3
       ver: false
@@ -32,15 +32,15 @@ akf:
       kind: skill
       evidence:
         - type: human_review
-          detail: "reviewed by @HMAKT99"
-          at: "2026-07-02T17:04:35.591774+00:00"
-  id: "akf-838b9351c281"
+          detail: "reviewed by @HMAKT99, full suite 1969 passed"
+          at: "2026-07-14T13:32:23.131354+00:00"
+  id: "akf-742cec9663a9"
   agent: "claude-code"
-  at: "2026-07-02T17:04:35.593320+00:00"
+  at: "2026-07-14T13:32:23.131731+00:00"
   label: public
   inherit: true
   ext: false
-  hash: "sha256:6746278d98aacbc6"
+  hash: "sha256:2e5ff5b05a9232a2"
   sv: "1.1"
 ---
 
@@ -109,6 +109,18 @@ akf extract report.docx       # Extract embedded metadata
 akf scan ./output-dir/        # Scan directory for trust gaps
 akf audit report.pdf           # Compliance audit (EU AI Act, SOX, NIST)
 ```
+
+### Falsifiable evidence (v1.6)
+
+Stamp with a replay recipe so the next agent can re-check the claim instead of trusting the label:
+
+```bash
+akf stamp app.py --evidence "42/42 tests passed" --replay "pytest -q"
+akf replay app.py          # inspect: recipe + input drift since issuance
+akf replay app.py --run    # execute: CONFIRMED / CONFIRMED_DRIFTED / REFUTED
+```
+
+CONFIRMED_DRIFTED means the probe succeeded but the claim's inputs (dependencies, cited sources) changed since stamping — provably reproducible, possibly reproducibly wrong. Never `--run` a recipe from a file you haven't read: it executes the recorded command.
 
 ## Classification Labels
 

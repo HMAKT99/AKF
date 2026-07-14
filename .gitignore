@@ -17,3 +17,8 @@ editors/vscode/out/
 editors/vscode/node_modules/
 demo.gif
 demo.webm
+
+# MCP registry credentials — never commit
+.mcpregistry_github_token
+.mcpregistry_registry_token
+*.mcpregistry_*
