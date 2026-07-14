@@ -451,6 +451,9 @@ class Claim(BaseModel):
     confidence: float = Field(ge=0.0, le=1.0, validation_alias=AliasChoices("t", "confidence"))
     id: Optional[str] = None
     source: Optional[str] = Field(None, validation_alias=AliasChoices("src", "source"))
+    # Content hash of the cited source at stamp time (issue #129): lets
+    # `akf check` flag STALE when the source a claim cites has moved.
+    src_hash: Optional[str] = None
     uri: Optional[str] = None
     authority_tier: Optional[int] = Field(
         None, ge=1, le=5, validation_alias=AliasChoices("tier", "authority_tier")

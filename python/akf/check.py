@@ -197,6 +197,15 @@ def check_file(filepath: str, threshold: float = 0.6) -> CheckResult:
         if changed_deps(filepath, recorded_deps):
             return CheckResult(status="STALE", exit_code=1, reason="dependency_changed", **base)
 
+    # Cited-source staleness (#129): a claim pinned its source's content hash
+    # at stamp time; if the source moved, the claim stands on drifted ground.
+    from .deps import hash_source
+    src_dir = os.path.dirname(os.path.abspath(filepath))
+    for claim in unit.claims:
+        pinned = getattr(claim, "src_hash", None)
+        if pinned and hash_source(claim.source, src_dir) != pinned:
+            return CheckResult(status="STALE", exit_code=1, reason="source_changed", **base)
+
     if overall < threshold:
         return CheckResult(status="LOW", exit_code=1, reason="below_threshold", **base)
 

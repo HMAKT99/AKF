@@ -78,3 +78,54 @@ class TestDependencyStaleness:
     def test_deps_recorded_in_stamp_meta(self, pkg):
         unit = stamp_file(str(pkg), agent="claude-code")
         assert "helper.py" in unit.meta["deps"]
+
+
+class TestSourceHashAttestation:
+    """#129 — claims pin their cited source's content at stamp time."""
+
+    def _freeze_mtime(self, path):
+        past = time.time() - 1
+        os.utime(path, (past, past))
+
+    def test_local_source_pinned_and_checked(self, tmp_path):
+        src = tmp_path / "data.csv"
+        src.write_text("q1,42\n")
+        report = tmp_path / "report.md"
+        report.write_text("# Q1 report\n")
+        from akf.stamp import stamp_file
+        unit = stamp_file(str(report), agent="claude-code",
+                          claims=["Q1 revenue was 42"], source="data.csv",
+                          evidence=["tests pass"])
+        assert unit.claims[0].src_hash and unit.claims[0].src_hash.startswith("sha256:")
+        assert check_file(str(report)).status == "OK"
+
+        # The cited source moves; report.md itself is untouched.
+        src.write_text("q1,999\n")
+        self._freeze_mtime(report)
+        result = check_file(str(report))
+        assert result.status == "STALE"
+        assert result.reason == "source_changed"
+
+    def test_deleted_source_is_stale(self, tmp_path):
+        src = tmp_path / "notes.txt"
+        src.write_text("facts\n")
+        f = tmp_path / "summary.md"
+        f.write_text("# Summary\n")
+        from akf.stamp import stamp_file
+        stamp_file(str(f), agent="a", claims=["summary of notes"],
+                   source="notes.txt", evidence=["tests pass"])
+        src.unlink()
+        self._freeze_mtime(f)
+        assert check_file(str(f)).reason == "source_changed"
+
+    def test_url_and_placeholder_sources_not_pinned(self, tmp_path):
+        f = tmp_path / "doc.md"
+        f.write_text("# Doc\n")
+        from akf.stamp import stamp_file
+        u1 = stamp_file(str(f), agent="a", claims=["from the web"],
+                        source="https://example.com/page")
+        assert u1.claims[0].src_hash is None
+        f2 = tmp_path / "doc2.md"
+        f2.write_text("# Doc2\n")
+        u2 = stamp_file(str(f2), agent="a")  # default source: unspecified
+        assert u2.claims[0].src_hash is None

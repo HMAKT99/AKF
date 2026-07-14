@@ -92,6 +92,24 @@ def resolve_local_deps(filepath: str) -> Dict[str, str]:
     return deps
 
 
+def hash_source(source: Optional[str], base_dir: str) -> Optional[str]:
+    """Content hash for a claim's cited source, when it resolves locally (#129).
+
+    Accepts absolute paths or paths relative to the stamped file's directory.
+    Returns None for URLs, placeholders like "unspecified", or anything that
+    doesn't resolve to a readable file — pinning is best-effort by design.
+    """
+    if not source or source == "unspecified" or "://" in source:
+        return None
+    path = source if os.path.isabs(source) else os.path.join(base_dir, source)
+    if not os.path.isfile(path):
+        return None
+    try:
+        return _hash_file(path)
+    except OSError:
+        return None
+
+
 def changed_deps(filepath: str, recorded: Dict[str, str]) -> list:
     """Return the recorded dependencies whose content no longer matches."""
     base_dir = os.path.dirname(os.path.abspath(filepath))

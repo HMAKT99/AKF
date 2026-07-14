@@ -13,6 +13,7 @@ Usage:
               trust_score=0.92)
 """
 
+import os
 import re
 from datetime import datetime, timezone
 from typing import List, Optional, Union
@@ -230,10 +231,19 @@ def stamp_file(
 
     # Record first-degree local import hashes (Python files) so `akf check`
     # can flag staleness when a dependency changes, not just this file (#124).
-    from .deps import resolve_local_deps
+    from .deps import resolve_local_deps, hash_source
     dep_hashes = resolve_local_deps(filepath)
     if dep_hashes:
         unit = unit.model_copy(update={"meta": {**(unit.meta or {}), "deps": dep_hashes}})
+
+    # Pin cited sources (#129): when a claim's src resolves to a local file,
+    # record its content hash so `akf check` can flag source_changed.
+    base_dir = os.path.dirname(os.path.abspath(filepath))
+    pinned = []
+    for claim in unit.claims:
+        h = hash_source(claim.source, base_dir)
+        pinned.append(claim.model_copy(update={"src_hash": h}) if h else claim)
+    unit = unit.model_copy(update={"claims": pinned})
 
     # Embed into the file using universal format layer
     from .universal import embed as _embed
