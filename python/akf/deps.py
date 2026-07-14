@@ -110,6 +110,21 @@ def hash_source(source: Optional[str], base_dir: str) -> Optional[str]:
         return None
 
 
+def input_fingerprint(dep_hashes: Dict[str, str], src_hashes: list) -> str:
+    """Digest over a claim's input closure — recorded deps + pinned sources.
+
+    Deliberately excludes the stamped file's own content: its drift is
+    already covered by mtime/dependency staleness, and frontmatter stamping
+    rewrites the file itself. Order-independent.
+    """
+    h = hashlib.sha256()
+    for key in sorted(dep_hashes):
+        h.update(f"{key}={dep_hashes[key]}".encode())
+    for s in sorted(x for x in src_hashes if x):
+        h.update(s.encode())
+    return "sha256:" + h.hexdigest()[:16]
+
+
 def changed_deps(filepath: str, recorded: Dict[str, str]) -> list:
     """Return the recorded dependencies whose content no longer matches."""
     base_dir = os.path.dirname(os.path.abspath(filepath))

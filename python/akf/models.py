@@ -177,6 +177,24 @@ class Fidelity(BaseModel):
         return d
 
 
+class Replay(BaseModel):
+    """A falsifiable probe recipe carried inside evidence (#128).
+
+    A signature proves who said it; a replay proves it could have been
+    true. ``input_hash`` pins the claim's input closure (dependencies +
+    cited sources) at issuance so a successful replay against drifted
+    inputs is distinguishable from one against the original world.
+    """
+
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
+
+    command: str
+    cwd: Optional[str] = None  # relative to the stamped file's directory
+    expected_exit: int = 0
+    output_digest: Optional[str] = None
+    input_hash: Optional[str] = None
+
+
 class Evidence(BaseModel):
     """A piece of evidence supporting a claim."""
 
@@ -186,6 +204,7 @@ class Evidence(BaseModel):
     detail: str
     timestamp: Optional[str] = Field(None, validation_alias=AliasChoices("at", "timestamp"))
     tool: Optional[str] = None
+    replay: Optional[Replay] = None
 
     def to_dict(self, compact: bool = False) -> dict:
         d = _strip_none(self.model_dump())

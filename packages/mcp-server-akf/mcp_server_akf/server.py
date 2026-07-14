@@ -1,6 +1,7 @@
 """MCP server implementation for AKF — Agent Knowledge Format.
 
-Exposes 10 tools via Model Context Protocol:
+Exposes 11 tools via Model Context Protocol:
+  - replay_file: Replay-verify a stamp's falsifiable probe recipe
   - check_file: One-line trust check — can an agent build on this file?
   - create_claim: Create AKF trust metadata
   - validate_file: Validate an .akf file
@@ -28,6 +29,17 @@ from mcp.types import Tool, TextContent
 # ---------------------------------------------------------------------------
 # Tool implementations
 # ---------------------------------------------------------------------------
+
+def replay_file(path: str, run: bool = False) -> dict:
+    """Replay-verify a stamp's probe recipe. run=False inspects only;
+    run=True executes the recorded command — only for trusted files."""
+    from akf.verify import verify_file as _verify
+
+    result = _verify(path, run=run)
+    payload = result.to_dict()
+    payload["summary"] = result.summary_line()
+    return payload
+
 
 def check_file(path: str, threshold: float = 0.6) -> dict:
     """One-line trust check: can an agent build on this file without re-verifying?"""
@@ -170,6 +182,18 @@ def detect_threats(path: str) -> dict:
 
 TOOLS = [
     Tool(
+        name="replay_file",
+        description="Replay-verify a stamp's falsifiable probe recipe. Default inspects only: shows the recorded command and whether the claim's inputs drifted since issuance. With run=true, EXECUTES the recorded command (arbitrary code — only for files you trust) and returns CONFIRMED / CONFIRMED_DRIFTED (succeeded against diverged inputs) / REFUTED / UNREPLAYABLE.",
+        inputSchema={
+            "type": "object",
+            "required": ["path"],
+            "properties": {
+                "path": {"type": "string", "description": "Path to the stamped file"},
+                "run": {"type": "boolean", "default": False, "description": "Execute the recorded command (review it first)"},
+            },
+        },
+    ),
+    Tool(
         name="check_file",
         description="One-line trust check before building on a file. Returns OK (fresh stamp, trust above threshold — skip re-verification), LOW (trust below threshold), STALE (modified after stamping or claims expired — re-verify), or UNSTAMPED (no metadata). Use this before re-reading, re-testing, or re-deriving work another agent already verified.",
         inputSchema={
@@ -298,6 +322,7 @@ TOOLS = [
 
 # Map tool names to handler functions
 HANDLERS = {
+    "replay_file": replay_file,
     "check_file": check_file,
     "create_claim": create_claim,
     "validate_file": validate_file,

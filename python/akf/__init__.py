@@ -53,6 +53,7 @@ from .report import enterprise_report, EnterpriseReport, FileReport, register_re
 from .knowledge_base import KnowledgeBase
 from .stamp import stamp, stamp_file
 from .check import check_file, CheckResult
+from .verify import verify_file, VerifyResult
 from .certify import (
     certify_file, certify_directory, certify_team,
     CertifyResult, CertifyReport, AgentCertifyReport, TeamCertifyReport,
@@ -417,6 +418,8 @@ __all__ = [
     "stamp_file",
     "check_file",
     "CheckResult",
+    "verify_file",
+    "VerifyResult",
     "stamp_commit",
     "read_commit",
     "trust_log",
