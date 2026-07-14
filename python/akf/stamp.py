@@ -52,11 +52,30 @@ _EVIDENCE_PATTERNS = [
 ]
 
 
+def _parse_metrics(s: str) -> Optional[dict]:
+    """Extract receipt strength from an evidence string (#125).
+
+    Recognizes "42/42 tests passed" (pass fraction) and
+    "coverage: 85%" / "85% coverage" (coverage ratio).
+    """
+    metrics: dict = {}
+    frac = re.search(r"(\d+)\s*/\s*(\d+)\s*tests?", s.lower())
+    if frac:
+        passed, total = int(frac.group(1)), int(frac.group(2))
+        metrics["tests_passed"] = float(passed)
+        metrics["tests_total"] = float(total)
+    cov = re.search(r"coverage[:\s]+(\d{1,3})\s*%|(\d{1,3})\s*%\s+coverage", s.lower())
+    if cov:
+        metrics["coverage"] = int(cov.group(1) or cov.group(2)) / 100.0
+    return metrics or None
+
+
 def parse_evidence_string(s: str) -> Evidence:
     """Parse a plain-text evidence string into an Evidence object.
 
     Auto-detects type from common patterns (test_pass, type_check,
-    lint_clean, ci_pass, human_review). Falls back to 'other'.
+    lint_clean, ci_pass, human_review) and receipt strength metrics.
+    Falls back to 'other'.
     """
     lower = s.lower()
     ev_type = "other"
@@ -69,6 +88,7 @@ def parse_evidence_string(s: str) -> Evidence:
         type=ev_type,
         detail=s,
         timestamp=datetime.now(timezone.utc).isoformat(),
+        metrics=_parse_metrics(s),
     )
 
 

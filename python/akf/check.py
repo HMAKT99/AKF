@@ -109,17 +109,43 @@ def _evidence_types(unit: AKF) -> List[str]:
     return types
 
 
+def _evidence_floor(ev) -> Optional[int]:
+    """Tier floor for one piece of evidence, scaled by receipt strength (#125).
+
+    Bare receipts keep their type's floor (no regression). Receipts whose
+    parsed metrics reveal weakness — a partial pass fraction or coverage
+    under 30% — drop to the weak floor: a green check from a trivial suite
+    shouldn't outrank one from a real one. Replayable evidence keeps the
+    strong floor: a falsifiable claim can at least be re-checked.
+    """
+    ev_type = getattr(ev, "type", None)
+    base = _EVIDENCE_TIER_FLOOR.get(ev_type)
+    if getattr(ev, "replay", None):
+        return 2 if base is None else min(base, 2)
+    if base is None:
+        return None
+    if ev_type in ("test_pass", "ci_pass"):
+        m = getattr(ev, "metrics", None) or {}
+        total, passed = m.get("tests_total"), m.get("tests_passed")
+        if total and passed is not None and passed < total:
+            return 3
+        cov = m.get("coverage")
+        if cov is not None and cov < 0.3:
+            return 3
+    return base
+
+
 def _claim_score(claim: Claim, age_days: float = 0) -> float:
     """Effective trust with evidence-aware authority and temporal decay.
 
     Verification receipts (tests, type checks, human review) floor the
-    authority tier — see _EVIDENCE_TIER_FLOOR. Stamp age drives decay for
-    claims with a decay_half_life (e.g. memory stamps).
+    authority tier — see _EVIDENCE_TIER_FLOOR and _evidence_floor. Stamp
+    age drives decay for claims with a decay_half_life (memory stamps).
     """
     floors = [
-        _EVIDENCE_TIER_FLOOR[ev.type]
+        floor
         for ev in (claim.evidence or [])
-        if getattr(ev, "type", None) in _EVIDENCE_TIER_FLOOR
+        if (floor := _evidence_floor(ev)) is not None
     ]
     if floors:
         tier = claim.authority_tier if claim.authority_tier is not None else 3
