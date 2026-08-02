@@ -57,6 +57,8 @@ cd site && npm run build
 4. Add tests for new functionality
 5. Open a PR against `main`
 
+**Adding or changing a format field?** The models are not the source of truth for the *standard* — the schema is. Any new field on `Claim`, `Evidence`, the envelope, or a new sub-model must also be added to `spec/akf-v1.1.schema.json` and documented in `spec/akf-v1.0-spec.md`. `tests/test_schema_conformance.py` enforces this: it stamps a maximal unit and validates it against the schema, so a field that exists in code but not in the schema fails CI.
+
 ## Reporting Bugs
 
 Open a GitHub issue with:

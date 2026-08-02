@@ -62,6 +62,7 @@ AKF (Agent Knowledge Format) is a lightweight, LLM-native file format for struct
 | contra | string | no | — | Contradicting claim ID |
 | fidelity | object | no | — | Multi-resolution {h, s, f} |
 | kind | string | no | — | Claim kind (claim, code_change, decision, suggestion, review, test_result, diagnosis) |
+| src_hash | string | no | — | Content hash of the cited source at stamp time (v1.6) — enables source-change staleness |
 | evidence | array | no | — | Evidence objects supporting the claim |
 
 ## Evidence Fields
@@ -72,6 +73,22 @@ AKF (Agent Knowledge Format) is a lightweight, LLM-native file format for struct
 | detail | string | yes | Description of the evidence |
 | at | ISO-8601 | no | Timestamp |
 | tool | string | no | Tool that produced this evidence |
+| metrics | object | no | Parsed receipt strength (v1.6): coverage, tests_passed, tests_total |
+| replay | object | no | Falsifiable probe recipe (v1.6) — see below |
+
+### Replay Fields (v1.6)
+
+A replay recipe makes evidence falsifiable: a signature proves who said it; a replay proves it could have been true.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| command | string | yes | Shell command that re-verifies the claim |
+| cwd | string | no | Working directory, relative to the stamped file |
+| expected_exit | int | no | Exit code meaning confirmed (default 0) |
+| output_digest | string | no | Content hash of the expected output |
+| input_hash | string | no | Fingerprint of the claim's input closure at issuance — distinguishes CONFIRMED from CONFIRMED_DRIFTED |
+
+Envelope `meta.deps` (v1.6) maps first-degree local dependency paths to content hashes, enabling transitive-dependency staleness detection.
 
 ## Trust Grounding
 
