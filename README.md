@@ -92,6 +92,25 @@ Stamps are trail markers agents leave for other agents — across sessions, acro
 | **Source provenance** | SEC filing → analyst → AI agent chain |
 | **Compliance** | One command: `akf audit file --regulation eu_ai_act` |
 
+## Don't trust the stamp — re-run it
+
+A signature proves *who* said it; a replay proves it *could have been true*. A stamp can carry a **falsifiable probe recipe**, so the next agent re-verifies the claim instead of trusting the label:
+
+```console
+# Stamp with a recipe that can be re-run
+$ akf stamp auth.py --agent claude-code --evidence "42/42 tests passed" --replay "pytest -q"
+
+# Later — re-run the probe instead of trusting the stamp
+$ akf replay auth.py --run
+CONFIRMED inputs=intact
+
+# A dependency moved since the stamp was written
+$ akf replay auth.py --run
+CONFIRMED_DRIFTED inputs=drifted   # probe still passes, but against a changed world — re-check
+```
+
+`REFUTED` when the probe fails, `UNREPLAYABLE` when there's no recipe. This is the answer to "a trusted source can still be wrong": trust stops depending on who signed it, for any claim with a runnable check.
+
 ## Quickstart
 
 ```bash
@@ -526,6 +545,9 @@ See [LLM-PROMPT.md](spec/LLM-PROMPT.md) for a full system prompt.
 | [JSON Schema](spec/akf-v1.1.schema.json) | Machine-readable schema |
 | [Producing AKF](spec/PRODUCING-AKF.md) | Quick start for 8 languages |
 | [Trust Computation](docs/trust-computation.md) | Scoring algorithm details |
+| [Falsifiable Evidence](docs/recipes/falsifiable-evidence.md) | Replay recipes — re-run the probe, don't trust the label |
+| [Agent Memory](docs/recipes/agent-memory.md) | Trust-decayed memory stamps |
+| [Skill Provenance](docs/recipes/skill-provenance.md) | Supply-chain trust for skill files |
 | [LLM Integration](docs/llm-integration.md) | Prompting strategies |
 | [EU AI Act](docs/compliance/eu-ai-act-mapping.md) | Compliance mapping |
 | [NIST AI RMF](docs/compliance/nist-ai-rmf-mapping.md) | Framework mapping |
