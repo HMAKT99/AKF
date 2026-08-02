@@ -1,0 +1,118 @@
+name: Published Surface Health
+
+# The recurring failure mode for this project has been dead published listings —
+# a registry pointing at the wrong package, an unreleased action, a catalog
+# pinned to a stale commit — each converting interest to nothing, silently, for
+# weeks. Unit tests cover the code; nothing covered distribution. This does:
+# every Monday it installs each published surface as a real user would and
+# asserts the core loop works, opening a tracking issue on any failure.
+
+on:
+  schedule:
+    - cron: "0 8 * * 1"   # Mondays 08:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run surface checks
+        id: checks
+        shell: bash
+        run: |
+          set +e
+          FAIL=""
+          fail() { FAIL="$FAIL"$'\n'"- ❌ $1"; echo "FAIL: $1"; }
+          pass() { echo "PASS: $1"; }
+
+          echo "## PyPI — akf"
+          pip install --quiet "akf" && \
+            akf --version && \
+            python - <<'PY'
+          import tempfile, os
+          from akf.stamp import stamp_file
+          from akf.check import check_file
+          d = tempfile.mkdtemp(); p = os.path.join(d, "a.md")
+          open(p, "w").write("# a\n")
+          stamp_file(p, agent="ci", evidence=["tests pass"])
+          s = check_file(p).status
+          assert s in ("OK", "LOW"), s          # stamped -> not UNSTAMPED
+          print("akf stamp+check loop OK:", s)
+          PY
+          [ $? -eq 0 ] && pass "PyPI akf install + stamp/check loop" || fail "PyPI akf install or core loop broken"
+
+          echo "## PyPI — mcp-server-akf"
+          pip install --quiet "mcp-server-akf" && python -c "import mcp_server_akf"
+          [ $? -eq 0 ] && pass "PyPI mcp-server-akf installs + imports" || fail "PyPI mcp-server-akf broken"
+
+          echo "## npm — akf-format"
+          WD=$(mktemp -d); ( cd "$WD" && npm init -y >/dev/null 2>&1 && npm install --silent akf-format >/dev/null 2>&1 && \
+            node -e "const {create,validate}=require('akf-format'); if(!validate(create('t',0.9,{})).valid) process.exit(1)" )
+          [ $? -eq 0 ] && pass "npm akf-format installs + validates" || fail "npm akf-format broken"
+
+          echo "## MCP registry"
+          REG=$(curl -s "https://registry.modelcontextprotocol.io/v0/servers?search=akf")
+          echo "$REG" | grep -q "io.github.HMAKT99/akf" && echo "$REG" | grep -q "mcp-server-akf"
+          [ $? -eq 0 ] && pass "MCP registry lists akf -> mcp-server-akf" || fail "MCP registry entry missing or mispointed"
+
+          echo "## GitHub Actions Marketplace"
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://github.com/marketplace/actions/akf-certify")
+          [ "$CODE" = "200" ] && pass "Actions Marketplace listing live" || fail "Actions Marketplace listing not live (HTTP $CODE)"
+
+          echo "## Claude community plugin catalog"
+          CAT=$(curl -s "https://raw.githubusercontent.com/anthropics/claude-plugins-community/main/.claude-plugin/marketplace.json")
+          echo "$CAT" | python3 -c "import sys,json; d=json.load(sys.stdin); assert any(p.get('name')=='akf' for p in d.get('plugins',[]))"
+          [ $? -eq 0 ] && pass "Claude community catalog lists akf" || fail "Claude community catalog entry missing"
+
+          # Emit the failure block for the issue step
+          {
+            echo "failures<<EOF"
+            echo "$FAIL"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          [ -z "$FAIL" ] && echo "ALL SURFACES HEALTHY" || exit 0   # don't fail the job; the issue is the signal
+
+      - name: Open or update tracking issue on failure
+        if: steps.checks.outputs.failures != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- surface-health-report -->';
+            const failures = process.env.FAILURES;
+            const body = [
+              marker,
+              '## Published surface health check failed',
+              '',
+              'The weekly check found one or more published surfaces broken. Each of these is a path a real user takes to install AKF:',
+              failures,
+              '',
+              `Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            ].join('\n');
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'surface-health',
+            });
+            const existing = issues.find(i => i.body && i.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.update({ owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: existing.number, body });
+            } else {
+              await github.rest.issues.create({ owner: context.repo.owner, repo: context.repo.repo,
+                title: 'Published surface health check failing', body, labels: ['surface-health'] });
+            }
+        env:
+          FAILURES: ${{ steps.checks.outputs.failures }}
