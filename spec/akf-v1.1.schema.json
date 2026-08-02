@@ -84,8 +84,15 @@
     },
     "meta": {
       "type": "object",
-      "description": "Free-form extension metadata",
-      "additionalProperties": true
+      "description": "Free-form extension metadata. Reserved key 'deps' (v1.6) maps first-degree local dependency paths to content hashes for transitive staleness detection.",
+      "additionalProperties": true,
+      "properties": {
+        "deps": {
+          "type": "object",
+          "description": "Dependency path -> content hash, recorded at stamp time (v1.6)",
+          "additionalProperties": { "type": "string" }
+        }
+      }
     },
     "made_by": {
       "type": "array",
@@ -170,6 +177,10 @@
         "src": {
           "type": "string",
           "description": "Source name"
+        },
+        "src_hash": {
+          "type": "string",
+          "description": "Content hash of the cited source at stamp time (v1.6). Enables STALE detection when the cited source changes."
         },
         "uri": {
           "type": "string",
@@ -284,6 +295,43 @@
         "tool": {
           "type": "string",
           "description": "Tool that produced this evidence"
+        },
+        "replay": {
+          "$ref": "#/$defs/Replay",
+          "description": "Falsifiable probe recipe (v1.6): how to re-verify this evidence"
+        },
+        "metrics": {
+          "type": "object",
+          "description": "Parsed receipt strength (v1.6), e.g. coverage, tests_passed, tests_total",
+          "additionalProperties": { "type": "number" }
+        }
+      }
+    },
+    "Replay": {
+      "type": "object",
+      "required": ["command"],
+      "additionalProperties": true,
+      "description": "A falsifiable probe recipe carried inside evidence (v1.6). A signature proves who said it; a replay proves it could have been true.",
+      "properties": {
+        "command": {
+          "type": "string",
+          "description": "Shell command that re-verifies the claim"
+        },
+        "cwd": {
+          "type": "string",
+          "description": "Working directory, relative to the stamped file"
+        },
+        "expected_exit": {
+          "type": "integer",
+          "description": "Exit code that means confirmed (default 0)"
+        },
+        "output_digest": {
+          "type": "string",
+          "description": "Optional content hash of the expected command output"
+        },
+        "input_hash": {
+          "type": "string",
+          "description": "Fingerprint of the claim's input closure (dependencies + pinned sources) at issuance. Distinguishes CONFIRMED from CONFIRMED_DRIFTED."
         }
       }
     },
