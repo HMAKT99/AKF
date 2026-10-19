@@ -1,6 +1,6 @@
 ---
 name: akf
-description: Trust metadata for files, memories, and skills — check before you trust, stamp what you verify. Use before building on existing files, after completing verified work, and when handling agent memories or downloaded skills.
+description: AKF, the AI native file format (EXIF for AI) — check before you trust, stamp what you verify. Use before building on existing files, after completing verified work, and when handling agent memories or downloaded skills.
 akf:
   v: "1.0"
   claims:

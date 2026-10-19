@@ -273,6 +273,7 @@ AKF works where AI agents work. Drop a config file, and every AI-generated file 
 | **Windsurf** | Reads `.windsurfrules` — stamps AI edits with trust metadata |
 | **GitHub Copilot** | Reads `.github/copilot-instructions.md` (native) + shell hook for CLI |
 | **OpenAI Codex** | Reads `AGENTS.md` — stamps files in cloud sandbox and local |
+| **Any skills-compatible agent** | `npx skills add HMAKT99/AKF` — self-contained check/stamp skill for 18+ agents |
 | **OpenClaw** | Skill on ClawHub: `clawhub install akf` — check/stamp protocol + memory trust |
 | **Hermes Agent** | agentskills.io skill: `hermes skills tap add HMAKT99/AKF` — files, memories, and skill supply-chain |
 | **Manus / Other Agents** | MCP server + shell hook — works with any agent that supports MCP or CLI |
@@ -301,21 +302,13 @@ eval "$(akf shell-hook)"
 
 ## Skills
 
-AKF provides [agent skill files](skills/) that AI agents can discover and use. Drop these into your agent's context:
+AKF ships as a self-contained agent skill ([`skills/akf/`](skills/akf/SKILL.md)): the check-before-you-trust procedure, an evidence reference, and a read-only check script.
 
-| Skill | What it does |
-|-------|-------------|
-| [`check.md`](skills/check.md) | Check a file's trust before building on it |
-| [`stamp.md`](skills/stamp.md) | Stamp trust metadata onto AI outputs |
-| [`audit.md`](skills/audit.md) | Audit files for regulatory compliance |
-| [`scan.md`](skills/scan.md) | Security scan files and directories |
-| [`embed.md`](skills/embed.md) | Embed trust metadata into Office/PDF/images |
-| [`detect.md`](skills/detect.md) | Run 10 security detection classes |
-| [`stream.md`](skills/stream.md) | Stream trust metadata in real-time |
-| [`git.md`](skills/git.md) | Trust-annotated git workflows |
-| [`convert.md`](skills/convert.md) | Convert between formats |
-| `delegate` | Agent-to-agent trust delegation |
-| `team` | Multi-agent streaming sessions |
+```bash
+npx skills add HMAKT99/AKF          # Claude Code, Cursor, Copilot, Cline and 18+ agents
+clawhub install akf                 # OpenClaw
+hermes skills tap add HMAKT99/AKF   # Hermes Agent
+```
 
 ## Format at a Glance
 
