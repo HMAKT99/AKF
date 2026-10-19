@@ -1208,11 +1208,10 @@ class TestCrossStackConsistency:
         assert "teams" in content.lower()
         assert "TeamStream" in content or "team_delegate" in content
 
-    def test_website_agent_integration_delegate_skill(self):
-        """AgentIntegration lists delegate and team skills."""
+    def test_website_agent_integration_skill_install(self):
+        """AgentIntegration shows the skills CLI install path."""
         content = self.site_files.get("components/AgentIntegration.tsx", "")
-        assert "delegate" in content
-        assert "team" in content.lower()
+        assert "npx skills add HMAKT99/AKF" in content
 
     def test_website_certify_page_team_flag(self):
         """CertifyPage documents --team flag."""
