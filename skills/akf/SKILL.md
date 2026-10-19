@@ -6,6 +6,30 @@ metadata:
   version: "1.6.0"
   homepage: https://akf.dev
   repository: https://github.com/HMAKT99/AKF
+akf:
+  v: "1.0"
+  claims:
+    - c: Trust metadata for skills/akf/SKILL.md
+      t: 0.7
+      id: a8b1e5d1
+      src: unspecified
+      tier: 3
+      ver: false
+      ai: true
+      decay: 365
+      kind: skill
+      evidence:
+        - type: human_review
+          detail: "reviewed by @HMAKT99"
+          at: "2026-10-19T17:32:27.327528+00:00"
+  id: "akf-bfbdf8be2efe"
+  agent: "claude-code"
+  at: "2026-10-19T17:32:27.328473+00:00"
+  label: public
+  inherit: true
+  ext: false
+  hash: "sha256:3c5922a7aad7468a"
+  sv: "1.1"
 ---
 
 # AKF: the AI native file format
