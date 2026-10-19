@@ -3,6 +3,7 @@ name: akf
 description: Agent Knowledge Format — stamp trust metadata into every file AI touches. Trust scores, provenance, and compliance that embed natively into DOCX, PDF, images, and code.
 homepage: https://akf.dev
 metadata:
+  internal: true
   openclaw:
     emoji: "🔐"
     requires:
