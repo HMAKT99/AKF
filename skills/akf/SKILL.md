@@ -3,7 +3,7 @@ name: akf
 description: AKF is the AI native file format, EXIF for AI. Use it before building on any existing file, memory, or downloaded skill to see whether its verification is still valid, and after you create or change a file to leave a ~15-token stamp of what you actually verified. Triggers on "can I trust this file", "is this still valid", "stamp this", provenance, handoff between agents.
 license: MIT
 metadata:
-  version: "1.6.0"
+  version: "1.6.1"
   homepage: https://akf.dev
   repository: https://github.com/HMAKT99/AKF
 akf:
