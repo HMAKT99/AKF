@@ -248,3 +248,116 @@ class TestContentHashStaleness:
         path.write_text("x = 2\n")
         self._touch_future(str(path))
         assert check_file(str(path)).status == "STALE"
+
+
+class TestContentHashBinaryFormats:
+    """Embedded-stamp binary formats: mtime-only change is OK, a real edit is STALE."""
+
+    @staticmethod
+    def _future(path):
+        t = time.time() + 3600
+        os.utime(path, (t, t))
+
+    @staticmethod
+    def _stamp(path):
+        stamp_file(str(path), agent="claude-code", trust_score=0.9,
+                   evidence=["reviewed by @someone"])
+
+    def _assert_ok_then_stale(self, path, edit):
+        self._stamp(path)
+        assert check_file(str(path)).status == "OK"
+        self._future(str(path))
+        assert check_file(str(path)).status == "OK", "mtime-only change must stay OK"
+        from akf import universal
+        old_meta = universal.extract(str(path))
+        edit(path)
+        # Rewriting an embedded-stamp file usually drops its stamp; put the
+        # old one back so the test models "stamped, then edited".
+        if universal.extract(str(path)) is None:
+            universal.embed(str(path), metadata=old_meta)
+        self._future(str(path))
+        assert check_file(str(path)).status == "STALE"
+
+    def test_docx(self, tmp_path):
+        docx = pytest.importorskip("docx")
+        path = tmp_path / "r.docx"
+        d = docx.Document()
+        d.add_paragraph("Revenue was 4.2B")
+        d.save(str(path))
+
+        def edit(p):
+            doc = docx.Document(str(p))
+            doc.add_paragraph("edited later")
+            doc.save(str(p))
+
+        self._assert_ok_then_stale(path, edit)
+
+    def test_docx_restamp_is_ok(self, tmp_path):
+        docx = pytest.importorskip("docx")
+        path = tmp_path / "r.docx"
+        d = docx.Document()
+        d.add_paragraph("hello")
+        d.save(str(path))
+        self._stamp(path)
+        self._stamp(path)
+        self._future(str(path))
+        assert check_file(str(path)).status == "OK"
+
+    def test_xlsx(self, tmp_path):
+        openpyxl = pytest.importorskip("openpyxl")
+        path = tmp_path / "b.xlsx"
+        wb = openpyxl.Workbook()
+        wb.active["A1"] = 1
+        wb.save(str(path))
+
+        def edit(p):
+            wb2 = openpyxl.load_workbook(str(p))
+            wb2.active["A1"] = 2
+            wb2.save(str(p))
+
+        self._assert_ok_then_stale(path, edit)
+
+    def test_pptx(self, tmp_path):
+        pptx = pytest.importorskip("pptx")
+        path = tmp_path / "s.pptx"
+        prs = pptx.Presentation()
+        prs.slides.add_slide(prs.slide_layouts[0]).shapes.title.text = "one"
+        prs.save(str(path))
+
+        def edit(p):
+            prs2 = pptx.Presentation(str(p))
+            prs2.slides[0].shapes.title.text = "two"
+            prs2.save(str(p))
+
+        self._assert_ok_then_stale(path, edit)
+
+    def test_pdf(self, tmp_path):
+        pytest.importorskip("pypdf")
+        Image = pytest.importorskip("PIL.Image")
+        path = tmp_path / "d.pdf"
+        Image.new("RGB", (8, 8), (255, 0, 0)).save(str(path))
+
+        def edit(p):
+            Image.new("RGB", (16, 16), (0, 255, 0)).save(str(p))
+
+        self._assert_ok_then_stale(path, edit)
+
+    def test_png(self, tmp_path):
+        Image = pytest.importorskip("PIL.Image")
+        path = tmp_path / "i.png"
+        Image.new("RGB", (8, 8), (255, 0, 0)).save(str(path))
+
+        def edit(p):
+            Image.new("RGB", (16, 16), (0, 0, 255)).save(str(p))
+
+        self._assert_ok_then_stale(path, edit)
+
+    def test_jpeg_sidecar(self, tmp_path):
+        Image = pytest.importorskip("PIL.Image")
+        path = tmp_path / "i.jpg"
+        Image.new("RGB", (8, 8), (255, 0, 0)).save(str(path))
+
+        def edit(p):
+            Image.new("RGB", (16, 16), (0, 0, 255)).save(str(p))
+
+        self._assert_ok_then_stale(path, edit)
