@@ -24,7 +24,7 @@ akf:
   claims:
     - c: "Trust metadata for skills/openclaw-akf/SKILL.md"
       t: 0.7
-      id: 1112e8c2
+      id: 25261ce0
       src: unspecified
       tier: 3
       ver: false
@@ -34,14 +34,16 @@ akf:
       evidence:
         - type: human_review
           detail: "reviewed by @HMAKT99"
-          at: "2026-10-19T17:32:27.609288+00:00"
-  id: "akf-dba0fa1c2304"
+          at: "2026-10-20T02:51:06.433763+00:00"
+  id: "akf-703e2e87a55f"
   agent: "claude-code"
-  at: "2026-10-19T17:32:27.609707+00:00"
+  at: "2026-10-20T02:51:06.434143+00:00"
   label: public
   inherit: true
   ext: false
-  hash: "sha256:c1e68739261f6f31"
+  hash: "sha256:8d9f5521ce5cf929"
+  meta:
+    content_hash: "sha256:5e5c01a26f626ceb"
   sv: "1.1"
 ---
 
