@@ -13,7 +13,7 @@ akf:
   claims:
     - c: "Trust metadata for skills/hermes-akf/SKILL.md"
       t: 0.7
-      id: 55682a3e
+      id: a0279214
       src: unspecified
       tier: 3
       ver: false
@@ -23,14 +23,16 @@ akf:
       evidence:
         - type: human_review
           detail: "reviewed by @HMAKT99"
-          at: "2026-10-19T17:32:27.468811+00:00"
-  id: "akf-be4cfedcc706"
+          at: "2026-10-20T02:51:06.316012+00:00"
+  id: "akf-c81e6b052c11"
   agent: "claude-code"
-  at: "2026-10-19T17:32:27.469226+00:00"
+  at: "2026-10-20T02:51:06.316407+00:00"
   label: public
   inherit: true
   ext: false
-  hash: "sha256:61d99bc6cbf720ab"
+  hash: "sha256:ecaa50278adaed73"
+  meta:
+    content_hash: "sha256:6cc10348580281f2"
   sv: "1.1"
 ---
 
