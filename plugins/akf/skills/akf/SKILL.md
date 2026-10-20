@@ -6,7 +6,7 @@ akf:
   claims:
     - c: Trust metadata for plugins/akf/skills/akf/SKILL.md
       t: 0.7
-      id: cb523958
+      id: 6158635f
       src: unspecified
       tier: 3
       ver: false
@@ -16,14 +16,14 @@ akf:
       evidence:
         - type: human_review
           detail: "reviewed by @HMAKT99"
-          at: "2026-10-20T02:51:06.552544+00:00"
-  id: "akf-5b43b44302c2"
+          at: "2026-10-20T03:32:39.967327+00:00"
+  id: "akf-ab8408da14ec"
   agent: "claude-code"
-  at: "2026-10-20T02:51:06.552939+00:00"
+  at: "2026-10-20T03:32:39.967760+00:00"
   label: public
   inherit: true
   ext: false
-  hash: "sha256:fbae225ebbfeea95"
+  hash: "sha256:b12ab993b4b22c4a"
   meta:
     content_hash: "sha256:fca1d0fd91611d6b"
   sv: "1.1"
