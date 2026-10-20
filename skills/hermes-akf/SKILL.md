@@ -1,7 +1,7 @@
 ---
 name: akf
 description: AKF, the AI native file format (EXIF for AI) — check before you trust, stamp what you verify. A stamp costs ~15 tokens; re-verifying costs 15,000.
-version: 1.6.0
+version: 1.6.1
 author: HMAKT99
 license: MIT
 metadata:
