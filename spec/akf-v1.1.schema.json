@@ -84,13 +84,17 @@
     },
     "meta": {
       "type": "object",
-      "description": "Free-form extension metadata. Reserved key 'deps' (v1.6) maps first-degree local dependency paths to content hashes for transitive staleness detection.",
+      "description": "Free-form extension metadata. Reserved keys: 'deps' (v1.6) maps first-degree local dependency paths to content hashes for transitive staleness detection; 'content_hash' fingerprints the stamped file's own content.",
       "additionalProperties": true,
       "properties": {
         "deps": {
           "type": "object",
           "description": "Dependency path -> content hash, recorded at stamp time (v1.6)",
           "additionalProperties": { "type": "string" }
+        },
+        "content_hash": {
+          "type": "string",
+          "description": "sha256 (16 hex) of the file content with the embedded stamp removed, recorded at stamp time so a fresh checkout is not reported STALE"
         }
       }
     },

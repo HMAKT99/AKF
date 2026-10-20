@@ -90,6 +90,8 @@ A replay recipe makes evidence falsifiable: a signature proves who said it; a re
 
 Envelope `meta.deps` (v1.6) maps first-degree local dependency paths to content hashes, enabling transitive-dependency staleness detection.
 
+Envelope `meta.content_hash` is a `sha256:` fingerprint (16 hex) of the file's content with its embedded stamp removed. `akf check` uses it to avoid reporting STALE when only the file's mtime changed, as after a fresh checkout.
+
 ## Trust Grounding
 
 A claim is **grounded** when it has one or more evidence items. Grounding is informational — it does not change the trust score formula, but indicates whether the claim is backed by verifiable artifacts (test results, type checks, CI runs, human reviews).

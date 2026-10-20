@@ -183,3 +183,68 @@ class TestReceiptStrengthScaling:
         # replay recipe of "true" classifies as type other, but replayability
         # itself earns the strong floor
         assert check_file(str(p)).status == "OK"
+
+
+class TestContentHashStaleness:
+    """mtime alone must not make unchanged content STALE (fresh checkouts)."""
+
+    def _touch_future(self, path):
+        future = time.time() + 3600
+        os.utime(path, (future, future))
+
+    def test_markdown_mtime_only_change_is_ok(self, stamped_md):
+        self._touch_future(stamped_md)
+        assert check_file(stamped_md).status == "OK"
+
+    def test_markdown_copy_is_ok(self, stamped_md, tmp_path):
+        import shutil
+        copy = str(tmp_path / "clone.md")
+        shutil.copy(stamped_md, copy)
+        self._touch_future(copy)
+        assert check_file(copy).status == "OK"
+
+    def test_markdown_with_frontmatter_mtime_only_is_ok(self, tmp_path):
+        path = tmp_path / "skill.md"
+        path.write_text("---\nname: demo\ntags: [a, b]\n---\n\n# Demo\n")
+        stamp_file(str(path), agent="claude-code", trust_score=0.9,
+                   evidence=["reviewed by @someone"])
+        self._touch_future(str(path))
+        assert check_file(str(path)).status == "OK"
+
+    def test_markdown_restamp_then_mtime_only_is_ok(self, stamped_md):
+        stamp_file(stamped_md, agent="claude-code", trust_score=0.9,
+                   evidence=["reviewed by @someone"])
+        self._touch_future(stamped_md)
+        assert check_file(stamped_md).status == "OK"
+
+    def test_markdown_body_edit_is_stale(self, stamped_md):
+        with open(stamped_md, "a") as f:
+            f.write("\nedited later\n")
+        self._touch_future(stamped_md)
+        assert check_file(stamped_md).status == "STALE"
+
+    def test_markdown_frontmatter_edit_is_stale(self, tmp_path):
+        path = tmp_path / "skill.md"
+        path.write_text("---\nname: demo\n---\n\n# Demo\n")
+        stamp_file(str(path), agent="claude-code", trust_score=0.9,
+                   evidence=["reviewed by @someone"])
+        path.write_text(path.read_text().replace("name: demo", "name: changed"))
+        self._touch_future(str(path))
+        assert check_file(str(path)).status == "STALE"
+
+    def test_sidecar_file_mtime_only_is_ok(self, tmp_path):
+        path = tmp_path / "mod.py"
+        path.write_text("x = 1\n")
+        stamp_file(str(path), agent="claude-code", trust_score=0.9,
+                   evidence=["42/42 tests passed"])
+        self._touch_future(str(path))
+        assert check_file(str(path)).status == "OK"
+
+    def test_sidecar_file_edit_is_stale(self, tmp_path):
+        path = tmp_path / "mod.py"
+        path.write_text("x = 1\n")
+        stamp_file(str(path), agent="claude-code", trust_score=0.9,
+                   evidence=["42/42 tests passed"])
+        path.write_text("x = 2\n")
+        self._touch_future(str(path))
+        assert check_file(str(path)).status == "STALE"
