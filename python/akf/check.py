@@ -6,7 +6,7 @@ file's stamped verification state, or does it need to re-verify?
 Statuses:
     OK        — fresh stamp, trust at or above threshold. Safe to build on.
     LOW       — stamped and fresh, but effective trust below threshold.
-    STALE     — file modified after it was stamped, or claims expired.
+    STALE     — file content changed after it was stamped, or claims expired.
     UNSTAMPED — no AKF metadata found.
 
 Exit codes (CLI): OK=0, LOW/STALE=1, UNSTAMPED=2.
@@ -19,6 +19,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import List, Optional
 
+from .fingerprint import content_unchanged
 from .models import AKF, Claim
 from .trust import effective_trust, is_expired
 
@@ -205,7 +206,9 @@ def check_file(filepath: str, threshold: float = 0.6) -> CheckResult:
     if stamped_at is not None:
         try:
             mtime = datetime.fromtimestamp(os.path.getmtime(filepath), tz=timezone.utc)
-            if (mtime - stamped_at).total_seconds() > _MTIME_TOLERANCE_S:
+            if (mtime - stamped_at).total_seconds() > _MTIME_TOLERANCE_S and not content_unchanged(
+                filepath, unit.meta, unit.integrity_hash
+            ):
                 return CheckResult(
                     status="STALE", exit_code=1,
                     reason="modified_after_stamp", **base,

@@ -250,6 +250,13 @@ def stamp_file(
         file_hash = hashlib.sha256(fh.read()).hexdigest()[:16]
     unit = unit.model_copy(update={"integrity_hash": f"sha256:{file_hash}"})
 
+    # Stamp-independent content hash so `akf check` can tell a fresh checkout
+    # (new mtime, same content) from a real edit.
+    from .fingerprint import content_fingerprint
+    fp = content_fingerprint(filepath)
+    if fp:
+        unit = unit.model_copy(update={"meta": {**(unit.meta or {}), "content_hash": fp}})
+
     # Record first-degree local import hashes (Python files) so `akf check`
     # can flag staleness when a dependency changes, not just this file (#124).
     from .deps import resolve_local_deps, hash_source
