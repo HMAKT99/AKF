@@ -56,8 +56,8 @@ jobs:
           [ $? -eq 0 ] && pass "PyPI akf install + stamp/check loop" || fail "PyPI akf install or core loop broken"
 
           echo "## PyPI — mcp-server-akf"
-          pip install --quiet "mcp-server-akf" && python -c "import mcp_server_akf"
-          [ $? -eq 0 ] && pass "PyPI mcp-server-akf installs + imports" || fail "PyPI mcp-server-akf broken"
+          pip install --quiet "mcp-server-akf" && python -c "from mcp_server_akf.server import create_server; create_server()"
+          [ $? -eq 0 ] && pass "PyPI mcp-server-akf installs + builds server" || fail "PyPI mcp-server-akf broken"
 
           echo "## npm — akf-format"
           WD=$(mktemp -d); ( cd "$WD" && npm init -y >/dev/null 2>&1 && npm install --silent akf-format >/dev/null 2>&1 && \

@@ -27,6 +27,21 @@ jobs:
           cd python
           pytest --tb=short -q
 
+  mcp-server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -e python -e "packages/mcp-server-akf[dev]"
+      - name: Run tests
+        run: |
+          cd packages/mcp-server-akf
+          pytest --tb=short -q
+
   typescript:
     runs-on: ubuntu-latest
     steps:
