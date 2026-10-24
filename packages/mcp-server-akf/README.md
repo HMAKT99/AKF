@@ -77,6 +77,43 @@ You can also run the server directly for testing:
 python -m mcp_server_akf
 ```
 
+## Verification state in tool results (experimental)
+
+On mcp 2.x, a tool result for a file (any tool called with `path`) carries that file's verification state in `_meta` under the vendor key `dev.akf/trust`:
+
+```json
+"_meta": {
+  "dev.akf/trust": {
+    "v": "1",
+    "status": "OK",
+    "trust": 0.7447,
+    "evidence": ["human_review"],
+    "agent": "claude-code",
+    "age_days": 4
+  }
+}
+```
+
+`status` is computed live (`OK` / `LOW` / `STALE` / `UNSTAMPED`), so a client sees whether the file changed since it was verified. The key is absent when the result isn't about a file. Clients that don't know the key ignore it.
+
+To annotate your own server's results:
+
+```python
+from mcp_server_akf.meta import TRUST_META_KEY, trust_meta
+
+meta = trust_meta(path)
+return CallToolResult(content=[...], _meta={TRUST_META_KEY: meta} if meta else None)
+```
+
+To read it in a client:
+
+```python
+result = await client.call_tool("extract_file", {"path": "report.md"})
+state = (result.meta or {}).get("dev.akf/trust")
+if state and state["status"] == "OK":
+    ...  # verified and unchanged: build on it without re-verifying
+```
+
 ## Multi-Agent Support
 
 The MCP server works seamlessly with multi-agent orchestration platforms:

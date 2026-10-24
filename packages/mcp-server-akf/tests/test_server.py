@@ -2,9 +2,11 @@
 
 import asyncio
 import json
+import os
 
 import pytest
 
+from mcp_server_akf.meta import TRUST_META_KEY
 from mcp_server_akf.server import TOOLS, create_server
 
 Client = getattr(pytest.importorskip("mcp"), "Client", None)
@@ -43,6 +45,28 @@ class TestServer:
         payload = _payload(_call("check_file", {"path": str(f)}))
         assert payload["status"] in {"OK", "LOW"}
         assert payload["agent"] == "test-agent"
+
+    def test_result_meta_carries_file_trust(self, tmp_path):
+        f = tmp_path / "notes.md"
+        f.write_text("# hello\n")
+        _call("stamp_file", {"path": str(f), "agent": "test-agent", "evidence": "3/3 tests passed"})
+        meta = _call("extract_file", {"path": str(f)}).meta[TRUST_META_KEY]
+        assert meta["v"] == "1"
+        assert meta["status"] in {"OK", "LOW"}
+        assert meta["agent"] == "test-agent"
+        assert "test_pass" in meta["evidence"]
+
+    def test_result_meta_reports_stale_after_edit(self, tmp_path):
+        f = tmp_path / "notes.md"
+        f.write_text("# hello\n")
+        _call("stamp_file", {"path": str(f), "agent": "test-agent", "evidence": "3/3 tests passed"})
+        later = f.stat().st_mtime + 120
+        f.write_text(f.read_text() + "\nedited after stamping\n")
+        os.utime(f, (later, later))
+        assert _call("extract_file", {"path": str(f)}).meta[TRUST_META_KEY]["status"] == "STALE"
+
+    def test_result_meta_absent_without_file(self):
+        assert not (_call("trust_score", {"content": "x", "confidence": 0.9}).meta or {}).get(TRUST_META_KEY)
 
     def test_unknown_tool_returns_error(self):
         assert "Unknown tool" in _payload(_call("nope", {}))["error"]
