@@ -340,27 +340,43 @@ HANDLERS = {
 # MCP Server
 # ---------------------------------------------------------------------------
 
+def _run_tool(name: str, arguments: dict | None) -> list[TextContent]:
+    handler = HANDLERS.get(name)
+    if not handler:
+        return [TextContent(type="text", text=json.dumps({"error": f"Unknown tool: {name}"}))]
+
+    try:
+        result = handler(**(arguments or {}))
+        return [TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
+    except Exception as e:
+        return [TextContent(type="text", text=json.dumps({"error": str(e)}))]
+
+
 def create_server() -> Server:
     """Create and configure the MCP server."""
-    server = Server("akf")
+    # mcp 1.x registers handlers with decorators; mcp 2.x takes them in the constructor.
+    if hasattr(Server, "list_tools"):
+        server = Server("akf")
 
-    @server.list_tools()
-    async def list_tools() -> list[Tool]:
-        return TOOLS
+        @server.list_tools()
+        async def list_tools() -> list[Tool]:
+            return TOOLS
 
-    @server.call_tool()
-    async def call_tool(name: str, arguments: dict) -> list[TextContent]:
-        handler = HANDLERS.get(name)
-        if not handler:
-            return [TextContent(type="text", text=json.dumps({"error": f"Unknown tool: {name}"}))]
+        @server.call_tool()
+        async def call_tool(name: str, arguments: dict) -> list[TextContent]:
+            return _run_tool(name, arguments)
 
-        try:
-            result = handler(**arguments)
-            return [TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
-        except Exception as e:
-            return [TextContent(type="text", text=json.dumps({"error": str(e)}))]
+        return server
 
-    return server
+    from mcp.types import CallToolResult, ListToolsResult
+
+    async def on_list_tools(ctx, params) -> ListToolsResult:
+        return ListToolsResult(tools=TOOLS)
+
+    async def on_call_tool(ctx, params) -> CallToolResult:
+        return CallToolResult(content=_run_tool(params.name, params.arguments))
+
+    return Server("akf", on_list_tools=on_list_tools, on_call_tool=on_call_tool)
 
 
 async def run_server():
