@@ -25,6 +25,8 @@ from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import Tool, TextContent
 
+from mcp_server_akf.meta import TRUST_META_KEY, trust_meta
+
 
 # ---------------------------------------------------------------------------
 # Tool implementations
@@ -374,9 +376,14 @@ def create_server() -> Server:
         return ListToolsResult(tools=TOOLS)
 
     async def on_call_tool(ctx, params) -> CallToolResult:
-        return CallToolResult(content=_run_tool(params.name, params.arguments))
+        content = _run_tool(params.name, params.arguments)
+        trust = trust_meta((params.arguments or {}).get("path")) if params.name in HANDLERS else None
+        return CallToolResult(content=content, _meta={TRUST_META_KEY: trust} if trust else None)
 
-    return Server("akf", on_list_tools=on_list_tools, on_call_tool=on_call_tool)
+    from importlib.metadata import version
+
+    return Server("akf", version=version("mcp-server-akf"),
+                  on_list_tools=on_list_tools, on_call_tool=on_call_tool)
 
 
 async def run_server():
