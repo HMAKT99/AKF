@@ -7,13 +7,13 @@
     "source": "github",
     "subfolder": "packages/mcp-server-akf"
   },
-  "version": "1.6.1",
+  "version": "1.6.2",
   "websiteUrl": "https://akf.dev",
   "packages": [
     {
       "registryType": "pypi",
       "identifier": "mcp-server-akf",
-      "version": "1.6.1",
+      "version": "1.6.2",
       "transport": {
         "type": "stdio"
       }
